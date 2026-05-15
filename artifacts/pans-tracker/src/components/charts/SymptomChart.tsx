@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   LineChart,
   Line,
@@ -5,12 +6,11 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ReferenceArea,
   ReferenceLine,
   ResponsiveContainer,
 } from "recharts";
-import { format, subDays, parseISO, isValid } from "date-fns";
+import { format, subDays, parseISO, isValid, getDay } from "date-fns";
 import {
   SymptomLog,
   Medication,
@@ -19,6 +19,8 @@ import {
   FREQUENCY_LABELS,
   MILESTONE_TYPE_LABELS,
 } from "@/lib/types";
+import { Button } from "@/components/ui/button";
+import { Eye, EyeOff } from "lucide-react";
 
 const CATEGORIES = [
   { key: "ocd", label: "OCD Behaviors", color: "hsl(140, 20%, 48%)" },
@@ -37,6 +39,12 @@ const MED_COLORS = [
   "rgba(210, 150, 170, 0.15)",
 ];
 
+export function getScoreColor(score: number): string {
+  if (score <= 3) return "#22c55e";
+  if (score <= 6) return "#f59e0b";
+  return "#ef4444";
+}
+
 interface ChartDataPoint {
   date: string;
   label: string;
@@ -46,96 +54,253 @@ interface ChartDataPoint {
   tics: number;
   sleep: number;
   cognition: number;
+  dailyScore: number;
   medicationsTaken: string[];
+  note?: string;
+  isToday: boolean;
+  isWeekend: boolean;
+  hasLog: boolean;
+}
+
+function ScoreDot(props: any) {
+  const { cx, cy, payload } = props;
+  if (cx == null || cy == null || !payload?.hasLog) return <g />;
+  const score = payload.dailyScore as number;
+  const color = getScoreColor(score);
+  const r = payload.isToday ? 7 : 4;
+  const noteOffset = payload.note ? 14 : 0;
+  const todayOffset = noteOffset + (payload.note ? 14 : 16);
+
+  return (
+    <g>
+      {payload.note && (
+        <g>
+          <rect
+            x={cx - 7}
+            y={cy - 25}
+            width={14}
+            height={11}
+            rx={3}
+            fill="#6366f1"
+            opacity={0.9}
+          />
+          <polygon
+            points={`${cx - 2},${cy - 14} ${cx + 2},${cy - 14} ${cx},${cy - 11}`}
+            fill="#6366f1"
+            opacity={0.9}
+          />
+          <text
+            x={cx}
+            y={cy - 17}
+            textAnchor="middle"
+            fontSize={7}
+            fill="white"
+            fontFamily="sans-serif"
+          >
+            ✎
+          </text>
+        </g>
+      )}
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
+        fill={color}
+        stroke="white"
+        strokeWidth={payload.isToday ? 2.5 : 1.5}
+      />
+      {payload.isToday && (
+        <text
+          x={cx}
+          y={cy - (payload.note ? 30 : 16)}
+          textAnchor="middle"
+          fontSize={9}
+          fill={color}
+          fontWeight="700"
+          fontFamily="sans-serif"
+        >
+          Today
+        </text>
+      )}
+    </g>
+  );
+}
+
+function ScoreActiveDot(props: any) {
+  const { cx, cy, payload } = props;
+  if (cx == null || cy == null) return <g />;
+  const color = getScoreColor((payload?.dailyScore as number) ?? 0);
+  return (
+    <circle cx={cx} cy={cy} r={7} fill={color} stroke="white" strokeWidth={2} />
+  );
+}
+
+function CustomXTick(props: any) {
+  const { x, y, payload, index, visibleTicksCount } = props;
+  const total = visibleTicksCount ?? 30;
+  const isLast = index === total - 1;
+  const show = index === 0 || index % 5 === 0 || isLast;
+  if (!show) return <g />;
+
+  const parts = (payload.value as string).split(" ");
+  const dayLabel = parts[0] ?? "";
+  const dateLabel = parts[1] ?? "";
+
+  return (
+    <g transform={`translate(${x},${y})`}>
+      <text
+        x={0}
+        y={0}
+        dy={11}
+        textAnchor="middle"
+        fontSize={9}
+        fill={
+          isLast
+            ? "hsl(var(--primary))"
+            : "hsl(var(--muted-foreground))"
+        }
+        fontWeight={isLast ? "700" : "400"}
+        fontFamily="sans-serif"
+      >
+        {dayLabel}
+      </text>
+      <text
+        x={0}
+        y={0}
+        dy={22}
+        textAnchor="middle"
+        fontSize={9}
+        fill={
+          isLast
+            ? "hsl(var(--primary))"
+            : "hsl(var(--muted-foreground))"
+        }
+        fontWeight={isLast ? "600" : "400"}
+        fontFamily="sans-serif"
+      >
+        {dateLabel}
+      </text>
+    </g>
+  );
 }
 
 interface TooltipProps {
   active?: boolean;
-  payload?: Array<{ name: string; value: number; color: string; payload: ChartDataPoint }>;
+  payload?: Array<{
+    name: string;
+    value: number;
+    color: string;
+    payload: ChartDataPoint;
+  }>;
   label?: string;
   medLibrary: MedLibraryItem[];
   milestones: Milestone[];
+  showIndividual: boolean;
 }
 
-function CustomTooltip({ active, payload, medLibrary, milestones }: TooltipProps) {
+function CustomTooltip({
+  active,
+  payload,
+  medLibrary,
+  milestones,
+  showIndividual,
+}: TooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
-
   const dataPoint = payload[0]?.payload;
-  const takenMeds = (dataPoint?.medicationsTaken ?? [])
+  if (!dataPoint?.hasLog) return null;
+
+  const takenMeds = (dataPoint.medicationsTaken ?? [])
     .map((id) => medLibrary.find((m) => m.id === id))
     .filter((m): m is MedLibraryItem => m !== undefined);
-
-  const milestonesOnDate = milestones.filter((ms) => ms.date === dataPoint?.date);
+  const milestonesOnDate = milestones.filter(
+    (ms) => ms.date === dataPoint.date
+  );
+  const score = dataPoint.dailyScore;
+  const scoreColor = getScoreColor(score);
 
   return (
-    <div className="bg-card border border-border rounded-xl shadow-md p-3 text-xs max-w-[230px]">
-      <p className="font-semibold text-foreground mb-2">
-        {dataPoint ? format(parseISO(dataPoint.date), "EEEE, MMM d") : ""}
-      </p>
-      <div className="space-y-1 mb-2">
-        {payload.map((entry) => (
-          <div key={entry.name} className="flex items-center gap-2">
-            <span
-              className="w-2 h-2 rounded-full flex-shrink-0"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-muted-foreground truncate">{entry.name}:</span>
-            <span className="font-medium text-foreground ml-auto pl-1">{entry.value}</span>
-          </div>
-        ))}
+    <div className="bg-card border border-border rounded-xl shadow-md p-3 text-xs max-w-[240px]">
+      <div className="flex items-center justify-between gap-3 mb-2">
+        <p className="font-semibold text-foreground">
+          {format(parseISO(dataPoint.date), "EEE, MMM d")}
+        </p>
+        <span
+          className="text-xs font-bold px-2 py-0.5 rounded-full text-white"
+          style={{ backgroundColor: scoreColor }}
+        >
+          {score.toFixed(1)}
+        </span>
       </div>
 
-      {takenMeds.length > 0 && (
-        <div className="border-t border-border pt-2 mt-2">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
-            Medications Given
+      {showIndividual && (
+        <div className="space-y-1 mb-2 border-b border-border pb-2">
+          {CATEGORIES.map((cat) => (
+            <div key={cat.key} className="flex items-center gap-2">
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: cat.color }}
+              />
+              <span className="text-muted-foreground flex-1 truncate">
+                {cat.label}:
+              </span>
+              <span className="font-medium text-foreground">
+                {dataPoint[cat.key as keyof ChartDataPoint] as number}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {dataPoint.note && (
+        <div className="mb-2 px-2 py-1.5 rounded-lg bg-primary/5 border border-primary/15">
+          <p className="text-[10px] font-semibold text-primary uppercase tracking-wide mb-0.5">
+            Note
           </p>
-          <div className="space-y-1">
-            {takenMeds.map((med) => (
-              <div key={med.id} className="flex items-start gap-1.5">
-                <span className="w-1 h-1 rounded-full bg-primary mt-1.5 flex-shrink-0" />
-                <span className="text-foreground leading-snug">
-                  {med.name}
-                  <span className="text-muted-foreground ml-1">
-                    {med.dosage} · {FREQUENCY_LABELS[med.frequency]}
-                  </span>
-                </span>
-              </div>
-            ))}
-          </div>
+          <p className="text-foreground leading-snug">{dataPoint.note}</p>
+        </div>
+      )}
+
+      {takenMeds.length > 0 && (
+        <div className="border-t border-border pt-2 mt-1">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
+            Meds Given
+          </p>
+          {takenMeds.map((med) => (
+            <div key={med.id} className="flex items-start gap-1.5 mb-0.5">
+              <span className="w-1 h-1 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+              <span className="text-foreground">
+                {med.name}{" "}
+                <span className="text-muted-foreground">{med.dosage}</span>
+              </span>
+            </div>
+          ))}
         </div>
       )}
 
       {milestonesOnDate.length > 0 && (
-        <div className="border-t border-border pt-2 mt-2">
-          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+        <div className="border-t border-border pt-2 mt-1">
+          <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1">
             Events
           </p>
-          <div className="space-y-1.5">
-            {milestonesOnDate.map((ms) => (
-              <div key={ms.id} className="flex items-start gap-1.5">
-                <span className="text-primary mt-0.5 flex-shrink-0 text-[10px]">◆</span>
-                <div className="min-w-0">
-                  <span className="text-foreground font-medium leading-snug">{ms.title}</span>
-                  <span className="text-muted-foreground block text-[10px]">
-                    {MILESTONE_TYPE_LABELS[ms.type]}
-                  </span>
-                </div>
+          {milestonesOnDate.map((ms) => (
+            <div key={ms.id} className="flex items-start gap-1.5 mb-0.5">
+              <span className="text-primary text-[10px] mt-0.5 flex-shrink-0">
+                ◆
+              </span>
+              <div className="min-w-0">
+                <span className="text-foreground font-medium leading-snug">
+                  {ms.title}
+                </span>
+                <span className="text-muted-foreground block text-[10px]">
+                  {MILESTONE_TYPE_LABELS[ms.type]}
+                </span>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
   );
-}
-
-interface Props {
-  logs: SymptomLog[];
-  medications: Medication[];
-  medLibrary?: MedLibraryItem[];
-  milestones?: Milestone[];
-  days?: number;
 }
 
 function MilestoneMarker(props: any) {
@@ -158,6 +323,14 @@ function MilestoneMarker(props: any) {
   );
 }
 
+interface Props {
+  logs: SymptomLog[];
+  medications: Medication[];
+  medLibrary?: MedLibraryItem[];
+  milestones?: Milestone[];
+  days?: number;
+}
+
 export default function SymptomChart({
   logs,
   medications,
@@ -165,27 +338,46 @@ export default function SymptomChart({
   milestones = [],
   days = 30,
 }: Props) {
+  const [showIndividual, setShowIndividual] = useState(false);
   const today = new Date();
+  const todayStr = format(today, "yyyy-MM-dd");
 
   const chartData: ChartDataPoint[] = Array.from({ length: days }, (_, i) => {
     const date = subDays(today, days - 1 - i);
     const dateStr = format(date, "yyyy-MM-dd");
     const log = logs.find((l) => l.date === dateStr);
+    const dayOfWeek = getDay(date);
+    const ocd = log?.ocd ?? 0;
+    const anxiety = log?.anxiety ?? 0;
+    const rage = log?.rage ?? 0;
+    const tics = log?.tics ?? 0;
+    const sleep = log?.sleep ?? 0;
+    const cognition = log?.cognition ?? 0;
+    const rawAvg = log
+      ? (ocd + anxiety + rage + tics + sleep + cognition) / 6
+      : 0;
+    const dailyScore = Math.round(rawAvg * 20) / 10;
+
     return {
       date: dateStr,
-      label: format(date, "MMM d"),
-      ocd: log?.ocd ?? 0,
-      anxiety: log?.anxiety ?? 0,
-      rage: log?.rage ?? 0,
-      tics: log?.tics ?? 0,
-      sleep: log?.sleep ?? 0,
-      cognition: log?.cognition ?? 0,
+      label: format(date, "EEE M/d"),
+      ocd,
+      anxiety,
+      rage,
+      tics,
+      sleep,
+      cognition,
+      dailyScore,
       medicationsTaken: log?.medicationsTaken ?? [],
+      note: log?.notes || undefined,
+      isToday: dateStr === todayStr,
+      isWeekend: dayOfWeek === 0 || dayOfWeek === 6,
+      hasLog: !!log,
     };
   });
 
   const windowStart = format(subDays(today, days - 1), "yyyy-MM-dd");
-  const windowEnd = format(today, "yyyy-MM-dd");
+  const windowEnd = todayStr;
 
   const medBands = medications
     .map((med, i) => {
@@ -195,12 +387,13 @@ export default function SymptomChart({
           ? med.endDate
           : windowEnd
         : windowEnd;
-
       if (start > end) return null;
-
-      const startLabel = isValid(parseISO(start)) ? format(parseISO(start), "MMM d") : "";
-      const endLabel = isValid(parseISO(end)) ? format(parseISO(end), "MMM d") : "";
-
+      const startLabel = isValid(parseISO(start))
+        ? format(parseISO(start), "EEE M/d")
+        : "";
+      const endLabel = isValid(parseISO(end))
+        ? format(parseISO(end), "EEE M/d")
+        : "";
       return {
         x1: startLabel,
         x2: endLabel,
@@ -208,51 +401,112 @@ export default function SymptomChart({
         color: MED_COLORS[i % MED_COLORS.length],
       };
     })
-    .filter(Boolean) as { x1: string; x2: string; name: string; color: string }[];
+    .filter(Boolean) as {
+    x1: string;
+    x2: string;
+    name: string;
+    color: string;
+  }[];
 
-  // Milestone markers within the chart window
   const milestoneMarkers = milestones
     .filter((ms) => ms.date >= windowStart && ms.date <= windowEnd)
     .map((ms) => ({
       ...ms,
-      xLabel: format(parseISO(ms.date), "MMM d"),
+      xLabel: format(parseISO(ms.date), "EEE M/d"),
     }));
+
+  const weekendBands = chartData.filter((d) => d.isWeekend);
 
   return (
     <div data-testid="symptom-chart">
-      <ResponsiveContainer width="100%" height={340}>
-        <LineChart data={chartData} margin={{ top: 16, right: 16, left: -8, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+      <div className="flex items-center justify-between mb-3 gap-2 flex-wrap">
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-green-500" />
+            <span>0–3 mild</span>
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-yellow-500 ml-1" />
+            <span>4–6 mod</span>
+            <span className="inline-block w-2.5 h-2.5 rounded-full bg-red-500 ml-1" />
+            <span>7–10 severe</span>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          className="text-xs gap-1.5 h-7 px-2.5 flex-shrink-0"
+          onClick={() => setShowIndividual((v) => !v)}
+        >
+          {showIndividual ? (
+            <EyeOff className="w-3 h-3" />
+          ) : (
+            <Eye className="w-3 h-3" />
+          )}
+          {showIndividual ? "Hide symptoms" : "Show symptoms"}
+        </Button>
+      </div>
+
+      <ResponsiveContainer width="100%" height={320}>
+        <LineChart
+          data={chartData}
+          margin={{ top: 24, right: 16, left: 0, bottom: 8 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="hsl(var(--border))"
+            vertical={false}
+          />
+
+          {weekendBands.map((d) => (
+            <ReferenceArea
+              key={d.date}
+              x1={d.label}
+              x2={d.label}
+              fill="rgba(0,0,0,0.025)"
+            />
+          ))}
+
           <XAxis
             dataKey="label"
-            tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
+            tick={<CustomXTick />}
             tickLine={false}
             axisLine={false}
-            interval="preserveStartEnd"
+            interval={0}
+            height={36}
           />
           <YAxis
-            domain={[0, 5]}
-            ticks={[0, 1, 2, 3, 4, 5]}
+            domain={[0, 10]}
+            ticks={[0, 2, 4, 6, 8, 10]}
             tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
             tickLine={false}
             axisLine={false}
+            width={28}
+            label={{
+              value: "Daily Score (0–10)",
+              angle: -90,
+              position: "insideLeft",
+              offset: 12,
+              style: {
+                fontSize: 9,
+                fill: "hsl(var(--muted-foreground))",
+                textAnchor: "middle",
+              },
+            }}
           />
           <Tooltip
             content={(props) => (
               <CustomTooltip
                 active={props.active}
-                payload={props.payload as TooltipProps["payload"]}
+                payload={
+                  props.payload as TooltipProps["payload"]
+                }
                 label={props.label as string}
                 medLibrary={medLibrary}
                 milestones={milestones}
+                showIndividual={showIndividual}
               />
             )}
           />
-          <Legend
-            wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
-            iconType="circle"
-            iconSize={8}
-          />
+
           {medBands.map((band, i) => (
             <ReferenceArea
               key={i}
@@ -267,6 +521,7 @@ export default function SymptomChart({
               }}
             />
           ))}
+
           {milestoneMarkers.map((ms) => (
             <ReferenceLine
               key={ms.id}
@@ -278,23 +533,39 @@ export default function SymptomChart({
               label={<MilestoneMarker />}
             />
           ))}
-          {CATEGORIES.map((cat) => (
-            <Line
-              key={cat.key}
-              type="monotone"
-              dataKey={cat.key}
-              name={cat.label}
-              stroke={cat.color}
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 4, strokeWidth: 0 }}
-              connectNulls={false}
-            />
-          ))}
+
+          {showIndividual &&
+            CATEGORIES.map((cat) => (
+              <Line
+                key={cat.key}
+                type="monotone"
+                dataKey={cat.key}
+                name={cat.label}
+                stroke={cat.color}
+                strokeWidth={1.5}
+                strokeOpacity={0.45}
+                dot={false}
+                activeDot={false}
+                connectNulls={false}
+                legendType="none"
+              />
+            ))}
+
+          <Line
+            type="monotone"
+            dataKey="dailyScore"
+            name="Daily Score"
+            stroke="hsl(var(--muted-foreground))"
+            strokeWidth={2.5}
+            strokeOpacity={0.7}
+            dot={<ScoreDot />}
+            activeDot={<ScoreActiveDot />}
+            connectNulls={false}
+            legendType="none"
+          />
         </LineChart>
       </ResponsiveContainer>
 
-      {/* Legend rows */}
       {(medBands.length > 0 || milestoneMarkers.length > 0) && (
         <div className="mt-3 flex flex-wrap gap-2">
           {medications.map((med, i) => (

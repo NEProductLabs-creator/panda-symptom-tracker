@@ -5,14 +5,14 @@ import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedications } from "@/hooks/useMedications";
 import { useMedLibrary } from "@/hooks/useMedLibrary";
 import { useMilestones } from "@/hooks/useMilestones";
-import SymptomChart, { CATEGORIES } from "@/components/charts/SymptomChart";
+import SymptomChart, { CATEGORIES, getScoreColor } from "@/components/charts/SymptomChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, TrendingUp, BookOpen, Pill } from "lucide-react";
+import { CheckCircle2, TrendingUp, BookOpen, Pill, Activity } from "lucide-react";
 import { SymptomLog, FREQUENCY_LABELS } from "@/lib/types";
 
 const today = format(new Date(), "yyyy-MM-dd");
@@ -28,20 +28,23 @@ function ScoreInput({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="space-y-2">
-      <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+    <div className="flex items-center gap-2 py-3 border-b border-border/50 last:border-0">
+      <span className="text-sm font-medium text-foreground flex-1 min-w-0 leading-tight">
         {label}
-      </Label>
-      <div className="flex gap-1.5" data-testid={`score-${label.toLowerCase().replace(/\s|\//g, "-")}`}>
+      </span>
+      <div
+        className="flex gap-1 flex-shrink-0"
+        data-testid={`score-${label.toLowerCase().replace(/\s|\//g, "-")}`}
+      >
         {[0, 1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
             type="button"
             onClick={() => onChange(n)}
             data-testid={`score-btn-${label.toLowerCase().replace(/\s|\//g, "-")}-${n}`}
-            className={`w-9 h-9 rounded-lg text-sm font-semibold transition-all ${
+            className={`w-10 h-10 rounded-lg text-sm font-bold transition-all touch-manipulation ${
               value === n
-                ? "bg-primary text-primary-foreground shadow-sm"
+                ? "bg-primary text-primary-foreground shadow-sm scale-105"
                 : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             }`}
           >
@@ -96,41 +99,160 @@ export default function Dashboard() {
     setTimeout(() => setSaved(false), 3000);
   }
 
+  const todayRawScore = existingToday
+    ? ((existingToday.ocd +
+        existingToday.anxiety +
+        existingToday.rage +
+        existingToday.tics +
+        existingToday.sleep +
+        existingToday.cognition) /
+        6) *
+      2
+    : null;
+  const todayScore =
+    todayRawScore !== null ? Math.round(todayRawScore * 10) / 10 : null;
+  const todayScoreColor = todayScore !== null ? getScoreColor(todayScore) : null;
+  const todayScoreLabel =
+    todayScore === null
+      ? null
+      : todayScore <= 3
+      ? "Mild"
+      : todayScore <= 6
+      ? "Moderate"
+      : "Severe";
+
+  const todayMedsTaken = existingToday?.medicationsTaken?.length
+    ? medLibrary.filter((m) =>
+        existingToday.medicationsTaken!.includes(m.id)
+      )
+    : [];
 
   return (
-    <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6">
-      <div>
-        <h1
-          className="text-2xl font-bold text-foreground"
-          style={{ fontFamily: "Outfit, sans-serif" }}
-        >
-          Dashboard
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">{todayDisplay}</p>
-      </div>
+    <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-5 pb-28">
+
+      {/* Today's Snapshot */}
+      <Card className="border-border shadow-sm overflow-hidden">
+        <div
+          className="h-1 w-full"
+          style={{
+            backgroundColor: todayScoreColor ?? "hsl(var(--border))",
+            opacity: 0.7,
+          }}
+        />
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1">
+                Today's Snapshot
+              </p>
+              <p className="text-sm font-medium text-foreground">{todayDisplay}</p>
+
+              {existingToday ? (
+                <div className="mt-2 space-y-1.5">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                    <span className="text-sm text-muted-foreground">
+                      Daily score:
+                    </span>
+                    <span
+                      className="text-sm font-bold"
+                      style={{ color: todayScoreColor ?? undefined }}
+                    >
+                      {todayScore?.toFixed(1)}
+                    </span>
+                  </div>
+                  {todayMedsTaken.length > 0 ? (
+                    <div className="flex items-start gap-2">
+                      <Pill className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                      <span className="text-sm text-muted-foreground">
+                        {todayMedsTaken.map((m) => m.name).join(", ")}
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <Pill className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                      <span className="text-sm text-muted-foreground">
+                        No medications logged today
+                      </span>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="mt-2 text-sm text-muted-foreground">
+                  No entry yet today
+                </p>
+              )}
+            </div>
+
+            <div className="flex flex-col items-end gap-2 flex-shrink-0">
+              {todayScore !== null && todayScoreColor && todayScoreLabel ? (
+                <span
+                  className="text-xs font-bold px-3 py-1.5 rounded-full text-white"
+                  style={{ backgroundColor: todayScoreColor }}
+                >
+                  {todayScoreLabel}
+                </span>
+              ) : (
+                <Link href="#log-form">
+                  <Button size="sm" className="text-xs h-8" data-testid="button-log-today-snapshot">
+                    Log Today
+                  </Button>
+                </Link>
+              )}
+              {existingToday && (
+                <CheckCircle2 className="w-4 h-4" style={{ color: todayScoreColor ?? undefined }} />
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quick stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         <Card className="border-border shadow-sm">
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Logs (30 days)</p>
-            <p className="text-2xl font-bold text-foreground mt-1" data-testid="stat-log-count">
-              {logs.filter((l) => l.date >= format(new Date(Date.now() - 30 * 86400000), "yyyy-MM-dd")).length}
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
+              Logs (30d)
+            </p>
+            <p
+              className="text-2xl font-bold text-foreground mt-1"
+              data-testid="stat-log-count"
+            >
+              {
+                logs.filter(
+                  (l) =>
+                    l.date >=
+                    format(
+                      new Date(Date.now() - 30 * 86400000),
+                      "yyyy-MM-dd"
+                    )
+                ).length
+              }
             </p>
           </CardContent>
         </Card>
         <Card className="border-border shadow-sm">
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Active Meds</p>
-            <p className="text-2xl font-bold text-foreground mt-1" data-testid="stat-active-meds">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
+              Active Meds
+            </p>
+            <p
+              className="text-2xl font-bold text-foreground mt-1"
+              data-testid="stat-active-meds"
+            >
               {medLibrary.length}
             </p>
           </CardContent>
         </Card>
-        <Card className="border-border shadow-sm col-span-2 sm:col-span-1">
+        <Card className="border-border shadow-sm">
           <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Today's Log</p>
-            <p className="text-2xl font-bold text-foreground mt-1" data-testid="stat-today-status">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
+              Today
+            </p>
+            <p
+              className="text-2xl font-bold text-foreground mt-1"
+              data-testid="stat-today-status"
+            >
               {existingToday ? "Done" : "Pending"}
             </p>
           </CardContent>
@@ -140,43 +262,54 @@ export default function Dashboard() {
       {/* Chart */}
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-base font-semibold" style={{ fontFamily: "Outfit, sans-serif" }}>
+          <CardTitle
+            className="flex items-center gap-2 text-base font-semibold"
+            style={{ fontFamily: "Outfit, sans-serif" }}
+          >
             <TrendingUp className="w-4 h-4 text-primary" />
-            30-Day Symptom Trends
+            30-Day Trend
           </CardTitle>
-          {(medications.length > 0 || medLibrary.length > 0) && (
-            <p className="text-xs text-muted-foreground">
-              {medications.length > 0 && "Shaded areas indicate medication periods. "}
-              {medLibrary.length > 0 && "Hover a data point to see medications given that day."}
-            </p>
-          )}
         </CardHeader>
         <CardContent>
           {logs.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
               <TrendingUp className="w-8 h-8 mb-2 opacity-30" />
               <p className="text-sm">No symptom data yet.</p>
-              <p className="text-xs mt-1">Log today's symptoms below to get started.</p>
+              <p className="text-xs mt-1">
+                Log today's symptoms below to get started.
+              </p>
             </div>
           ) : (
-            <SymptomChart logs={logs} medications={medications} medLibrary={medLibrary} milestones={milestones} />
+            <SymptomChart
+              logs={logs}
+              medications={medications}
+              medLibrary={medLibrary}
+              milestones={milestones}
+            />
           )}
         </CardContent>
       </Card>
 
       {/* Today's quick log */}
-      <Card className="border-border shadow-sm">
+      <Card className="border-border shadow-sm" id="log-form">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2" style={{ fontFamily: "Outfit, sans-serif" }}>
-            {existingToday && <CheckCircle2 className="w-4 h-4 text-primary" />}
+          <CardTitle
+            className="text-base font-semibold flex items-center gap-2"
+            style={{ fontFamily: "Outfit, sans-serif" }}
+          >
+            {existingToday && (
+              <CheckCircle2 className="w-4 h-4 text-primary" />
+            )}
             {existingToday ? "Update Today's Log" : "Log Today's Symptoms"}
           </CardTitle>
           {existingToday && (
-            <p className="text-xs text-muted-foreground">You've already logged today — update below if needed.</p>
+            <p className="text-xs text-muted-foreground">
+              You've already logged today — update below if needed.
+            </p>
           )}
         </CardHeader>
-        <CardContent className="space-y-5">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <CardContent className="space-y-0 p-5 pt-0">
+          <div className="divide-y-0">
             {CATEGORIES.map((cat) => (
               <ScoreInput
                 key={cat.key}
@@ -187,8 +320,7 @@ export default function Dashboard() {
             ))}
           </div>
 
-          {/* Medications taken today */}
-          <div className="space-y-2">
+          <div className="space-y-2 pt-4">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
                 Medications Taken Today
@@ -207,17 +339,22 @@ export default function Dashboard() {
                 <p className="text-xs">
                   Add medications to your{" "}
                   <Link href="/library">
-                    <span className="text-primary hover:underline cursor-pointer font-medium">Med Library</span>
-                  </Link>
-                  {" "}to see a checklist here.
+                    <span className="text-primary hover:underline cursor-pointer font-medium">
+                      Med Library
+                    </span>
+                  </Link>{" "}
+                  to see a checklist here.
                 </p>
               </div>
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="med-checklist-today">
+              <div
+                className="grid grid-cols-1 sm:grid-cols-2 gap-2"
+                data-testid="med-checklist-today"
+              >
                 {medLibrary.map((med) => (
                   <label
                     key={med.id}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors touch-manipulation"
                     data-testid={`med-check-${med.id}`}
                   >
                     <Checkbox
@@ -226,7 +363,9 @@ export default function Dashboard() {
                       data-testid={`checkbox-med-${med.id}`}
                     />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground leading-tight">{med.name}</p>
+                      <p className="text-sm font-medium text-foreground leading-tight">
+                        {med.name}
+                      </p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
                         {med.dosage} · {FREQUENCY_LABELS[med.frequency]}
                       </p>
@@ -240,7 +379,7 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 pt-4">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Notes (optional)
             </Label>
@@ -252,15 +391,22 @@ export default function Dashboard() {
               data-testid="input-notes"
             />
           </div>
-          <Button
-            onClick={handleSave}
-            className="w-full sm:w-auto"
-            data-testid="button-save-log"
-          >
-            {saved ? "Saved!" : existingToday ? "Update Log" : "Save Log"}
-          </Button>
         </CardContent>
       </Card>
+
+      {/* Sticky save button */}
+      <div className="fixed bottom-0 left-0 right-0 z-50 px-5 py-3 bg-background/95 backdrop-blur-sm border-t border-border md:static md:bg-transparent md:border-0 md:backdrop-blur-none md:p-0 md:pb-2">
+        <div className="max-w-5xl mx-auto">
+          <Button
+            onClick={handleSave}
+            className="w-full md:w-auto"
+            size="lg"
+            data-testid="button-save-log"
+          >
+            {saved ? "Saved!" : existingToday ? "Update Log" : "Save Today's Log"}
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

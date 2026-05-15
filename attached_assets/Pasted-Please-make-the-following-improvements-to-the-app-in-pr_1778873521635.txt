@@ -1,0 +1,15 @@
+Please make the following improvements to the app, in priority order:
+1. Consolidated Daily Score on the 30-day chart
+Replace the multiple individual symptom lines on the 30-day trend chart with a single “Daily Score” line, calculated as the average of all symptom severity ratings logged that day on a 0-10 scale. Color-code the line green (7-10), yellow (4-6), and red (0-3). Add a toggle button above the chart labeled “Show individual symptoms” that reveals the per-symptom lines as thinner, lighter lines behind the main score line. Label the Y-axis clearly as “Daily Score (0-10).”
+2. Today’s Snapshot card
+Add a “Today’s Snapshot” card at the very top of the home/dashboard screen showing: today’s date, the overall daily score, a green/yellow/red color-coded badge, and a one-line summary of any medications logged today. If nothing has been logged yet, show “No entry yet today” with a prominent “Log Today” button.
+3. Faster daily logging form
+Redesign the symptom logging form so each symptom uses a row of 5 large tap buttons (labeled 1-5) instead of sliders or dropdowns. Show the symptom name on the left and the buttons on the right. Highlight the selected value in the primary app color. Make buttons large enough for easy mobile tapping. Add a sticky “Save Entry” button fixed to the bottom of the screen.
+4. Cleaner chart date labels
+On the 30-day chart, only show X-axis date labels every 5 days (formatted as “Mon 5/12”) to avoid crowding. Highlight today’s data point with a larger dot and a small “Today” label. Add a subtle shaded background band on weekends.
+5. Notes as icons on the chart
+If a daily log entry includes a text note, show a small speech bubble icon on the chart at that date’s point. Tapping or hovering it should show a tooltip with the note text, so parents can correlate observations like “started new antibiotic” with score changes.
+6. Medication adherence grid
+Add a Medications section showing a monthly calendar grid where each medication has its own row. Filled circles indicate the medication was taken that day, empty circles indicate it was missed or not logged. Show a small adherence percentage next to each medication name (e.g., “Amoxicillin: 87% this month”). Use the same green/yellow/red color scheme.
+7. Export for doctor visits
+Add an “Export for Doctor” button on the trend chart page or in settings. It should generate a clean PDF of the last 30 days including: the daily score chart, a table of individual symptom scores per day, medications taken, and any notes. Include the child’s name and date range at the top. Use jsPDF or pdfmake to generate it client-side and trigger a download.

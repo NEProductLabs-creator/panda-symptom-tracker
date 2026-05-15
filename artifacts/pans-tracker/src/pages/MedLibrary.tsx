@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useMedLibrary } from "@/hooks/useMedLibrary";
+import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { MedLibraryItem, FrequencyOption, FREQUENCY_LABELS } from "@/lib/types";
+import MedAdherence from "@/components/MedAdherence";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +43,7 @@ const emptyForm = {
 
 export default function MedLibrary() {
   const { medLibrary, saveMedLibraryItem, deleteMedLibraryItem } = useMedLibrary();
+  const { logs } = useSymptomLogs();
   const { toast } = useToast();
 
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -185,6 +188,8 @@ export default function MedLibrary() {
           )}
         </CardContent>
       </Card>
+
+      <MedAdherence medLibrary={medLibrary} logs={logs} />
 
       {/* Add / Edit dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>

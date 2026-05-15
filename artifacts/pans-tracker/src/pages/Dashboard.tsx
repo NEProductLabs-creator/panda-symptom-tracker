@@ -96,9 +96,6 @@ export default function Dashboard() {
     setTimeout(() => setSaved(false), 3000);
   }
 
-  const activeMeds = medications.filter(
-    (m) => !m.endDate || m.endDate >= today
-  );
 
   return (
     <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-6">
@@ -126,7 +123,7 @@ export default function Dashboard() {
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">Active Meds</p>
             <p className="text-2xl font-bold text-foreground mt-1" data-testid="stat-active-meds">
-              {activeMeds.length}
+              {medLibrary.length}
             </p>
           </CardContent>
         </Card>

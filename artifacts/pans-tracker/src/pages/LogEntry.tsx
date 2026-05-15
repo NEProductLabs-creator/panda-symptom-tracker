@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { format } from "date-fns";
+import { format, subDays, addDays, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedLibrary } from "@/hooks/useMedLibrary";
@@ -7,11 +7,10 @@ import { storage } from "@/lib/storage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, ClipboardList, BookOpen, Pill } from "lucide-react";
+import { Trash2, ClipboardList, BookOpen, Pill, ChevronLeft, ChevronRight } from "lucide-react";
 import { SymptomLog, FREQUENCY_LABELS } from "@/lib/types";
 import {
   AlertDialog,
@@ -81,6 +80,29 @@ export default function LogEntry() {
   const [selectedDate, setSelectedDate] = useState(today);
   const existing = logs.find((l) => l.date === selectedDate);
 
+  const canGoForward = selectedDate < today;
+
+  function goBack() {
+    setSelectedDate(format(subDays(parseISO(selectedDate), 1), "yyyy-MM-dd"));
+  }
+
+  function goForward() {
+    const next = format(addDays(parseISO(selectedDate), 1), "yyyy-MM-dd");
+    if (next <= today) setSelectedDate(next);
+  }
+
+  const yesterday = format(subDays(new Date(), 1), "yyyy-MM-dd");
+  const dateLabel =
+    selectedDate === today
+      ? "Today"
+      : selectedDate === yesterday
+      ? "Yesterday"
+      : format(parseISO(selectedDate), "EEE, MMM d, yyyy");
+  const dateSubLabel =
+    selectedDate === today || selectedDate === yesterday
+      ? format(parseISO(selectedDate), "EEEE, MMMM d, yyyy")
+      : null;
+
   // Initialize synchronously from localStorage so today's data appears immediately on page load
   const initial = getInitialFormValues(today);
   const [scores, setScores] = useState(initial.scores);
@@ -129,29 +151,56 @@ export default function LogEntry() {
         <p className="text-sm text-muted-foreground mt-0.5">Record symptom scores for any day</p>
       </div>
 
+      {/* Date navigator */}
+      <div className="flex items-center gap-3 bg-card border border-border rounded-xl px-3 py-3 shadow-sm">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={goBack}
+          className="w-9 h-9 text-muted-foreground hover:text-foreground flex-shrink-0"
+          data-testid="button-date-back"
+          aria-label="Previous day"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </Button>
+        <div className="flex-1 text-center">
+          <p className="text-base font-semibold text-foreground leading-tight" style={{ fontFamily: "Outfit, sans-serif" }}>
+            {dateLabel}
+          </p>
+          {dateSubLabel && (
+            <p className="text-xs text-muted-foreground mt-0.5">{dateSubLabel}</p>
+          )}
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={goForward}
+          disabled={!canGoForward}
+          className="w-9 h-9 text-muted-foreground hover:text-foreground flex-shrink-0 disabled:opacity-30"
+          data-testid="button-date-forward"
+          aria-label="Next day"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </Button>
+      </div>
+
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold" style={{ fontFamily: "Outfit, sans-serif" }}>
+          <CardTitle className="text-base font-semibold flex items-center gap-2" style={{ fontFamily: "Outfit, sans-serif" }}>
             {existing ? "Edit Entry" : "New Entry"}
+            {existing && (
+              <span className="text-xs font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full">
+                Saved
+              </span>
+            )}
           </CardTitle>
           {existing && (
             <p className="text-xs text-muted-foreground">
-              An entry already exists for this date — fields are pre-filled with the saved values.
+              Pre-filled with your saved values — update and save to overwrite.
             </p>
           )}
         </CardHeader>
         <CardContent className="space-y-5">
-          <div className="space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Date</Label>
-            <Input
-              type="date"
-              value={selectedDate}
-              max={today}
-              onChange={(e) => setSelectedDate(e.target.value)}
-              className="w-48 text-sm"
-              data-testid="input-date"
-            />
-          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {CATEGORIES.map((cat) => (

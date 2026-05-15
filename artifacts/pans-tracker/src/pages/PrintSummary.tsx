@@ -76,7 +76,7 @@ export default function PrintSummary() {
         {/* Header */}
         <div className="border-b-2 border-gray-200 pb-6 mb-6">
           <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "Outfit, sans-serif" }}>
-            PANS/PANDAS Symptom Report
+            PANS &amp; PANDAS Symptom Report
           </h1>
           <p className="text-sm text-gray-500 mt-1">
             Generated on {format(new Date(), "MMMM d, yyyy")} &bull; Last 30 days

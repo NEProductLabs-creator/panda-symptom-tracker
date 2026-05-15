@@ -83,7 +83,7 @@ export default function ExportPDF() {
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(30, 30, 30);
-    doc.text("PANS/PANDAS Symptom Tracker", margin, 18);
+    doc.text("PANS & PANDAS Symptom Tracker", margin, 18);
 
     doc.setFontSize(10);
     doc.setFont("helvetica", "normal");
@@ -275,7 +275,7 @@ export default function ExportPDF() {
       doc.setFont("helvetica", "normal");
       doc.setTextColor(160, 160, 160);
       const footerY = pageHeight - 8;
-      doc.text(`PANS/PANDAS Tracker · Page ${i} of ${pageCount}`, margin, footerY);
+      doc.text(`PANS & PANDAS Tracker · Page ${i} of ${pageCount}`, margin, footerY);
       doc.text(
         "All data stored locally on this device",
         pageWidth - margin,

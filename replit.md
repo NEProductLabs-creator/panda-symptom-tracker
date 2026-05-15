@@ -1,4 +1,4 @@
-# PANS/PANDAS Symptom & Medication Tracker
+# PANS & PANDAS Symptom & Medication Tracker
 
 A daily symptom and medication tracking app for parents managing children with PANS or PANDAS. Logs symptom scores across 6 categories, tracks medications, visualizes 30-day trends, and generates a print-friendly doctor summary.
 

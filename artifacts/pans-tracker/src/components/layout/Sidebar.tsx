@@ -62,7 +62,7 @@ export default function Sidebar() {
         <div className="flex justify-center">
           <Link href="/about" onClick={() => setMobileOpen(false)}>
             <span className="text-[11px] text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2 cursor-pointer">
-              About PANS/PANDAS
+              About PANS &amp; PANDAS
             </span>
           </Link>
         </div>

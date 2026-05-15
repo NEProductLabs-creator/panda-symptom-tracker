@@ -37,3 +37,10 @@ export type MedLibraryItem = {
   dosage: string;
   frequency: FrequencyOption;
 };
+
+export type Milestone = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  label: string;
+  notes?: string;
+};

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, ClipboardList, Pill, Printer, Menu, X, Activity, BookOpen } from "lucide-react";
+import { LayoutDashboard, ClipboardList, Pill, Printer, Menu, X, Activity, BookOpen, Download } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -10,6 +10,7 @@ const navItems = [
   { href: "/medications", label: "Medications", icon: Pill },
   { href: "/library", label: "Med Library", icon: BookOpen },
   { href: "/print", label: "Print Summary", icon: Printer },
+  { href: "/export", label: "Export PDF", icon: Download },
 ];
 
 export default function Sidebar() {

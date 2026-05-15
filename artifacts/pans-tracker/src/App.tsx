@@ -9,6 +9,7 @@ import LogEntry from "@/pages/LogEntry";
 import Medications from "@/pages/Medications";
 import MedLibrary from "@/pages/MedLibrary";
 import PrintSummary from "@/pages/PrintSummary";
+import ExportPDF from "@/pages/ExportPDF";
 import Sidebar from "@/components/layout/Sidebar";
 
 const queryClient = new QueryClient();
@@ -40,6 +41,7 @@ function Router() {
         <Route path="/medications" component={Medications} />
         <Route path="/library" component={MedLibrary} />
         <Route path="/print" component={PrintSummary} />
+        <Route path="/export" component={ExportPDF} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

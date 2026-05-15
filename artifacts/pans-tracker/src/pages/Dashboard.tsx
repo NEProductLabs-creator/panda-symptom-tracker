@@ -78,6 +78,7 @@ export default function Dashboard() {
     existingToday?.medicationsTaken ?? []
   );
   const [saved, setSaved] = useState(false);
+  const [chartDays, setChartDays] = useState<7 | 14 | 30>(30);
 
   function toggleMed(id: string) {
     setMedicationsTaken((prev) =>
@@ -262,13 +263,30 @@ export default function Dashboard() {
       {/* Chart */}
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-2">
-          <CardTitle
-            className="flex items-center gap-2 text-base font-semibold"
-            style={{ fontFamily: "Outfit, sans-serif" }}
-          >
-            <TrendingUp className="w-4 h-4 text-primary" />
-            30-Day Trend
-          </CardTitle>
+          <div className="flex items-center justify-between gap-3">
+            <CardTitle
+              className="flex items-center gap-2 text-base font-semibold"
+              style={{ fontFamily: "Outfit, sans-serif" }}
+            >
+              <TrendingUp className="w-4 h-4 text-primary" />
+              {chartDays}-Day Trend
+            </CardTitle>
+            <div className="flex rounded-lg border border-border overflow-hidden flex-shrink-0">
+              {([7, 14, 30] as const).map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setChartDays(d)}
+                  className={`px-3 py-1 text-xs font-medium transition-colors ${
+                    chartDays === d
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted"
+                  }`}
+                >
+                  {d}d
+                </button>
+              ))}
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {logs.length === 0 ? (
@@ -285,6 +303,7 @@ export default function Dashboard() {
               medications={medications}
               medLibrary={medLibrary}
               milestones={milestones}
+              days={chartDays}
             />
           )}
         </CardContent>

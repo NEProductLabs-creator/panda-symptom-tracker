@@ -13,11 +13,17 @@ export function useMilestones() {
     return item;
   }
 
+  function updateMilestone(id: string, data: Omit<Milestone, 'id'>) {
+    const updated = milestones.map((m) => (m.id === id ? { ...data, id } : m));
+    setMilestones(updated);
+    storage.saveMilestones(updated);
+  }
+
   function deleteMilestone(id: string) {
     const updated = milestones.filter((m) => m.id !== id);
     setMilestones(updated);
     storage.saveMilestones(updated);
   }
 
-  return { milestones, addMilestone, deleteMilestone };
+  return { milestones, addMilestone, updateMilestone, deleteMilestone };
 }

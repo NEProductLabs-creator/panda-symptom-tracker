@@ -4,6 +4,7 @@ import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedications } from "@/hooks/useMedications";
 import { useMedLibrary } from "@/hooks/useMedLibrary";
+import { useMilestones } from "@/hooks/useMilestones";
 import SymptomChart, { CATEGORIES } from "@/components/charts/SymptomChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -56,6 +57,7 @@ export default function Dashboard() {
   const { logs, addLog } = useSymptomLogs();
   const { medications } = useMedications();
   const { medLibrary } = useMedLibrary();
+  const { milestones } = useMilestones();
   const { toast } = useToast();
 
   const existingToday = logs.find((l) => l.date === today);
@@ -160,7 +162,7 @@ export default function Dashboard() {
               <p className="text-xs mt-1">Log today's symptoms below to get started.</p>
             </div>
           ) : (
-            <SymptomChart logs={logs} medications={medications} medLibrary={medLibrary} />
+            <SymptomChart logs={logs} medications={medications} medLibrary={medLibrary} milestones={milestones} />
           )}
         </CardContent>
       </Card>

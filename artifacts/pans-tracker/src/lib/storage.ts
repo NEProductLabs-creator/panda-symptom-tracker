@@ -35,7 +35,13 @@ export const storage = {
 
   getMilestones: (): Milestone[] => {
     const data = localStorage.getItem(MILESTONES_KEY);
-    return data ? JSON.parse(data) : [];
+    if (!data) return [];
+    // migrate old format: label→title, add default type
+    return (JSON.parse(data) as any[]).map((m) => ({
+      ...m,
+      title: m.title ?? m.label ?? '',
+      type: m.type ?? 'other',
+    }));
   },
 
   saveMilestones: (milestones: Milestone[]) => {

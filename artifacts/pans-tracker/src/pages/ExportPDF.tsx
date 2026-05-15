@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { format, subDays, parseISO } from "date-fns";
+import { Link } from "wouter";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
@@ -10,20 +11,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { Download, History, CalendarRange, Flag, Plus, Trash2, FileDown } from "lucide-react";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+import { History, CalendarRange, Flag, FileDown, ExternalLink } from "lucide-react";
+import { MILESTONE_TYPE_LABELS } from "@/lib/types";
 
 type RangeMode = "all" | "custom";
 
@@ -37,7 +27,10 @@ function fmtDate(d: string) {
 function StatPill({ label, value }: { label: string; value: number }) {
   return (
     <div className="flex flex-col items-center px-5 py-3 bg-muted rounded-xl">
-      <span className="text-xl font-bold text-foreground" style={{ fontFamily: "Outfit, sans-serif" }}>
+      <span
+        className="text-xl font-bold text-foreground"
+        style={{ fontFamily: "Outfit, sans-serif" }}
+      >
         {value}
       </span>
       <span className="text-[11px] text-muted-foreground mt-0.5">{label}</span>
@@ -49,17 +42,12 @@ export default function ExportPDF() {
   const { logs } = useSymptomLogs();
   const { medications } = useMedications();
   const { medLibrary } = useMedLibrary();
-  const { milestones, addMilestone, deleteMilestone } = useMilestones();
+  const { milestones } = useMilestones();
   const { toast } = useToast();
 
   const [rangeMode, setRangeMode] = useState<RangeMode>("all");
   const [startDate, setStartDate] = useState(defaultStart);
   const [endDate, setEndDate] = useState(today);
-
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [msDate, setMsDate] = useState(today);
-  const [msLabel, setMsLabel] = useState("");
-  const [msNotes, setMsNotes] = useState("");
 
   const filteredLogs = [...logs]
     .filter((l) => rangeMode === "all" || (l.date >= startDate && l.date <= endDate))
@@ -78,32 +66,20 @@ export default function ExportPDF() {
   const logsWithNotes = filteredLogs.filter((l) => l.notes?.trim());
 
   const rangeStart =
-    rangeMode === "all"
-      ? filteredLogs[0]?.date ?? today
-      : startDate;
+    rangeMode === "all" ? filteredLogs[0]?.date ?? today : startDate;
   const rangeEnd =
     rangeMode === "all"
       ? filteredLogs[filteredLogs.length - 1]?.date ?? today
       : endDate;
-
-  function handleAddMilestone() {
-    if (!msLabel.trim()) return;
-    addMilestone({ date: msDate, label: msLabel.trim(), notes: msNotes.trim() || undefined });
-    setMsLabel("");
-    setMsNotes("");
-    setShowAddForm(false);
-    toast({ title: "Milestone added" });
-  }
 
   function generatePDF() {
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 14;
-
     const headColor: [number, number, number] = [74, 103, 74];
 
-    // ── Header ──────────────────────────────────────────────────
+    // ── Header ──────────────────────────────────────────────
     doc.setFontSize(20);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(30, 30, 30);
@@ -131,7 +107,7 @@ export default function ExportPDF() {
 
     let y = 50;
 
-    // ── Daily Symptom Scores ────────────────────────────────────
+    // ── Daily Symptom Scores ────────────────────────────────
     doc.setFontSize(11);
     doc.setFont("helvetica", "bold");
     doc.setTextColor(30, 30, 30);
@@ -200,16 +176,14 @@ export default function ExportPDF() {
       y = (doc as any).lastAutoTable.finalY + 10;
     }
 
-    // ── Notes ───────────────────────────────────────────────────
+    // ── Notes ────────────────────────────────────────────────
     if (logsWithNotes.length > 0) {
       if (y > pageHeight - 60) { doc.addPage(); y = 20; }
-
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(30, 30, 30);
       doc.text("Notes", margin, y);
       y += 3;
-
       autoTable(doc, {
         startY: y,
         head: [["Date", "Notes"]],
@@ -222,16 +196,14 @@ export default function ExportPDF() {
       y = (doc as any).lastAutoTable.finalY + 10;
     }
 
-    // ── Medications ─────────────────────────────────────────────
+    // ── Medications ──────────────────────────────────────────
     if (filteredMeds.length > 0) {
       if (y > pageHeight - 60) { doc.addPage(); y = 20; }
-
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(30, 30, 30);
       doc.text("Medications", margin, y);
       y += 3;
-
       autoTable(doc, {
         startY: y,
         head: [["Name", "Dose", "Type", "Start", "End", "Notes"]],
@@ -258,28 +230,36 @@ export default function ExportPDF() {
       y = (doc as any).lastAutoTable.finalY + 10;
     }
 
-    // ── Milestones ───────────────────────────────────────────────
+    // ── Milestones ───────────────────────────────────────────
     if (filteredMilestones.length > 0) {
       if (y > pageHeight - 60) { doc.addPage(); y = 20; }
-
       doc.setFontSize(11);
       doc.setFont("helvetica", "bold");
       doc.setTextColor(30, 30, 30);
       doc.text("Milestones & Events", margin, y);
       y += 3;
-
       autoTable(doc, {
         startY: y,
-        head: [["Date", "Event", "Notes"]],
-        body: filteredMilestones.map((m) => [fmtDate(m.date), m.label, m.notes || "—"]),
+        head: [["Date", "Type", "Title", "Notes"]],
+        body: filteredMilestones.map((m) => [
+          fmtDate(m.date),
+          MILESTONE_TYPE_LABELS[m.type],
+          m.title,
+          m.notes || "—",
+        ]),
         margin: { left: margin, right: margin },
         styles: { fontSize: 8, cellPadding: 2.5 },
         headStyles: { fillColor: headColor, textColor: 255, fontStyle: "bold", fontSize: 8 },
-        columnStyles: { 0: { cellWidth: 28 }, 1: { cellWidth: 60 }, 2: { cellWidth: "auto" } },
+        columnStyles: {
+          0: { cellWidth: 26 },
+          1: { cellWidth: 36 },
+          2: { cellWidth: 50 },
+          3: { cellWidth: "auto" },
+        },
       });
     }
 
-    // ── Footer on every page ────────────────────────────────────
+    // ── Footer ───────────────────────────────────────────────
     const pageCount = doc.getNumberOfPages();
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -288,7 +268,12 @@ export default function ExportPDF() {
       doc.setTextColor(160, 160, 160);
       const footerY = pageHeight - 8;
       doc.text(`PANS/PANDAS Tracker · Page ${i} of ${pageCount}`, margin, footerY);
-      doc.text("All data stored locally on this device", pageWidth - margin, footerY, { align: "right" });
+      doc.text(
+        "All data stored locally on this device",
+        pageWidth - margin,
+        footerY,
+        { align: "right" }
+      );
     }
 
     const filename =
@@ -296,7 +281,6 @@ export default function ExportPDF() {
         ? `pans-tracker-${startDate}-to-${endDate}.pdf`
         : "pans-tracker-full-export.pdf";
     doc.save(filename);
-
     toast({ title: "PDF downloaded", description: filename });
   }
 
@@ -314,7 +298,7 @@ export default function ExportPDF() {
         </p>
       </div>
 
-      {/* ── Range selector ── */}
+      {/* Range selector */}
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-3">
           <CardTitle
@@ -337,15 +321,15 @@ export default function ExportPDF() {
               data-testid="range-mode-all"
             >
               <History
-                className={`w-5 h-5 mt-0.5 flex-shrink-0 ${rangeMode === "all" ? "text-primary" : "text-muted-foreground"}`}
+                className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                  rangeMode === "all" ? "text-primary" : "text-muted-foreground"
+                }`}
               />
               <div>
                 <p className="text-sm font-semibold text-foreground leading-tight">
                   Full History
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  All entries ever logged
-                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">All entries ever logged</p>
               </div>
             </button>
 
@@ -360,15 +344,15 @@ export default function ExportPDF() {
               data-testid="range-mode-custom"
             >
               <CalendarRange
-                className={`w-5 h-5 mt-0.5 flex-shrink-0 ${rangeMode === "custom" ? "text-primary" : "text-muted-foreground"}`}
+                className={`w-5 h-5 mt-0.5 flex-shrink-0 ${
+                  rangeMode === "custom" ? "text-primary" : "text-muted-foreground"
+                }`}
               />
               <div>
                 <p className="text-sm font-semibold text-foreground leading-tight">
                   Custom Range
                 </p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  Pick a start and end date
-                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">Pick a start and end date</p>
               </div>
             </button>
           </div>
@@ -407,7 +391,7 @@ export default function ExportPDF() {
         </CardContent>
       </Card>
 
-      {/* ── Preview summary ── */}
+      {/* Preview summary */}
       <div className="flex gap-3 flex-wrap">
         <StatPill label="Log entries" value={filteredLogs.length} />
         <StatPill label="With notes" value={logsWithNotes.length} />
@@ -415,192 +399,83 @@ export default function ExportPDF() {
         <StatPill label="Milestones" value={filteredMilestones.length} />
       </div>
 
-      {/* ── Milestones management ── */}
-      <Card className="border-border shadow-sm">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <CardTitle
-              className="text-base font-semibold flex items-center gap-2"
-              style={{ fontFamily: "Outfit, sans-serif" }}
-            >
-              <Flag className="w-4 h-4 text-primary" />
-              Milestones &amp; Events
-            </CardTitle>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setShowAddForm((v) => !v)}
-              data-testid="button-add-milestone"
-            >
-              <Plus className="w-3.5 h-3.5 mr-1" />
-              Add
-            </Button>
-          </div>
-          <p className="text-xs text-muted-foreground">
-            Record key events (e.g. "Started amoxicillin", "IVIG infusion") to include in the export.
-          </p>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {/* Add form */}
-          {showAddForm && (
-            <div className="p-4 rounded-xl border border-border bg-muted/40 space-y-3">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-                New Milestone
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Date</Label>
-                  <Input
-                    type="date"
-                    value={msDate}
-                    max={today}
-                    onChange={(e) => setMsDate(e.target.value)}
-                    className="text-sm"
-                    data-testid="input-ms-date"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-xs font-medium text-muted-foreground">Event</Label>
-                  <Input
-                    value={msLabel}
-                    onChange={(e) => setMsLabel(e.target.value)}
-                    placeholder="e.g. Started amoxicillin"
-                    className="text-sm"
-                    data-testid="input-ms-label"
-                  />
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-xs font-medium text-muted-foreground">
-                  Notes (optional)
-                </Label>
-                <Textarea
-                  value={msNotes}
-                  onChange={(e) => setMsNotes(e.target.value)}
-                  placeholder="Any additional context..."
-                  className="resize-none h-16 text-sm"
-                  data-testid="input-ms-notes"
-                />
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  size="sm"
-                  onClick={handleAddMilestone}
-                  disabled={!msLabel.trim()}
-                  data-testid="button-save-milestone"
-                >
-                  Save Milestone
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  onClick={() => setShowAddForm(false)}
-                >
-                  Cancel
-                </Button>
-              </div>
+      {/* Milestones in range (read-only — managed on Milestones page) */}
+      {milestones.length > 0 && (
+        <Card className="border-border shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <CardTitle
+                className="text-base font-semibold flex items-center gap-2"
+                style={{ fontFamily: "Outfit, sans-serif" }}
+              >
+                <Flag className="w-4 h-4 text-primary" />
+                Milestones in Range
+              </CardTitle>
+              <Link href="/milestones">
+                <span className="flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer">
+                  Manage
+                  <ExternalLink className="w-3 h-3" />
+                </span>
+              </Link>
             </div>
-          )}
-
-          {/* Milestone list */}
-          {milestones.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-              <Flag className="w-7 h-7 mb-2 opacity-25" />
-              <p className="text-sm">No milestones yet</p>
-              <p className="text-xs mt-0.5">
-                Add events to mark important moments in your child's treatment journey.
+          </CardHeader>
+          <CardContent>
+            {filteredMilestones.length === 0 ? (
+              <p className="text-sm text-muted-foreground py-2">
+                No milestones fall within the selected date range.
               </p>
-            </div>
-          ) : (
-            <div className="space-y-2">
-              {[...milestones]
-                .sort((a, b) => b.date.localeCompare(a.date))
-                .map((ms) => {
-                  const inRange =
-                    rangeMode === "all" ||
-                    (ms.date >= startDate && ms.date <= endDate);
-                  return (
-                    <div
-                      key={ms.id}
-                      className={`flex items-start gap-3 px-4 py-3 rounded-lg border transition-colors ${
-                        inRange
-                          ? "border-border bg-background"
-                          : "border-border/40 bg-muted/30 opacity-50"
-                      }`}
-                      data-testid={`milestone-row-${ms.id}`}
-                    >
-                      <Flag className="w-3.5 h-3.5 mt-0.5 text-primary flex-shrink-0" />
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-medium text-foreground">
-                            {ms.label}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {fmtDate(ms.date)}
-                          </span>
-                          {!inRange && (
-                            <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                              outside range
-                            </span>
-                          )}
-                        </div>
-                        {ms.notes && (
-                          <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                            {ms.notes}
-                          </p>
-                        )}
+            ) : (
+              <div className="space-y-2">
+                {filteredMilestones.map((ms) => (
+                  <div
+                    key={ms.id}
+                    className="flex items-start gap-3 px-3 py-2.5 rounded-lg border border-border bg-background"
+                    data-testid={`export-milestone-${ms.id}`}
+                  >
+                    <Flag className="w-3.5 h-3.5 mt-0.5 text-primary flex-shrink-0" />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-sm font-medium text-foreground">{ms.title}</span>
+                        <span className="text-[11px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
+                          {MILESTONE_TYPE_LABELS[ms.type]}
+                        </span>
                       </div>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-7 h-7 text-muted-foreground hover:text-destructive flex-shrink-0"
-                            data-testid={`button-delete-milestone-${ms.id}`}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Delete this milestone?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              "{ms.label}" on {fmtDate(ms.date)} will be permanently removed.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => deleteMilestone(ms.id)}>
-                              Delete
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {fmtDate(ms.date)}
+                        {ms.notes && ` · ${ms.notes}`}
+                      </p>
                     </div>
-                  );
-                })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
-      {/* ── Export button ── */}
+      {/* Export button */}
       <div className="flex items-center gap-4 pt-1 pb-6">
         <Button
           size="lg"
           onClick={generatePDF}
-          disabled={filteredLogs.length === 0 && filteredMeds.length === 0 && filteredMilestones.length === 0}
+          disabled={
+            filteredLogs.length === 0 &&
+            filteredMeds.length === 0 &&
+            filteredMilestones.length === 0
+          }
           className="gap-2"
           data-testid="button-export-pdf"
         >
           <FileDown className="w-4 h-4" />
           Download PDF
         </Button>
-        {filteredLogs.length === 0 && filteredMeds.length === 0 && filteredMilestones.length === 0 && (
-          <p className="text-sm text-muted-foreground">
-            No data in the selected range to export.
-          </p>
-        )}
+        {filteredLogs.length === 0 &&
+          filteredMeds.length === 0 &&
+          filteredMilestones.length === 0 && (
+            <p className="text-sm text-muted-foreground">
+              No data in the selected range to export.
+            </p>
+          )}
       </div>
     </div>
   );

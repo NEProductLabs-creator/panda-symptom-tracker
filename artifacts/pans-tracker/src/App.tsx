@@ -11,6 +11,7 @@ import MedLibrary from "@/pages/MedLibrary";
 import PrintSummary from "@/pages/PrintSummary";
 import ExportPDF from "@/pages/ExportPDF";
 import Intro, { hasVisited } from "@/pages/Intro";
+import MilestonesPage from "@/pages/Milestones";
 import Sidebar from "@/components/layout/Sidebar";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ function Router() {
         <Route path="/library" component={MedLibrary} />
         <Route path="/print" component={PrintSummary} />
         <Route path="/export" component={ExportPDF} />
+        <Route path="/milestones" component={MilestonesPage} />
         <Route path="/about" component={Intro} />
         <Route component={NotFound} />
       </Switch>

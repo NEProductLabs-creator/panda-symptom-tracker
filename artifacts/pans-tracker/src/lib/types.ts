@@ -38,9 +38,19 @@ export type MedLibraryItem = {
   frequency: FrequencyOption;
 };
 
+export type MilestoneType = 'appointment' | 'lab_results' | 'medication_change' | 'other';
+
+export const MILESTONE_TYPE_LABELS: Record<MilestoneType, string> = {
+  appointment: 'Doctor Appointment',
+  lab_results: 'Lab Results',
+  medication_change: 'Medication Change',
+  other: 'Other',
+};
+
 export type Milestone = {
   id: string;
   date: string; // YYYY-MM-DD
-  label: string;
+  title: string;
+  type: MilestoneType;
   notes?: string;
 };

@@ -55,10 +55,17 @@ export default function Sidebar() {
           );
         })}
       </nav>
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border space-y-2">
         <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
           All data stored locally on this device
         </p>
+        <div className="flex justify-center">
+          <Link href="/about" onClick={() => setMobileOpen(false)}>
+            <span className="text-[11px] text-muted-foreground hover:text-foreground transition-colors underline underline-offset-2 cursor-pointer">
+              About PANS/PANDAS
+            </span>
+          </Link>
+        </div>
       </div>
     </>
   );

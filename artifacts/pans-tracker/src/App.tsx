@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -10,15 +10,17 @@ import Medications from "@/pages/Medications";
 import MedLibrary from "@/pages/MedLibrary";
 import PrintSummary from "@/pages/PrintSummary";
 import ExportPDF from "@/pages/ExportPDF";
+import Intro, { hasVisited } from "@/pages/Intro";
 import Sidebar from "@/components/layout/Sidebar";
 
 const queryClient = new QueryClient();
 
+const NO_SIDEBAR_ROUTES = ["/print", "/about"];
+
 function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  const isPrint = location === "/print";
 
-  if (isPrint) {
+  if (NO_SIDEBAR_ROUTES.includes(location)) {
     return <>{children}</>;
   }
 
@@ -33,6 +35,14 @@ function Layout({ children }: { children: ReactNode }) {
 }
 
 function Router() {
+  const [location, navigate] = useLocation();
+
+  useEffect(() => {
+    if (!hasVisited() && location === "/") {
+      navigate("/about");
+    }
+  }, []);
+
   return (
     <Layout>
       <Switch>
@@ -42,6 +52,7 @@ function Router() {
         <Route path="/library" component={MedLibrary} />
         <Route path="/print" component={PrintSummary} />
         <Route path="/export" component={ExportPDF} />
+        <Route path="/about" component={Intro} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

@@ -218,7 +218,7 @@ export default function PrintSummary() {
 
         {/* Footer */}
         <div className="mt-12 pt-4 border-t border-gray-200 text-xs text-gray-400 text-center">
-          <p>Printed from PANS Tracker &bull; {format(new Date(), "MMMM d, yyyy")}</p>
+          <p>Printed from PANS &amp; PANDAS Tracker &bull; {format(new Date(), "MMMM d, yyyy")}</p>
           <p className="mt-0.5">All data is stored locally on this device and is not shared.</p>
         </div>
       </div>

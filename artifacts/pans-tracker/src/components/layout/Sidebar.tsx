@@ -25,7 +25,7 @@ export default function Sidebar() {
         </div>
         <div>
           <p className="font-semibold text-sm leading-tight text-foreground" style={{ fontFamily: "Outfit, sans-serif" }}>
-            PANS Tracker
+            PANS &amp; PANDAS Tracker
           </p>
           <p className="text-[11px] text-muted-foreground leading-tight">Symptom Journal</p>
         </div>
@@ -84,7 +84,7 @@ export default function Sidebar() {
             <Activity className="w-3.5 h-3.5 text-primary-foreground" />
           </div>
           <span className="font-semibold text-sm text-foreground" style={{ fontFamily: "Outfit, sans-serif" }}>
-            PANS Tracker
+            PANS &amp; PANDAS Tracker
           </span>
         </div>
         <Button

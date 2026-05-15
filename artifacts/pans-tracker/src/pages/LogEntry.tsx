@@ -41,7 +41,7 @@ function getInitialFormValues(date: string) {
   return {
     scores: entry
       ? { ocd: entry.ocd, anxiety: entry.anxiety, rage: entry.rage, tics: entry.tics, sleep: entry.sleep, cognition: entry.cognition }
-      : { ocd: 1, anxiety: 1, rage: 1, tics: 1, sleep: 1, cognition: 1 },
+      : { ocd: 0, anxiety: 0, rage: 0, tics: 0, sleep: 0, cognition: 0 },
     notes: entry?.notes ?? "",
     medicationsTaken: entry?.medicationsTaken ?? [] as string[],
   };
@@ -64,7 +64,7 @@ function ScoreBubble({ value, active, onClick }: { value: number; active: boolea
 }
 
 function ScoreBadge({ value }: { value: number }) {
-  const colors = ["", "bg-green-100 text-green-700", "bg-lime-100 text-lime-700", "bg-yellow-100 text-yellow-700", "bg-orange-100 text-orange-700", "bg-red-100 text-red-700"];
+  const colors = ["bg-slate-100 text-slate-400", "bg-green-100 text-green-700", "bg-lime-100 text-lime-700", "bg-yellow-100 text-yellow-700", "bg-orange-100 text-orange-700", "bg-red-100 text-red-700"];
   return (
     <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold ${colors[value] ?? ""}`}>
       {value}
@@ -209,7 +209,7 @@ export default function LogEntry() {
                   {cat.label}
                 </Label>
                 <div className="flex gap-1.5" data-testid={`score-${cat.key}`}>
-                  {[1, 2, 3, 4, 5].map((n) => (
+                  {[0, 1, 2, 3, 4, 5].map((n) => (
                     <ScoreBubble
                       key={n}
                       value={n}

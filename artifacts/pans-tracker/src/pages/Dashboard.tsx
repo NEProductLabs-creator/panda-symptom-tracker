@@ -33,7 +33,7 @@ function ScoreInput({
         {label}
       </Label>
       <div className="flex gap-1.5" data-testid={`score-${label.toLowerCase().replace(/\s|\//g, "-")}`}>
-        {[1, 2, 3, 4, 5].map((n) => (
+        {[0, 1, 2, 3, 4, 5].map((n) => (
           <button
             key={n}
             type="button"
@@ -63,12 +63,12 @@ export default function Dashboard() {
   const existingToday = logs.find((l) => l.date === today);
 
   const [scores, setScores] = useState({
-    ocd: existingToday?.ocd ?? 1,
-    anxiety: existingToday?.anxiety ?? 1,
-    rage: existingToday?.rage ?? 1,
-    tics: existingToday?.tics ?? 1,
-    sleep: existingToday?.sleep ?? 1,
-    cognition: existingToday?.cognition ?? 1,
+    ocd: existingToday?.ocd ?? 0,
+    anxiety: existingToday?.anxiety ?? 0,
+    rage: existingToday?.rage ?? 0,
+    tics: existingToday?.tics ?? 0,
+    sleep: existingToday?.sleep ?? 0,
+    cognition: existingToday?.cognition ?? 0,
   });
   const [notes, setNotes] = useState(existingToday?.notes ?? "");
   const [medicationsTaken, setMedicationsTaken] = useState<string[]>(

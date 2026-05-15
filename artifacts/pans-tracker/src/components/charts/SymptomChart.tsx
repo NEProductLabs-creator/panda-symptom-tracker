@@ -40,12 +40,12 @@ const MED_COLORS = [
 interface ChartDataPoint {
   date: string;
   label: string;
-  ocd: number | null;
-  anxiety: number | null;
-  rage: number | null;
-  tics: number | null;
-  sleep: number | null;
-  cognition: number | null;
+  ocd: number;
+  anxiety: number;
+  rage: number;
+  tics: number;
+  sleep: number;
+  cognition: number;
   medicationsTaken: string[];
 }
 
@@ -174,12 +174,12 @@ export default function SymptomChart({
     return {
       date: dateStr,
       label: format(date, "MMM d"),
-      ocd: log?.ocd ?? null,
-      anxiety: log?.anxiety ?? null,
-      rage: log?.rage ?? null,
-      tics: log?.tics ?? null,
-      sleep: log?.sleep ?? null,
-      cognition: log?.cognition ?? null,
+      ocd: log?.ocd ?? 0,
+      anxiety: log?.anxiety ?? 0,
+      rage: log?.rage ?? 0,
+      tics: log?.tics ?? 0,
+      sleep: log?.sleep ?? 0,
+      cognition: log?.cognition ?? 0,
       medicationsTaken: log?.medicationsTaken ?? [],
     };
   });
@@ -231,8 +231,8 @@ export default function SymptomChart({
             interval="preserveStartEnd"
           />
           <YAxis
-            domain={[1, 5]}
-            ticks={[1, 2, 3, 4, 5]}
+            domain={[0, 5]}
+            ticks={[0, 1, 2, 3, 4, 5]}
             tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
             tickLine={false}
             axisLine={false}

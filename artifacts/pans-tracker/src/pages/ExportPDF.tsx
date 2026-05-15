@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { format, subDays, parseISO } from "date-fns";
+import { format, subDays, parseISO, eachDayOfInterval } from "date-fns";
 import { Link } from "wouter";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -69,7 +69,7 @@ export default function ExportPDF() {
     rangeMode === "all" ? filteredLogs[0]?.date ?? today : startDate;
   const rangeEnd =
     rangeMode === "all"
-      ? filteredLogs[filteredLogs.length - 1]?.date ?? today
+      ? today
       : endDate;
 
   function generatePDF() {
@@ -114,7 +114,16 @@ export default function ExportPDF() {
     doc.text("Daily Symptom Scores", margin, y);
     y += 3;
 
-    if (filteredLogs.length === 0) {
+    // Build one row per calendar day in range; unlogged days get all-zero scores
+    const allDates =
+      filteredLogs.length === 0 && rangeMode === "all"
+        ? []
+        : eachDayOfInterval({
+            start: parseISO(rangeStart),
+            end: parseISO(rangeEnd),
+          }).map((d) => format(d, "yyyy-MM-dd"));
+
+    if (allDates.length === 0) {
       doc.setFontSize(9);
       doc.setFont("helvetica", "italic");
       doc.setTextColor(150);
@@ -122,21 +131,16 @@ export default function ExportPDF() {
       doc.setTextColor(0);
       y += 16;
     } else {
-      const scoreRows = filteredLogs.map((log) => {
-        const takenNames = (log.medicationsTaken ?? [])
-          .map((id) => medLibrary.find((m) => m.id === id)?.name ?? "")
-          .filter(Boolean)
-          .join(", ");
-        return [
-          fmtDate(log.date),
-          log.ocd,
-          log.anxiety,
-          log.rage,
-          log.tics,
-          log.sleep,
-          log.cognition,
-          takenNames || "—",
-        ];
+      const scoreRows = allDates.map((dateStr) => {
+        const log = logs.find((l) => l.date === dateStr);
+        if (log) {
+          const takenNames = (log.medicationsTaken ?? [])
+            .map((id) => medLibrary.find((m) => m.id === id)?.name ?? "")
+            .filter(Boolean)
+            .join(", ");
+          return [fmtDate(dateStr), log.ocd, log.anxiety, log.rage, log.tics, log.sleep, log.cognition, takenNames || "—"];
+        }
+        return [fmtDate(dateStr), 0, 0, 0, 0, 0, 0, "No symptoms reported"];
       });
 
       autoTable(doc, {
@@ -159,7 +163,11 @@ export default function ExportPDF() {
         didParseCell: (data) => {
           if (data.section === "body" && data.column.index >= 1 && data.column.index <= 6) {
             const val = Number(data.cell.raw);
-            if (val <= 2) {
+            if (val === 0) {
+              // symptom-free / unlogged day — neutral grey
+              data.cell.styles.fillColor = [245, 245, 245];
+              data.cell.styles.textColor = [150, 150, 150];
+            } else if (val <= 2) {
               data.cell.styles.fillColor = [220, 252, 231];
               data.cell.styles.textColor = [22, 101, 52];
             } else if (val === 3) {

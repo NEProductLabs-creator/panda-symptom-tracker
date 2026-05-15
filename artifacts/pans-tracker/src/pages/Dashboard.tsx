@@ -1,15 +1,18 @@
 import { useState } from "react";
 import { format } from "date-fns";
+import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedications } from "@/hooks/useMedications";
+import { useMedLibrary } from "@/hooks/useMedLibrary";
 import SymptomChart, { CATEGORIES } from "@/components/charts/SymptomChart";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, TrendingUp } from "lucide-react";
-import { SymptomLog } from "@/lib/types";
+import { CheckCircle2, TrendingUp, BookOpen, Pill } from "lucide-react";
+import { SymptomLog, FREQUENCY_LABELS } from "@/lib/types";
 
 const today = format(new Date(), "yyyy-MM-dd");
 const todayDisplay = format(new Date(), "EEEE, MMMM d, yyyy");
@@ -52,6 +55,7 @@ function ScoreInput({
 export default function Dashboard() {
   const { logs, addLog } = useSymptomLogs();
   const { medications } = useMedications();
+  const { medLibrary } = useMedLibrary();
   const { toast } = useToast();
 
   const existingToday = logs.find((l) => l.date === today);
@@ -65,7 +69,16 @@ export default function Dashboard() {
     cognition: existingToday?.cognition ?? 1,
   });
   const [notes, setNotes] = useState(existingToday?.notes ?? "");
+  const [medicationsTaken, setMedicationsTaken] = useState<string[]>(
+    existingToday?.medicationsTaken ?? []
+  );
   const [saved, setSaved] = useState(false);
+
+  function toggleMed(id: string) {
+    setMedicationsTaken((prev) =>
+      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
+    );
+  }
 
   function handleSave() {
     const log: SymptomLog = {
@@ -73,6 +86,7 @@ export default function Dashboard() {
       date: today,
       ...scores,
       notes,
+      medicationsTaken,
     };
     addLog(log);
     setSaved(true);
@@ -131,9 +145,10 @@ export default function Dashboard() {
             <TrendingUp className="w-4 h-4 text-primary" />
             30-Day Symptom Trends
           </CardTitle>
-          {medications.length > 0 && (
+          {(medications.length > 0 || medLibrary.length > 0) && (
             <p className="text-xs text-muted-foreground">
-              Shaded areas indicate medication periods
+              {medications.length > 0 && "Shaded areas indicate medication periods. "}
+              {medLibrary.length > 0 && "Hover a data point to see medications given that day."}
             </p>
           )}
         </CardHeader>
@@ -145,7 +160,7 @@ export default function Dashboard() {
               <p className="text-xs mt-1">Log today's symptoms below to get started.</p>
             </div>
           ) : (
-            <SymptomChart logs={logs} medications={medications} />
+            <SymptomChart logs={logs} medications={medications} medLibrary={medLibrary} />
           )}
         </CardContent>
       </Card>
@@ -172,6 +187,60 @@ export default function Dashboard() {
               />
             ))}
           </div>
+
+          {/* Medications taken today */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Medications Taken Today
+              </Label>
+              {medLibrary.length === 0 && (
+                <Link href="/library">
+                  <span className="text-xs text-primary hover:underline cursor-pointer">
+                    Set up library
+                  </span>
+                </Link>
+              )}
+            </div>
+            {medLibrary.length === 0 ? (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-dashed border-border text-muted-foreground">
+                <BookOpen className="w-4 h-4 flex-shrink-0 opacity-40" />
+                <p className="text-xs">
+                  Add medications to your{" "}
+                  <Link href="/library">
+                    <span className="text-primary hover:underline cursor-pointer font-medium">Med Library</span>
+                  </Link>
+                  {" "}to see a checklist here.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="med-checklist-today">
+                {medLibrary.map((med) => (
+                  <label
+                    key={med.id}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                    data-testid={`med-check-${med.id}`}
+                  >
+                    <Checkbox
+                      checked={medicationsTaken.includes(med.id)}
+                      onCheckedChange={() => toggleMed(med.id)}
+                      data-testid={`checkbox-med-${med.id}`}
+                    />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-foreground leading-tight">{med.name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {med.dosage} · {FREQUENCY_LABELS[med.frequency]}
+                      </p>
+                    </div>
+                    {medicationsTaken.includes(med.id) && (
+                      <Pill className="w-3.5 h-3.5 text-primary ml-auto flex-shrink-0" />
+                    )}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Notes (optional)

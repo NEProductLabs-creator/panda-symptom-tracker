@@ -10,7 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { format, subDays, parseISO, isValid } from "date-fns";
-import { SymptomLog, Medication } from "@/lib/types";
+import { SymptomLog, Medication, MedLibraryItem, FREQUENCY_LABELS } from "@/lib/types";
 
 const CATEGORIES = [
   { key: "ocd", label: "OCD Behaviors", color: "hsl(140, 20%, 48%)" },
@@ -29,32 +29,82 @@ const MED_COLORS = [
   "rgba(210, 150, 170, 0.15)",
 ];
 
-interface Props {
-  logs: SymptomLog[];
-  medications: Medication[];
-  days?: number;
+interface ChartDataPoint {
+  date: string;
+  label: string;
+  ocd: number | null;
+  anxiety: number | null;
+  rage: number | null;
+  tics: number | null;
+  sleep: number | null;
+  cognition: number | null;
+  medicationsTaken: string[];
 }
 
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; color: string }>; label?: string }) {
+interface TooltipProps {
+  active?: boolean;
+  payload?: Array<{ name: string; value: number; color: string; payload: ChartDataPoint }>;
+  label?: string;
+  medLibrary: MedLibraryItem[];
+}
+
+function CustomTooltip({ active, payload, label, medLibrary }: TooltipProps) {
   if (!active || !payload || payload.length === 0) return null;
+
+  const dataPoint = payload[0]?.payload;
+  const takenMeds = (dataPoint?.medicationsTaken ?? [])
+    .map((id) => medLibrary.find((m) => m.id === id))
+    .filter((m): m is MedLibraryItem => m !== undefined);
+
   return (
-    <div className="bg-card border border-border rounded-xl shadow-md p-3 text-xs">
+    <div className="bg-card border border-border rounded-xl shadow-md p-3 text-xs max-w-[220px]">
       <p className="font-semibold text-foreground mb-2">{label}</p>
-      {payload.map((entry) => (
-        <div key={entry.name} className="flex items-center gap-2 mb-1">
-          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
-          <span className="text-muted-foreground">{entry.name}:</span>
-          <span className="font-medium text-foreground">{entry.value}</span>
-        </div>
-      ))}
+      <div className="space-y-1 mb-2">
+        {payload.map((entry) => (
+          <div key={entry.name} className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
+            <span className="text-muted-foreground truncate">{entry.name}:</span>
+            <span className="font-medium text-foreground ml-auto pl-1">{entry.value}</span>
+          </div>
+        ))}
+      </div>
+      {takenMeds.length > 0 && (
+        <>
+          <div className="border-t border-border pt-2 mt-2">
+            <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">
+              Medications Given
+            </p>
+            <div className="space-y-1">
+              {takenMeds.map((med) => (
+                <div key={med.id} className="flex items-start gap-1.5">
+                  <span className="w-1 h-1 rounded-full bg-primary mt-1.5 flex-shrink-0" />
+                  <span className="text-foreground leading-snug">
+                    {med.name}
+                    <span className="text-muted-foreground ml-1">
+                      {med.dosage} · {FREQUENCY_LABELS[med.frequency]}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
 
-export default function SymptomChart({ logs, medications, days = 30 }: Props) {
+interface Props {
+  logs: SymptomLog[];
+  medications: Medication[];
+  medLibrary?: MedLibraryItem[];
+  days?: number;
+}
+
+export default function SymptomChart({ logs, medications, medLibrary = [], days = 30 }: Props) {
   const today = new Date();
 
-  const chartData = Array.from({ length: days }, (_, i) => {
+  const chartData: ChartDataPoint[] = Array.from({ length: days }, (_, i) => {
     const date = subDays(today, days - 1 - i);
     const dateStr = format(date, "yyyy-MM-dd");
     const log = logs.find((l) => l.date === dateStr);
@@ -67,6 +117,7 @@ export default function SymptomChart({ logs, medications, days = 30 }: Props) {
       tics: log?.tics ?? null,
       sleep: log?.sleep ?? null,
       cognition: log?.cognition ?? null,
+      medicationsTaken: log?.medicationsTaken ?? [],
     };
   });
 
@@ -115,7 +166,16 @@ export default function SymptomChart({ logs, medications, days = 30 }: Props) {
             tickLine={false}
             axisLine={false}
           />
-          <Tooltip content={<CustomTooltip />} />
+          <Tooltip
+            content={(props) => (
+              <CustomTooltip
+                active={props.active}
+                payload={props.payload as TooltipProps["payload"]}
+                label={props.label as string}
+                medLibrary={medLibrary}
+              />
+            )}
+          />
           <Legend
             wrapperStyle={{ fontSize: "12px", paddingTop: "12px" }}
             iconType="circle"

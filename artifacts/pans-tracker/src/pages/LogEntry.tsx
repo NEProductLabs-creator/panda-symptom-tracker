@@ -1,14 +1,17 @@
 import { useState, useEffect } from "react";
-import { format, subDays } from "date-fns";
+import { format } from "date-fns";
+import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
+import { useMedLibrary } from "@/hooks/useMedLibrary";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { Trash2, ClipboardList } from "lucide-react";
-import { SymptomLog } from "@/lib/types";
+import { Trash2, ClipboardList, BookOpen, Pill } from "lucide-react";
+import { SymptomLog, FREQUENCY_LABELS } from "@/lib/types";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,6 +60,7 @@ function ScoreBadge({ value }: { value: number }) {
 
 export default function LogEntry() {
   const { logs, addLog, deleteLog } = useSymptomLogs();
+  const { medLibrary } = useMedLibrary();
   const { toast } = useToast();
 
   const today = format(new Date(), "yyyy-MM-dd");
@@ -73,6 +77,7 @@ export default function LogEntry() {
     cognition: 1,
   });
   const [notes, setNotes] = useState("");
+  const [medicationsTaken, setMedicationsTaken] = useState<string[]>([]);
 
   useEffect(() => {
     if (existing) {
@@ -85,11 +90,19 @@ export default function LogEntry() {
         cognition: existing.cognition,
       });
       setNotes(existing.notes ?? "");
+      setMedicationsTaken(existing.medicationsTaken ?? []);
     } else {
       setScores({ ocd: 1, anxiety: 1, rage: 1, tics: 1, sleep: 1, cognition: 1 });
       setNotes("");
+      setMedicationsTaken([]);
     }
   }, [selectedDate, existing?.id]);
+
+  function toggleMed(id: string) {
+    setMedicationsTaken((prev) =>
+      prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id]
+    );
+  }
 
   function handleSave() {
     const log: SymptomLog = {
@@ -97,6 +110,7 @@ export default function LogEntry() {
       date: selectedDate,
       ...scores,
       notes,
+      medicationsTaken,
     };
     addLog(log);
     toast({ title: "Log saved", description: `Symptoms saved for ${format(new Date(selectedDate + "T12:00:00"), "MMMM d, yyyy")}.` });
@@ -154,6 +168,57 @@ export default function LogEntry() {
             ))}
           </div>
 
+          {/* Medications taken checklist */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Medications Taken Today
+              </Label>
+              {medLibrary.length === 0 && (
+                <Link href="/library">
+                  <span className="text-xs text-primary hover:underline cursor-pointer">Set up library</span>
+                </Link>
+              )}
+            </div>
+            {medLibrary.length === 0 ? (
+              <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-dashed border-border text-muted-foreground">
+                <BookOpen className="w-4 h-4 flex-shrink-0 opacity-40" />
+                <p className="text-xs">
+                  Add medications to your{" "}
+                  <Link href="/library">
+                    <span className="text-primary hover:underline cursor-pointer font-medium">Med Library</span>
+                  </Link>
+                  {" "}to track which ones were given each day.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="med-checklist-log">
+                {medLibrary.map((med) => (
+                  <label
+                    key={med.id}
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg border border-border hover:bg-muted/50 cursor-pointer transition-colors"
+                    data-testid={`med-check-log-${med.id}`}
+                  >
+                    <Checkbox
+                      checked={medicationsTaken.includes(med.id)}
+                      onCheckedChange={() => toggleMed(med.id)}
+                      data-testid={`checkbox-log-med-${med.id}`}
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-medium text-foreground leading-tight">{med.name}</p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {med.dosage} · {FREQUENCY_LABELS[med.frequency]}
+                      </p>
+                    </div>
+                    {medicationsTaken.includes(med.id) && (
+                      <Pill className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+                    )}
+                  </label>
+                ))}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
               Notes (optional)
@@ -199,67 +264,81 @@ export default function LogEntry() {
                     <th className="py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Tics</th>
                     <th className="py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Sleep</th>
                     <th className="py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Cogn</th>
+                    <th className="py-3 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-center">Meds</th>
                     <th className="py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide text-left">Notes</th>
                     <th className="py-3 px-3" />
                   </tr>
                 </thead>
                 <tbody>
-                  {recent.map((log) => (
-                    <tr
-                      key={log.id}
-                      className={`border-b border-border last:border-0 hover:bg-muted/50 transition-colors cursor-pointer ${selectedDate === log.date ? "bg-accent/40" : ""}`}
-                      onClick={() => setSelectedDate(log.date)}
-                      data-testid={`log-row-${log.date}`}
-                    >
-                      <td className="py-3 px-4 font-medium text-foreground whitespace-nowrap">
-                        {format(new Date(log.date + "T12:00:00"), "MMM d, yyyy")}
-                      </td>
-                      <td className="py-3 px-2 text-center"><ScoreBadge value={log.ocd} /></td>
-                      <td className="py-3 px-2 text-center"><ScoreBadge value={log.anxiety} /></td>
-                      <td className="py-3 px-2 text-center"><ScoreBadge value={log.rage} /></td>
-                      <td className="py-3 px-2 text-center"><ScoreBadge value={log.tics} /></td>
-                      <td className="py-3 px-2 text-center"><ScoreBadge value={log.sleep} /></td>
-                      <td className="py-3 px-2 text-center"><ScoreBadge value={log.cognition} /></td>
-                      <td className="py-3 px-4 text-muted-foreground max-w-xs truncate text-xs">
-                        {log.notes || "—"}
-                      </td>
-                      <td className="py-3 px-3">
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="w-7 h-7 text-muted-foreground hover:text-destructive"
-                              onClick={(e) => e.stopPropagation()}
-                              data-testid={`button-delete-log-${log.id}`}
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                This will permanently remove the log for{" "}
-                                {format(new Date(log.date + "T12:00:00"), "MMMM d, yyyy")}.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancel</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => {
-                                  deleteLog(log.id);
-                                  toast({ title: "Entry deleted" });
-                                }}
+                  {recent.map((log) => {
+                    const takenCount = log.medicationsTaken?.length ?? 0;
+                    return (
+                      <tr
+                        key={log.id}
+                        className={`border-b border-border last:border-0 hover:bg-muted/50 transition-colors cursor-pointer ${selectedDate === log.date ? "bg-accent/40" : ""}`}
+                        onClick={() => setSelectedDate(log.date)}
+                        data-testid={`log-row-${log.date}`}
+                      >
+                        <td className="py-3 px-4 font-medium text-foreground whitespace-nowrap">
+                          {format(new Date(log.date + "T12:00:00"), "MMM d, yyyy")}
+                        </td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.ocd} /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.anxiety} /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.rage} /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.tics} /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.sleep} /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.cognition} /></td>
+                        <td className="py-3 px-2 text-center">
+                          {takenCount > 0 ? (
+                            <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">
+                              <Pill className="w-3 h-3" />
+                              {takenCount}
+                            </span>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">—</span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-muted-foreground max-w-xs truncate text-xs">
+                          {log.notes || "—"}
+                        </td>
+                        <td className="py-3 px-3">
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="w-7 h-7 text-muted-foreground hover:text-destructive"
+                                onClick={(e) => e.stopPropagation()}
+                                data-testid={`button-delete-log-${log.id}`}
                               >
-                                Delete
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      </td>
-                    </tr>
-                  ))}
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete this entry?</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  This will permanently remove the log for{" "}
+                                  {format(new Date(log.date + "T12:00:00"), "MMMM d, yyyy")}.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => {
+                                    deleteLog(log.id);
+                                    toast({ title: "Entry deleted" });
+                                  }}
+                                >
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

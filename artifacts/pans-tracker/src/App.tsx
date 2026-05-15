@@ -7,6 +7,7 @@ import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import LogEntry from "@/pages/LogEntry";
 import Medications from "@/pages/Medications";
+import MedLibrary from "@/pages/MedLibrary";
 import PrintSummary from "@/pages/PrintSummary";
 import Sidebar from "@/components/layout/Sidebar";
 
@@ -37,6 +38,7 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/log" component={LogEntry} />
         <Route path="/medications" component={Medications} />
+        <Route path="/library" component={MedLibrary} />
         <Route path="/print" component={PrintSummary} />
         <Route component={NotFound} />
       </Switch>

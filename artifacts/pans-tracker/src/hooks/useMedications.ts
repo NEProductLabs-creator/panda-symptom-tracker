@@ -1,13 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { Medication } from '@/lib/types';
 import { storage } from '@/lib/storage';
 
 export function useMedications() {
-  const [medications, setMedications] = useState<Medication[]>([]);
-
-  useEffect(() => {
-    setMedications(storage.getMedications());
-  }, []);
+  const [medications, setMedications] = useState<Medication[]>(() => storage.getMedications());
 
   const addMedication = useCallback((med: Medication) => {
     setMedications(prev => {

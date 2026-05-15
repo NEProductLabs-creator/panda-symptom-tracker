@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedLibrary } from "@/hooks/useMedLibrary";
+import { storage } from "@/lib/storage";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -32,6 +33,20 @@ const CATEGORIES = [
   { key: "sleep", label: "Sleep Quality" },
   { key: "cognition", label: "School / Cognition" },
 ] as const;
+
+const today = format(new Date(), "yyyy-MM-dd");
+
+function getInitialFormValues(date: string) {
+  const allLogs = storage.getLogs();
+  const entry = allLogs.find((l) => l.date === date);
+  return {
+    scores: entry
+      ? { ocd: entry.ocd, anxiety: entry.anxiety, rage: entry.rage, tics: entry.tics, sleep: entry.sleep, cognition: entry.cognition }
+      : { ocd: 1, anxiety: 1, rage: 1, tics: 1, sleep: 1, cognition: 1 },
+    notes: entry?.notes ?? "",
+    medicationsTaken: entry?.medicationsTaken ?? [] as string[],
+  };
+}
 
 function ScoreBubble({ value, active, onClick }: { value: number; active: boolean; onClick: () => void }) {
   return (
@@ -63,40 +78,22 @@ export default function LogEntry() {
   const { medLibrary } = useMedLibrary();
   const { toast } = useToast();
 
-  const today = format(new Date(), "yyyy-MM-dd");
   const [selectedDate, setSelectedDate] = useState(today);
-
   const existing = logs.find((l) => l.date === selectedDate);
 
-  const [scores, setScores] = useState({
-    ocd: 1,
-    anxiety: 1,
-    rage: 1,
-    tics: 1,
-    sleep: 1,
-    cognition: 1,
-  });
-  const [notes, setNotes] = useState("");
-  const [medicationsTaken, setMedicationsTaken] = useState<string[]>([]);
+  // Initialize synchronously from localStorage so today's data appears immediately on page load
+  const initial = getInitialFormValues(today);
+  const [scores, setScores] = useState(initial.scores);
+  const [notes, setNotes] = useState(initial.notes);
+  const [medicationsTaken, setMedicationsTaken] = useState<string[]>(initial.medicationsTaken);
 
+  // Re-populate when the user switches to a different date
   useEffect(() => {
-    if (existing) {
-      setScores({
-        ocd: existing.ocd,
-        anxiety: existing.anxiety,
-        rage: existing.rage,
-        tics: existing.tics,
-        sleep: existing.sleep,
-        cognition: existing.cognition,
-      });
-      setNotes(existing.notes ?? "");
-      setMedicationsTaken(existing.medicationsTaken ?? []);
-    } else {
-      setScores({ ocd: 1, anxiety: 1, rage: 1, tics: 1, sleep: 1, cognition: 1 });
-      setNotes("");
-      setMedicationsTaken([]);
-    }
-  }, [selectedDate, existing?.id]);
+    const vals = getInitialFormValues(selectedDate);
+    setScores(vals.scores);
+    setNotes(vals.notes);
+    setMedicationsTaken(vals.medicationsTaken);
+  }, [selectedDate]);
 
   function toggleMed(id: string) {
     setMedicationsTaken((prev) =>
@@ -113,7 +110,10 @@ export default function LogEntry() {
       medicationsTaken,
     };
     addLog(log);
-    toast({ title: "Log saved", description: `Symptoms saved for ${format(new Date(selectedDate + "T12:00:00"), "MMMM d, yyyy")}.` });
+    toast({
+      title: existing ? "Entry updated" : "Entry saved",
+      description: `Symptoms saved for ${format(new Date(selectedDate + "T12:00:00"), "MMMM d, yyyy")}.`,
+    });
   }
 
   const recent = [...logs]
@@ -134,6 +134,11 @@ export default function LogEntry() {
           <CardTitle className="text-base font-semibold" style={{ fontFamily: "Outfit, sans-serif" }}>
             {existing ? "Edit Entry" : "New Entry"}
           </CardTitle>
+          {existing && (
+            <p className="text-xs text-muted-foreground">
+              An entry already exists for this date — fields are pre-filled with the saved values.
+            </p>
+          )}
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-2">

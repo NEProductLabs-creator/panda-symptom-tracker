@@ -1,13 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { MedLibraryItem } from '@/lib/types';
 import { storage } from '@/lib/storage';
 
 export function useMedLibrary() {
-  const [medLibrary, setMedLibrary] = useState<MedLibraryItem[]>([]);
-
-  useEffect(() => {
-    setMedLibrary(storage.getMedLibrary());
-  }, []);
+  const [medLibrary, setMedLibrary] = useState<MedLibraryItem[]>(() => storage.getMedLibrary());
 
   const saveMedLibraryItem = useCallback((item: MedLibraryItem) => {
     setMedLibrary(prev => {

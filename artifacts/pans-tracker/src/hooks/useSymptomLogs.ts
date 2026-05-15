@@ -1,13 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { SymptomLog } from '@/lib/types';
 import { storage } from '@/lib/storage';
 
 export function useSymptomLogs() {
-  const [logs, setLogs] = useState<SymptomLog[]>([]);
-
-  useEffect(() => {
-    setLogs(storage.getLogs());
-  }, []);
+  const [logs, setLogs] = useState<SymptomLog[]>(() => storage.getLogs());
 
   const addLog = useCallback((log: SymptomLog) => {
     setLogs(prev => {

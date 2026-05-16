@@ -10,6 +10,8 @@ import { usePTECLogs } from "@/hooks/usePTECLogs";
 import SymptomChart, { CATEGORIES, getScoreColor } from "@/components/charts/SymptomChart";
 import Sparkline from "@/components/charts/Sparkline";
 import FlareAlert from "@/components/FlareAlert";
+import DailyAffirmation from "@/components/DailyAffirmation";
+import MilestoneCelebration from "@/components/MilestoneCelebration";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -178,6 +180,12 @@ export default function Dashboard() {
 
   return (
     <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-4 pb-28">
+
+      {/* Daily affirmation */}
+      <DailyAffirmation />
+
+      {/* Milestone celebrations */}
+      <MilestoneCelebration />
 
       {/* PTEC-based flare alert */}
       {flareStatus.isActive && (

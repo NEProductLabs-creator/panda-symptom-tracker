@@ -19,6 +19,7 @@ import TriggerLogPage from "@/pages/TriggerLog";
 import Medications from "@/pages/Medications";
 import SchoolHub from "@/pages/SchoolHub";
 import WellbeingCheckin from "@/pages/WellbeingCheckin";
+import HopeBoard from "@/pages/HopeBoard";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,7 @@ function Router() {
         <Route path="/medications" component={Medications} />
         <Route path="/school" component={SchoolHub} />
         <Route path="/wellbeing" component={WellbeingCheckin} />
+        <Route path="/hope" component={HopeBoard} />
         <Route path="/about" component={Intro} />
         <Route component={NotFound} />
       </Switch>

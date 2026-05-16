@@ -17,6 +17,7 @@ import Baseline from "@/pages/Baseline";
 import PTECCheckin from "@/pages/PTECCheckin";
 import TriggerLogPage from "@/pages/TriggerLog";
 import Medications from "@/pages/Medications";
+import SchoolHub from "@/pages/SchoolHub";
 
 const queryClient = new QueryClient();
 
@@ -62,6 +63,7 @@ function Router() {
         <Route path="/baseline" component={Baseline} />
         <Route path="/triggers" component={TriggerLogPage} />
         <Route path="/medications" component={Medications} />
+        <Route path="/school" component={SchoolHub} />
         <Route path="/about" component={Intro} />
         <Route component={NotFound} />
       </Switch>

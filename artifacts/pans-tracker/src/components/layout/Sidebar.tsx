@@ -15,6 +15,7 @@ import {
   ClipboardCheck,
   Zap,
   Pill,
+  School,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -29,6 +30,7 @@ const navItems = [
   { href: "/library", label: "Med Library", icon: BookOpen },
   { href: "/milestones", label: "Milestones", icon: Flag },
   { href: "/baseline", label: "My Child", icon: Heart },
+  { href: "/school", label: "School Hub", icon: School },
   { href: "/print", label: "Print Summary", icon: Printer },
   { href: "/export", label: "Export PDF", icon: Download },
 ];

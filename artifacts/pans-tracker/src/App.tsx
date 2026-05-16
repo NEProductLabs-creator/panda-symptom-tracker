@@ -12,6 +12,8 @@ import ExportPDF from "@/pages/ExportPDF";
 import Intro, { hasVisited } from "@/pages/Intro";
 import MilestonesPage from "@/pages/Milestones";
 import Sidebar from "@/components/layout/Sidebar";
+import Timeline from "@/pages/Timeline";
+import Baseline from "@/pages/Baseline";
 
 const queryClient = new QueryClient();
 
@@ -52,6 +54,8 @@ function Router() {
         <Route path="/print" component={PrintSummary} />
         <Route path="/export" component={ExportPDF} />
         <Route path="/milestones" component={MilestonesPage} />
+        <Route path="/timeline" component={Timeline} />
+        <Route path="/baseline" component={Baseline} />
         <Route path="/about" component={Intro} />
         <Route component={NotFound} />
       </Switch>

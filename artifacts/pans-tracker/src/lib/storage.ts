@@ -1,9 +1,10 @@
-import { SymptomLog, Medication, MedLibraryItem, Milestone } from './types';
+import { SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline } from './types';
 
 const SYMPTOM_LOGS_KEY = 'pans_tracker_symptom_logs';
 const MEDICATIONS_KEY = 'pans_tracker_medications';
 const MED_LIBRARY_KEY = 'pans_tracker_med_library';
 const MILESTONES_KEY = 'pans_tracker_milestones';
+const CHILD_BASELINE_KEY = 'childBaseline';
 
 export const storage = {
   getLogs: (): SymptomLog[] => {
@@ -46,5 +47,18 @@ export const storage = {
 
   saveMilestones: (milestones: Milestone[]) => {
     localStorage.setItem(MILESTONES_KEY, JSON.stringify(milestones));
+  },
+
+  getChildBaseline: (): ChildBaseline | null => {
+    const data = localStorage.getItem(CHILD_BASELINE_KEY);
+    return data ? JSON.parse(data) : null;
+  },
+
+  saveChildBaseline: (baseline: ChildBaseline) => {
+    localStorage.setItem(CHILD_BASELINE_KEY, JSON.stringify(baseline));
+  },
+
+  clearChildBaseline: () => {
+    localStorage.removeItem(CHILD_BASELINE_KEY);
   },
 };

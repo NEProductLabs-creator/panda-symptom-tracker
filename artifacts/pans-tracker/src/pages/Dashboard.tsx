@@ -1,19 +1,30 @@
-import { useState } from "react";
-import { format } from "date-fns";
+import { useMemo, useState } from "react";
+import { format, subDays } from "date-fns";
 import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedications } from "@/hooks/useMedications";
 import { useMedLibrary } from "@/hooks/useMedLibrary";
 import { useMilestones } from "@/hooks/useMilestones";
+import { useChildBaseline } from "@/hooks/useChildBaseline";
 import SymptomChart, { CATEGORIES, getScoreColor } from "@/components/charts/SymptomChart";
+import Sparkline from "@/components/charts/Sparkline";
+import FlareAlert from "@/components/FlareAlert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { CheckCircle2, TrendingUp, BookOpen, Pill, Activity } from "lucide-react";
+import {
+  CheckCircle2,
+  TrendingUp,
+  BookOpen,
+  Pill,
+  Activity,
+  Heart,
+} from "lucide-react";
 import { SymptomLog, FREQUENCY_LABELS } from "@/lib/types";
+import { computeDailyScore, detectCurrentFlare } from "@/lib/flare";
 
 const today = format(new Date(), "yyyy-MM-dd");
 const todayDisplay = format(new Date(), "EEEE, MMMM d, yyyy");
@@ -61,6 +72,7 @@ export default function Dashboard() {
   const { medications } = useMedications();
   const { medLibrary } = useMedLibrary();
   const { milestones } = useMilestones();
+  const { baseline } = useChildBaseline();
   const { toast } = useToast();
 
   const existingToday = logs.find((l) => l.date === today);
@@ -100,6 +112,7 @@ export default function Dashboard() {
     setTimeout(() => setSaved(false), 3000);
   }
 
+  // Snapshot score (0–10 display scale for the badge)
   const todayRawScore = existingToday
     ? ((existingToday.ocd +
         existingToday.anxiety +
@@ -110,28 +123,53 @@ export default function Dashboard() {
         6) *
       2
     : null;
-  const todayScore =
-    todayRawScore !== null ? Math.round(todayRawScore * 10) / 10 : null;
+  const todayScore = todayRawScore !== null ? Math.round(todayRawScore * 10) / 10 : null;
   const todayScoreColor = todayScore !== null ? getScoreColor(todayScore) : null;
   const todayScoreLabel =
-    todayScore === null
-      ? null
-      : todayScore <= 3
-      ? "Mild"
-      : todayScore <= 6
-      ? "Moderate"
-      : "Severe";
+    todayScore === null ? null : todayScore <= 3 ? "Mild" : todayScore <= 6 ? "Moderate" : "Severe";
+
+  // Raw 0–30 total for flare detection + baseline reminder threshold
+  const todayTotal = existingToday ? computeDailyScore(existingToday) : 0;
 
   const todayMedsTaken = existingToday?.medicationsTaken?.length
-    ? medLibrary.filter((m) =>
-        existingToday.medicationsTaken!.includes(m.id)
-      )
+    ? medLibrary.filter((m) => existingToday.medicationsTaken!.includes(m.id))
     : [];
 
-  return (
-    <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-5 pb-28">
+  // Flare detection
+  const flareStatus = useMemo(() => detectCurrentFlare(logs), [logs]);
 
-      {/* Today's Snapshot */}
+  // Sparkline data: last 30 days of total scores
+  const sparklineData = useMemo(() => {
+    const logMap = new Map(logs.map((l) => [l.date, l]));
+    return Array.from({ length: 30 }, (_, i) => {
+      const d = format(subDays(new Date(), 29 - i), "yyyy-MM-dd");
+      const log = logMap.get(d);
+      return {
+        date: format(subDays(new Date(), 29 - i), "MMM d"),
+        score: log ? computeDailyScore(log) : 0,
+        hasLog: !!log,
+      };
+    });
+  }, [logs]);
+
+  const hasAnyLog = logs.length > 0;
+  const childName = baseline?.childName?.trim();
+  // Show baseline reminder when today's total score is high (≥15/30) and baseline exists
+  const showBaselineReminder = baseline && existingToday && todayTotal >= 15;
+
+  return (
+    <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-4 pb-28">
+
+      {/* Flare alert banner */}
+      {flareStatus.isActive && flareStatus.startDate && (
+        <FlareAlert
+          childName={childName}
+          startDate={flareStatus.startDate}
+          consecutiveDays={flareStatus.consecutiveDays}
+        />
+      )}
+
+      {/* Today's Snapshot + Sparkline */}
       <Card className="border-border shadow-sm overflow-hidden">
         <div
           className="h-1 w-full"
@@ -144,7 +182,7 @@ export default function Dashboard() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1">
-                Today's Snapshot
+                {childName ? `${childName}'s Snapshot` : "Today's Snapshot"}
               </p>
               <p className="text-sm font-medium text-foreground">{todayDisplay}</p>
 
@@ -152,14 +190,12 @@ export default function Dashboard() {
                 <div className="mt-2 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <Activity className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                    <span className="text-sm text-muted-foreground">
-                      Daily score:
-                    </span>
-                    <span
-                      className="text-sm font-bold"
-                      style={{ color: todayScoreColor ?? undefined }}
-                    >
+                    <span className="text-sm text-muted-foreground">Daily score:</span>
+                    <span className="text-sm font-bold" style={{ color: todayScoreColor ?? undefined }}>
                       {todayScore?.toFixed(1)}
+                    </span>
+                    <span className="text-xs text-muted-foreground">
+                      ({todayTotal}/30 total)
                     </span>
                   </div>
                   {todayMedsTaken.length > 0 ? (
@@ -172,16 +208,12 @@ export default function Dashboard() {
                   ) : (
                     <div className="flex items-center gap-2">
                       <Pill className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-                      <span className="text-sm text-muted-foreground">
-                        No medications logged today
-                      </span>
+                      <span className="text-sm text-muted-foreground">No medications logged today</span>
                     </div>
                   )}
                 </div>
               ) : (
-                <p className="mt-2 text-sm text-muted-foreground">
-                  No entry yet today
-                </p>
+                <p className="mt-2 text-sm text-muted-foreground">No entry yet today</p>
               )}
             </div>
 
@@ -205,8 +237,46 @@ export default function Dashboard() {
               )}
             </div>
           </div>
+
+          {/* Sparkline — 30-day total severity trend */}
+          {hasAnyLog && (
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium mb-1">
+                30-day severity trend (total 0–30)
+              </p>
+              <Sparkline data={sparklineData} height={44} />
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Baseline reminder */}
+      {showBaselineReminder && (
+        <Link href="/baseline">
+          <div
+            className="flex items-center gap-3 px-4 py-3 rounded-xl border cursor-pointer hover:opacity-90 transition-opacity"
+            style={{
+              background: "linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%)",
+              borderColor: "#fcd34d",
+            }}
+          >
+            <Heart className="w-4 h-4 flex-shrink-0 fill-amber-400 text-amber-400" />
+            <div className="flex-1 min-w-0">
+              <p className="text-xs font-semibold" style={{ color: "#92400e" }}>
+                Remember your baseline
+              </p>
+              <p className="text-[11px] leading-snug mt-0.5" style={{ color: "#b45309" }}>
+                {childName
+                  ? `Tap to see who ${childName} is when they're feeling like themselves.`
+                  : "Tap to see who your child is when they're feeling like themselves."}
+              </p>
+            </div>
+            <span className="text-[11px] font-medium flex-shrink-0" style={{ color: "#d97706" }}>
+              View →
+            </span>
+          </div>
+        </Link>
+      )}
 
       {/* Quick stats */}
       <div className="grid grid-cols-3 gap-3">
@@ -215,18 +285,10 @@ export default function Dashboard() {
             <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
               Logs (30d)
             </p>
-            <p
-              className="text-2xl font-bold text-foreground mt-1"
-              data-testid="stat-log-count"
-            >
+            <p className="text-2xl font-bold text-foreground mt-1" data-testid="stat-log-count">
               {
                 logs.filter(
-                  (l) =>
-                    l.date >=
-                    format(
-                      new Date(Date.now() - 30 * 86400000),
-                      "yyyy-MM-dd"
-                    )
+                  (l) => l.date >= format(new Date(Date.now() - 30 * 86400000), "yyyy-MM-dd")
                 ).length
               }
             </p>
@@ -237,10 +299,7 @@ export default function Dashboard() {
             <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
               Active Meds
             </p>
-            <p
-              className="text-2xl font-bold text-foreground mt-1"
-              data-testid="stat-active-meds"
-            >
+            <p className="text-2xl font-bold text-foreground mt-1" data-testid="stat-active-meds">
               {medLibrary.length}
             </p>
           </CardContent>
@@ -250,10 +309,7 @@ export default function Dashboard() {
             <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
               Today
             </p>
-            <p
-              className="text-2xl font-bold text-foreground mt-1"
-              data-testid="stat-today-status"
-            >
+            <p className="text-2xl font-bold text-foreground mt-1" data-testid="stat-today-status">
               {existingToday ? "Done" : "Pending"}
             </p>
           </CardContent>
@@ -293,9 +349,7 @@ export default function Dashboard() {
             <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
               <TrendingUp className="w-8 h-8 mb-2 opacity-30" />
               <p className="text-sm">No symptom data yet.</p>
-              <p className="text-xs mt-1">
-                Log today's symptoms below to get started.
-              </p>
+              <p className="text-xs mt-1">Log today's symptoms below to get started.</p>
             </div>
           ) : (
             <SymptomChart
@@ -316,9 +370,7 @@ export default function Dashboard() {
             className="text-base font-semibold flex items-center gap-2"
             style={{ fontFamily: "Outfit, sans-serif" }}
           >
-            {existingToday && (
-              <CheckCircle2 className="w-4 h-4 text-primary" />
-            )}
+            {existingToday && <CheckCircle2 className="w-4 h-4 text-primary" />}
             {existingToday ? "Update Today's Log" : "Log Today's Symptoms"}
           </CardTitle>
           {existingToday && (
@@ -366,10 +418,7 @@ export default function Dashboard() {
                 </p>
               </div>
             ) : (
-              <div
-                className="grid grid-cols-1 sm:grid-cols-2 gap-2"
-                data-testid="med-checklist-today"
-              >
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" data-testid="med-checklist-today">
                 {medLibrary.map((med) => (
                   <label
                     key={med.id}
@@ -382,9 +431,7 @@ export default function Dashboard() {
                       data-testid={`checkbox-med-${med.id}`}
                     />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground leading-tight">
-                        {med.name}
-                      </p>
+                      <p className="text-sm font-medium text-foreground leading-tight">{med.name}</p>
                       <p className="text-[11px] text-muted-foreground mt-0.5">
                         {med.dosage} · {FREQUENCY_LABELS[med.frequency]}
                       </p>

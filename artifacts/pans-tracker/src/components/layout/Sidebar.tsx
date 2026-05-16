@@ -1,14 +1,29 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { LayoutDashboard, ClipboardList, Pill, Printer, Menu, X, Activity, BookOpen, Download, Flag } from "lucide-react";
+import {
+  LayoutDashboard,
+  ClipboardList,
+  Pill,
+  Printer,
+  Menu,
+  X,
+  Activity,
+  BookOpen,
+  Download,
+  Flag,
+  CalendarRange,
+  Heart,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/log", label: "Daily Log", icon: ClipboardList },
+  { href: "/timeline", label: "Timeline", icon: CalendarRange },
   { href: "/library", label: "Med Library", icon: BookOpen },
   { href: "/milestones", label: "Milestones", icon: Flag },
+  { href: "/baseline", label: "My Child", icon: Heart },
   { href: "/print", label: "Print Summary", icon: Printer },
   { href: "/export", label: "Export PDF", icon: Download },
 ];
@@ -33,6 +48,7 @@ export default function Sidebar() {
       <nav className="flex flex-col gap-1 p-3 flex-1" data-testid="sidebar-nav">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = location === href;
+          const isBaseline = href === "/baseline";
           return (
             <Link
               key={href}
@@ -45,10 +61,12 @@ export default function Sidebar() {
                   "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors cursor-pointer",
                   isActive
                     ? "bg-primary text-primary-foreground"
+                    : isBaseline
+                    ? "text-amber-700 hover:bg-amber-50 dark:text-amber-400 dark:hover:bg-amber-950"
                     : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
                 )}
               >
-                <Icon className="w-4 h-4 flex-shrink-0" />
+                <Icon className={cn("w-4 h-4 flex-shrink-0", isBaseline && !isActive && "text-amber-500")} />
                 {label}
               </div>
             </Link>

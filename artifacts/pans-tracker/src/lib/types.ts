@@ -54,3 +54,24 @@ export type Milestone = {
   type: MilestoneType;
   notes?: string;
 };
+
+export type ActivityLevel = 'low' | 'moderate' | 'high';
+
+export const ACTIVITY_LABELS: Record<ActivityLevel, string> = {
+  low: 'Low — prefers quiet activities',
+  moderate: 'Moderate — mix of active and calm',
+  high: 'High — on the go, always moving',
+};
+
+export type ChildBaseline = {
+  childName: string;
+  childAge: string;
+  description: string;
+  sleepHours: string;
+  appetite: string;
+  activityLevel: ActivityLevel;
+  socialBehavior: string;
+  schoolPerformance: string;
+  behavioralNotes: string;
+  lastUpdated: string; // ISO timestamp
+};

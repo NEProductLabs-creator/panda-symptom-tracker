@@ -15,6 +15,7 @@ import Sidebar from "@/components/layout/Sidebar";
 import Timeline from "@/pages/Timeline";
 import Baseline from "@/pages/Baseline";
 import PTECCheckin from "@/pages/PTECCheckin";
+import TriggerLogPage from "@/pages/TriggerLog";
 
 const queryClient = new QueryClient();
 
@@ -58,6 +59,7 @@ function Router() {
         <Route path="/ptec" component={PTECCheckin} />
         <Route path="/timeline" component={Timeline} />
         <Route path="/baseline" component={Baseline} />
+        <Route path="/triggers" component={TriggerLogPage} />
         <Route path="/about" component={Intro} />
         <Route component={NotFound} />
       </Switch>

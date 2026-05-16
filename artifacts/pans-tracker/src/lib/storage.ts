@@ -1,4 +1,4 @@
-import { SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline, PTECLog, FlareEvent } from './types';
+import { SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline, PTECLog, FlareEvent, TriggerEntry, HouseholdIllness } from './types';
 
 const SYMPTOM_LOGS_KEY = 'pans_tracker_symptom_logs';
 const MEDICATIONS_KEY = 'pans_tracker_medications';
@@ -104,5 +104,39 @@ export const storage = {
     if (!alreadyExists) {
       storage.saveFlareHistory([...existing, event]);
     }
+  },
+
+  getTriggerLog: (): TriggerEntry[] => {
+    const data = localStorage.getItem('triggerLog');
+    return data ? JSON.parse(data) : [];
+  },
+
+  saveTriggerLog: (entries: TriggerEntry[]) => {
+    localStorage.setItem('triggerLog', JSON.stringify(entries));
+  },
+
+  addTriggerEntry: (entry: TriggerEntry) => {
+    storage.saveTriggerLog([...storage.getTriggerLog(), entry]);
+  },
+
+  deleteTriggerEntry: (id: string) => {
+    storage.saveTriggerLog(storage.getTriggerLog().filter((e) => e.id !== id));
+  },
+
+  getHouseholdHealth: (): HouseholdIllness[] => {
+    const data = localStorage.getItem('householdHealthLog');
+    return data ? JSON.parse(data) : [];
+  },
+
+  saveHouseholdHealth: (illnesses: HouseholdIllness[]) => {
+    localStorage.setItem('householdHealthLog', JSON.stringify(illnesses));
+  },
+
+  addHouseholdIllness: (illness: HouseholdIllness) => {
+    storage.saveHouseholdHealth([...storage.getHouseholdHealth(), illness]);
+  },
+
+  deleteHouseholdIllness: (id: string) => {
+    storage.saveHouseholdHealth(storage.getHouseholdHealth().filter((h) => h.id !== id));
   },
 };

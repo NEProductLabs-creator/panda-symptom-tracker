@@ -79,6 +79,40 @@ export type PTECLog = {
 
 export type PTECScores = PTECLog['scores'];
 
+// ─── Trigger Log ─────────────────────────────────────────────────────────────
+
+export type TriggerCategory =
+  | 'strep_exposure'
+  | 'child_illness'
+  | 'household_illness'
+  | 'vaccination'
+  | 'high_stress'
+  | 'dietary_change'
+  | 'poor_sleep'
+  | 'seasonal_weather'
+  | 'other';
+
+export type TriggerSeverity = 'low' | 'medium' | 'high';
+
+export type TriggerEntry = {
+  id: string;
+  category: TriggerCategory;
+  date: string; // YYYY-MM-DD
+  notes: string;
+  severity: TriggerSeverity;
+  householdMemberName?: string; // for household_illness category
+  customCategory?: string; // for 'other' category
+};
+
+export type HouseholdIllness = {
+  id: string;
+  memberName: string;
+  illnessType: string;
+  startDate: string; // YYYY-MM-DD
+  endDate?: string; // YYYY-MM-DD
+  notes?: string;
+};
+
 export type FlareEvent = {
   id: string;
   detectedDate: string; // YYYY-MM-DD

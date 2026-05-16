@@ -13,6 +13,7 @@ import {
   CalendarRange,
   Heart,
   ClipboardCheck,
+  Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,7 @@ const navItems = [
   { href: "/log", label: "Daily Log", icon: ClipboardList },
   { href: "/ptec", label: "Weekly Check-in", icon: ClipboardCheck },
   { href: "/timeline", label: "Timeline", icon: CalendarRange },
+  { href: "/triggers", label: "Trigger Log", icon: Zap },
   { href: "/library", label: "Med Library", icon: BookOpen },
   { href: "/milestones", label: "Milestones", icon: Flag },
   { href: "/baseline", label: "My Child", icon: Heart },

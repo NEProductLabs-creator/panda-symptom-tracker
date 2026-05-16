@@ -13,6 +13,8 @@ import { useMedLibrary } from "@/hooks/useMedLibrary";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
 import { usePTECLogs } from "@/hooks/usePTECLogs";
 import { useMilestones } from "@/hooks/useMilestones";
+import { useTriggerLog } from "@/hooks/useTriggerLog";
+import { useHouseholdHealth } from "@/hooks/useHouseholdHealth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CalendarRange,
@@ -47,6 +49,8 @@ const LEGEND = [
   { label: "Significant (19–24)", color: "#fdba74", border: false },
   { label: "Severe (25–30)", color: "#f87171", border: false },
 ];
+
+const TRIGGER_DOT_COLOR = "#8b5cf6";
 
 // ─── Day Detail Panel ────────────────────────────────────────────────────────
 
@@ -208,6 +212,7 @@ interface MonthGridProps {
   logMap: Map<string, SymptomLog>;
   milestoneDays: Map<string, Milestone>;
   flareDays: Set<string>;
+  triggerDays: Set<string>;
   onDayClick: (date: string) => void;
   selectedDate: string | null;
 }
@@ -218,6 +223,7 @@ function MonthGrid({
   logMap,
   milestoneDays,
   flareDays,
+  triggerDays,
   onDayClick,
   selectedDate,
 }: MonthGridProps) {
@@ -258,6 +264,7 @@ function MonthGrid({
           const isSelected = ds === selectedDate;
           const hasMilestone = milestoneDays.has(ds);
           const isFlareDay = flareDays.has(ds);
+          const isTriggerDay = triggerDays.has(ds);
           const hasNotes = !!log?.notes;
 
           return (
@@ -297,6 +304,15 @@ function MonthGrid({
                 </div>
               )}
 
+              {/* Bottom-left: trigger dot */}
+              {isTriggerDay && (
+                <span
+                  className="absolute bottom-0.5 left-0.5 w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: TRIGGER_DOT_COLOR }}
+                  title="Trigger logged"
+                />
+              )}
+
               {/* Bottom-right: notes dot */}
               {hasNotes && (
                 <span
@@ -321,6 +337,8 @@ export default function Timeline() {
   const { baseline } = useChildBaseline();
   const { ptecLogs } = usePTECLogs();
   const { milestones } = useMilestones();
+  const { entries: triggerEntries } = useTriggerLog();
+  const { illnesses: householdIllnesses } = useHouseholdHealth();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
 
   const logMap = useMemo(() => new Map(logs.map((l) => [l.date, l])), [logs]);
@@ -329,6 +347,22 @@ export default function Timeline() {
     () => new Map(milestones.map((m) => [m.date, m])),
     [milestones]
   );
+
+  // Compute trigger days (trigger entries + household illness date ranges)
+  const triggerDays = useMemo(() => {
+    const days = new Set<string>();
+    triggerEntries.forEach((t) => days.add(t.date));
+    householdIllnesses.forEach((h) => {
+      if (h.endDate) {
+        eachDayOfInterval({ start: parseISO(h.startDate), end: parseISO(h.endDate) }).forEach((d) =>
+          days.add(format(d, "yyyy-MM-dd"))
+        );
+      } else {
+        days.add(h.startDate);
+      }
+    });
+    return days;
+  }, [triggerEntries, householdIllnesses]);
 
   // Compute flare days from PTEC periods
   const { flareDays, ptecFlareHistory } = useMemo(() => {
@@ -460,6 +494,10 @@ export default function Timeline() {
           <span className="text-xs text-muted-foreground">Possible flare week</span>
         </div>
         <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: TRIGGER_DOT_COLOR }} />
+          <span className="text-xs text-muted-foreground">Trigger event</span>
+        </div>
+        <div className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: "#818cf8" }} />
           <span className="text-xs text-muted-foreground">Has note</span>
         </div>
@@ -488,6 +526,7 @@ export default function Timeline() {
                   logMap={logMap}
                   milestoneDays={milestoneDays}
                   flareDays={flareDays}
+                  triggerDays={triggerDays}
                   onDayClick={(d) => setSelectedDate((prev) => (prev === d ? null : d))}
                   selectedDate={selectedDate}
                 />

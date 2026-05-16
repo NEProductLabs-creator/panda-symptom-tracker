@@ -13,14 +13,28 @@ export type SymptomLog = {
 
 export type MedicationType = 'antibiotic' | 'ssri' | 'supplement' | 'ivig' | 'steroid' | 'other';
 
+export type CourseType = 'prophylactic' | 'treatment';
+
+export type MissedDose = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  note?: string;
+};
+
 export type Medication = {
   id: string;
   name: string;
   dose: string;
+  frequency?: FrequencyOption;
   type: MedicationType;
   startDate: string; // YYYY-MM-DD
   endDate: string | null;
+  prescribingDoctor?: string;
+  courseType?: CourseType;
+  courseDays?: number; // planned duration for treatment courses
+  supplyDays?: number; // days of supply on hand (user-updated)
   notes?: string;
+  missedDoses?: MissedDose[];
 };
 
 export type FrequencyOption = 'once' | 'twice' | 'three_times';

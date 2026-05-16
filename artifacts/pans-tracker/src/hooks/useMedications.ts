@@ -1,5 +1,5 @@
 import { useState, useCallback } from 'react';
-import { Medication } from '@/lib/types';
+import { Medication, MissedDose } from '@/lib/types';
 import { storage } from '@/lib/storage';
 
 export function useMedications() {
@@ -28,5 +28,29 @@ export function useMedications() {
     });
   }, []);
 
-  return { medications, addMedication, deleteMedication };
+  const addMissedDose = useCallback((medId: string, missed: MissedDose) => {
+    setMedications(prev => {
+      const newMeds = prev.map(m =>
+        m.id === medId
+          ? { ...m, missedDoses: [...(m.missedDoses ?? []), missed] }
+          : m
+      );
+      storage.saveMedications(newMeds);
+      return newMeds;
+    });
+  }, []);
+
+  const deleteMissedDose = useCallback((medId: string, doseId: string) => {
+    setMedications(prev => {
+      const newMeds = prev.map(m =>
+        m.id === medId
+          ? { ...m, missedDoses: (m.missedDoses ?? []).filter(d => d.id !== doseId) }
+          : m
+      );
+      storage.saveMedications(newMeds);
+      return newMeds;
+    });
+  }, []);
+
+  return { medications, addMedication, deleteMedication, addMissedDose, deleteMissedDose };
 }

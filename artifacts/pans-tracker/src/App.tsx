@@ -16,6 +16,7 @@ import Timeline from "@/pages/Timeline";
 import Baseline from "@/pages/Baseline";
 import PTECCheckin from "@/pages/PTECCheckin";
 import TriggerLogPage from "@/pages/TriggerLog";
+import Medications from "@/pages/Medications";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ function Router() {
         <Route path="/timeline" component={Timeline} />
         <Route path="/baseline" component={Baseline} />
         <Route path="/triggers" component={TriggerLogPage} />
+        <Route path="/medications" component={Medications} />
         <Route path="/about" component={Intro} />
         <Route component={NotFound} />
       </Switch>

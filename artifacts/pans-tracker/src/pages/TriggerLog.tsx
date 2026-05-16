@@ -17,6 +17,8 @@ import {
   Trash2,
   Users,
   ChevronUp,
+  TrendingUp,
+  BarChart2,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +26,12 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useSymptomLogs } from "@/hooks/useSymptomLogs";
+import {
+  computeTriggerCorrelations,
+  computePatternInsight,
+  TriggerCorrelation,
+} from "@/lib/triggerCorrelation";
 import {
   TriggerCategory,
   TriggerSeverity,
@@ -59,6 +67,114 @@ type MergedItem =
   | { kind: "trigger"; entry: TriggerEntry; date: string }
   | { kind: "household"; illness: HouseholdIllness; date: string };
 
+// ─── Before/After Correlation Bars ───────────────────────────────────────────
+
+function CorrelationBars({ correlation }: { correlation: TriggerCorrelation | null }) {
+  if (!correlation) return null;
+
+  const {
+    beforeAvg,
+    afterAvg,
+    beforeDaysLogged,
+    afterDaysLogged,
+    hasEnoughData,
+    changeAmount,
+    hasSignificantIncrease,
+  } = correlation;
+
+  if (!hasEnoughData) {
+    return (
+      <p className="text-xs text-muted-foreground italic mt-2 pl-1 leading-relaxed">
+        No daily logs found within 7 days of this trigger — keep logging to see comparisons here.
+      </p>
+    );
+  }
+
+  const afterBarColor = (() => {
+    if (changeAmount === null) return "#86efac";
+    if (changeAmount > 5) return "#f87171";
+    if (changeAmount > 2) return "#fdba74";
+    if (changeAmount > 0) return "#fde68a";
+    return "#86efac";
+  })();
+
+  const changeColor =
+    changeAmount === null
+      ? "#9ca3af"
+      : changeAmount > 2
+      ? "#ea580c"
+      : changeAmount < -1
+      ? "#16a34a"
+      : "#9ca3af";
+
+  const changeLabel =
+    changeAmount === null
+      ? null
+      : changeAmount > 0
+      ? `↑ ${changeAmount.toFixed(1)} pts after`
+      : changeAmount < 0
+      ? `↓ ${Math.abs(changeAmount).toFixed(1)} pts — improvement`
+      : "→ no change";
+
+  const rows = [
+    { label: "Before", avg: beforeAvg, days: beforeDaysLogged, color: "#86efac" },
+    { label: "After", avg: afterAvg, days: afterDaysLogged, color: afterBarColor },
+  ];
+
+  return (
+    <div className="mt-3 pt-2.5 border-t border-border/40 space-y-1.5">
+      <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium mb-2">
+        Symptom avg · 7 days before vs after (0–30)
+      </p>
+      {rows.map(({ label, avg, days, color }) => (
+        <div key={label} className="flex items-center gap-2">
+          <span className="text-[11px] text-muted-foreground w-9 text-right flex-shrink-0 font-medium">
+            {label}
+          </span>
+          <div className="flex-1 h-2 bg-muted/80 rounded-full overflow-hidden">
+            <div
+              className="h-full rounded-full"
+              style={{
+                width: `${avg !== null ? Math.min((avg / 30) * 100, 100) : 0}%`,
+                backgroundColor: color,
+                transition: "width 0.4s ease",
+              }}
+            />
+          </div>
+          <span className="text-[11px] text-muted-foreground w-16 flex-shrink-0 tabular-nums">
+            {avg !== null ? (
+              <>
+                <span className="font-semibold text-foreground">{avg.toFixed(1)}</span>
+                <span className="text-[9px]"> ({days}d)</span>
+              </>
+            ) : (
+              <span className="italic">no data</span>
+            )}
+          </span>
+        </div>
+      ))}
+      {changeLabel && (
+        <div className="flex items-center gap-2 pt-0.5">
+          <span className="w-9 flex-shrink-0" />
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-semibold" style={{ color: changeColor }}>
+              {changeLabel}
+            </span>
+            {hasSignificantIncrease && (
+              <span
+                className="text-[10px] font-medium px-1.5 py-0.5 rounded-full"
+                style={{ background: "#fef2f2", color: "#dc2626", border: "1px solid #fecaca" }}
+              >
+                Notable rise
+              </span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function TriggerLog() {
   const { entries, addEntry, deleteEntry } = useTriggerLog();
   const { illnesses, addIllness, deleteIllness } = useHouseholdHealth();
@@ -82,6 +198,23 @@ export default function TriggerLog() {
   const [hhNotes, setHhNotes] = useState("");
 
   const childName = baseline?.childName?.trim();
+  const { logs } = useSymptomLogs();
+
+  // Trigger correlations
+  const correlations = useMemo(
+    () => computeTriggerCorrelations(entries, logs),
+    [entries, logs]
+  );
+
+  const correlationInsight = useMemo(
+    () => computePatternInsight(correlations),
+    [correlations]
+  );
+
+  const correlationMap = useMemo(
+    () => new Map(correlations.map((c) => [c.triggerId, c])),
+    [correlations]
+  );
 
   // Merged timeline: triggers + household illnesses sorted newest-first
   const mergedItems = useMemo<MergedItem[]>(() => {
@@ -157,6 +290,56 @@ export default function TriggerLog() {
             : "Track events that may have triggered or preceded symptoms"}
         </p>
       </div>
+
+      {/* ── Pattern Insight ─────────────────────────────────────────────────── */}
+      {entries.length >= 1 && (
+        <Card className="border-border shadow-sm overflow-hidden">
+          <div
+            className="h-1 w-full"
+            style={{
+              backgroundColor: correlationInsight.hasPattern ? "#f59e0b" : "hsl(var(--border))",
+              opacity: 0.7,
+            }}
+          />
+          <CardContent className="p-4">
+            {correlationInsight.hasPattern ? (
+              <div className="flex items-start gap-3">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                  style={{ background: "#fffbeb" }}
+                >
+                  <TrendingUp className="w-4 h-4 text-amber-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-foreground">Pattern noticed</p>
+                  <p className="text-sm text-muted-foreground mt-0.5 leading-relaxed">
+                    {correlationInsight.message}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1.5 opacity-70">
+                    Based on {correlationInsight.totalWithData} trigger
+                    {correlationInsight.totalWithData !== 1 ? "s" : ""} with enough daily log data around them.
+                    These are observations, not diagnoses.
+                  </p>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-start gap-3">
+                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0">
+                  <BarChart2 className="w-4 h-4 text-muted-foreground" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-foreground">Trigger correlation</p>
+                  <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                    {correlationInsight.totalWithData < 2
+                      ? "Keep logging daily symptoms and patterns will begin to appear here over time."
+                      : "No clear patterns detected yet. Keep logging — connections often emerge after a few weeks of data."}
+                  </p>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Log a Trigger ────────────────────────────────────────────────────── */}
       <Card className="border-border shadow-sm">
@@ -521,6 +704,7 @@ export default function TriggerLog() {
                             {entry.notes}
                           </p>
                         )}
+                        <CorrelationBars correlation={correlationMap.get(entry.id) ?? null} />
                       </div>
                     </div>
                   );

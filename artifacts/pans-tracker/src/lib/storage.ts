@@ -1,4 +1,4 @@
-import { SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline, PTECLog } from './types';
+import { SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline, PTECLog, FlareEvent } from './types';
 
 const SYMPTOM_LOGS_KEY = 'pans_tracker_symptom_logs';
 const MEDICATIONS_KEY = 'pans_tracker_medications';
@@ -6,6 +6,7 @@ const MED_LIBRARY_KEY = 'pans_tracker_med_library';
 const MILESTONES_KEY = 'pans_tracker_milestones';
 const CHILD_BASELINE_KEY = 'childBaseline';
 const PTEC_LOG_KEY = 'ptecLog';
+const FLARE_HISTORY_KEY = 'flareHistory';
 
 export const storage = {
   getLogs: (): SymptomLog[] => {
@@ -86,5 +87,22 @@ export const storage = {
   deletePTECLog: (id: string) => {
     const existing = storage.getPTECLogs().filter((l) => l.id !== id);
     storage.savePTECLogs(existing);
+  },
+
+  getFlareHistory: (): FlareEvent[] => {
+    const data = localStorage.getItem(FLARE_HISTORY_KEY);
+    return data ? JSON.parse(data) : [];
+  },
+
+  saveFlareHistory: (events: FlareEvent[]) => {
+    localStorage.setItem(FLARE_HISTORY_KEY, JSON.stringify(events));
+  },
+
+  addFlareEventIfNew: (event: FlareEvent) => {
+    const existing = storage.getFlareHistory();
+    const alreadyExists = existing.some((e) => e.weekStartDate === event.weekStartDate);
+    if (!alreadyExists) {
+      storage.saveFlareHistory([...existing, event]);
+    }
   },
 };

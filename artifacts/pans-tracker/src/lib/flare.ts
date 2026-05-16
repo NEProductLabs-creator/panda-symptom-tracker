@@ -138,20 +138,21 @@ export function computeFlareHistory(logs: SymptomLog[]): FlarePeriod[] {
   return periods.reverse();
 }
 
+// Green-to-red scale. No log = light green (good day assumption).
 export function getHeatColor(score: number, hasLog: boolean): string {
-  if (!hasLog) return '';
-  if (score === 0) return '#dcfce7';
-  if (score <= 8) return '#86efac';
-  if (score <= 16) return '#fde68a';
-  if (score <= 22) return '#fdba74';
-  return '#f87171';
+  if (!hasLog) return '#dcfce7'; // No log → assumed good day (light green)
+  if (score === 0) return '#bbf7d0'; // Confirmed symptom-free
+  if (score <= 9) return '#86efac'; // Mild (0-1 avg per symptom)
+  if (score <= 18) return '#fde68a'; // Moderate (2-3 avg)
+  if (score <= 24) return '#fdba74'; // Significant (4-5 avg)
+  return '#f87171'; // Severe (6+ avg)
 }
 
 export function getHeatLabel(score: number, hasLog: boolean): string {
   if (!hasLog) return 'No log';
   if (score === 0) return 'Symptom-free';
-  if (score <= 8) return 'Mild';
-  if (score <= 16) return 'Moderate';
-  if (score <= 22) return 'Significant';
+  if (score <= 9) return 'Mild';
+  if (score <= 18) return 'Moderate';
+  if (score <= 24) return 'Significant';
   return 'Severe';
 }

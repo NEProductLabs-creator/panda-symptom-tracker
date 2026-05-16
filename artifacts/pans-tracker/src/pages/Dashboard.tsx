@@ -1,11 +1,12 @@
 import { useMemo, useState } from "react";
-import { format, subDays } from "date-fns";
+import { format, subDays, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedications } from "@/hooks/useMedications";
 import { useMedLibrary } from "@/hooks/useMedLibrary";
 import { useMilestones } from "@/hooks/useMilestones";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
+import { usePTECLogs } from "@/hooks/usePTECLogs";
 import SymptomChart, { CATEGORIES, getScoreColor } from "@/components/charts/SymptomChart";
 import Sparkline from "@/components/charts/Sparkline";
 import FlareAlert from "@/components/FlareAlert";
@@ -22,9 +23,11 @@ import {
   Pill,
   Activity,
   Heart,
+  ClipboardCheck,
 } from "lucide-react";
 import { SymptomLog, FREQUENCY_LABELS } from "@/lib/types";
-import { computeDailyScore, detectCurrentFlare } from "@/lib/flare";
+import { computeDailyScore } from "@/lib/flare";
+import { detectPTECFlare, getPTECSeverity } from "@/lib/ptec";
 
 const today = format(new Date(), "yyyy-MM-dd");
 const todayDisplay = format(new Date(), "EEEE, MMMM d, yyyy");
@@ -73,6 +76,7 @@ export default function Dashboard() {
   const { medLibrary } = useMedLibrary();
   const { milestones } = useMilestones();
   const { baseline } = useChildBaseline();
+  const { ptecLogs } = usePTECLogs();
   const { toast } = useToast();
 
   const existingToday = logs.find((l) => l.date === today);
@@ -128,17 +132,23 @@ export default function Dashboard() {
   const todayScoreLabel =
     todayScore === null ? null : todayScore <= 3 ? "Mild" : todayScore <= 6 ? "Moderate" : "Severe";
 
-  // Raw 0–30 total for flare detection + baseline reminder threshold
   const todayTotal = existingToday ? computeDailyScore(existingToday) : 0;
 
   const todayMedsTaken = existingToday?.medicationsTaken?.length
     ? medLibrary.filter((m) => existingToday.medicationsTaken!.includes(m.id))
     : [];
 
-  // Flare detection
-  const flareStatus = useMemo(() => detectCurrentFlare(logs), [logs]);
+  // PTEC-based flare detection (primary)
+  const flareStatus = useMemo(() => detectPTECFlare(ptecLogs), [ptecLogs]);
 
-  // Sparkline data: last 30 days of total scores
+  // Latest PTEC entry for snapshot display
+  const latestPTEC = useMemo(
+    () => [...ptecLogs].sort((a, b) => b.weekStartDate.localeCompare(a.weekStartDate))[0] ?? null,
+    [ptecLogs]
+  );
+  const latestPTECSev = latestPTEC ? getPTECSeverity(latestPTEC.totalScore) : null;
+
+  // Sparkline data: last 30 days of total daily scores
   const sparklineData = useMemo(() => {
     const logMap = new Map(logs.map((l) => [l.date, l]));
     return Array.from({ length: 30 }, (_, i) => {
@@ -152,24 +162,33 @@ export default function Dashboard() {
     });
   }, [logs]);
 
+  // PTEC sparkline: last 8 weekly entries
+  const ptecSparkData = useMemo(() => {
+    const last8 = [...ptecLogs].sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate)).slice(-8);
+    return last8.map((log) => ({
+      date: format(parseISO(log.weekStartDate), "MMM d"),
+      score: log.totalScore,
+      hasLog: true,
+    }));
+  }, [ptecLogs]);
+
   const hasAnyLog = logs.length > 0;
   const childName = baseline?.childName?.trim();
-  // Show baseline reminder when today's total score is high (≥15/30) and baseline exists
   const showBaselineReminder = baseline && existingToday && todayTotal >= 15;
 
   return (
     <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-4 pb-28">
 
-      {/* Flare alert banner */}
-      {flareStatus.isActive && flareStatus.startDate && (
+      {/* PTEC-based flare alert */}
+      {flareStatus.isActive && (
         <FlareAlert
           childName={childName}
-          startDate={flareStatus.startDate}
-          consecutiveDays={flareStatus.consecutiveDays}
+          ptecScore={flareStatus.latestScore}
+          avgScore={flareStatus.fourWeekAvg}
         />
       )}
 
-      {/* Today's Snapshot + Sparkline */}
+      {/* Today's Snapshot + Sparklines */}
       <Card className="border-border shadow-sm overflow-hidden">
         <div
           className="h-1 w-full"
@@ -238,13 +257,48 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* Sparkline — 30-day total severity trend */}
+          {/* 30-day daily severity sparkline */}
           {hasAnyLog && (
             <div className="mt-3 pt-3 border-t border-border/50">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium mb-1">
-                30-day severity trend (total 0–30)
+                30-day daily severity (0–30)
               </p>
-              <Sparkline data={sparklineData} height={44} />
+              <Sparkline data={sparklineData} height={40} gradientId="dailySparkGradient" />
+            </div>
+          )}
+
+          {/* PTEC 8-week sparkline */}
+          {ptecLogs.length > 0 && (
+            <div className="mt-2.5 pt-2.5 border-t border-border/50">
+              <div className="flex items-center justify-between mb-1">
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium flex items-center gap-1">
+                  <ClipboardCheck className="w-3 h-3" />
+                  PTEC weekly trend (8w · 0–72)
+                </p>
+                {latestPTEC && latestPTECSev && (
+                  <span className="text-[10px] font-semibold" style={{ color: latestPTECSev.color }}>
+                    Latest: {latestPTEC.totalScore}/72 · {latestPTECSev.label}
+                  </span>
+                )}
+              </div>
+              <Sparkline
+                data={ptecSparkData}
+                height={36}
+                color="#f59e0b"
+                gradientId="ptecSparkGradient"
+              />
+            </div>
+          )}
+
+          {/* Prompt to start PTEC if no data */}
+          {ptecLogs.length === 0 && (
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <Link href="/ptec">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
+                  <ClipboardCheck className="w-3.5 h-3.5 text-amber-500" />
+                  <span>Complete your first weekly check-in to see PTEC trends →</span>
+                </div>
+              </Link>
             </div>
           )}
         </CardContent>
@@ -316,7 +370,7 @@ export default function Dashboard() {
         </Card>
       </div>
 
-      {/* Chart */}
+      {/* Symptom trend chart */}
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between gap-3">

@@ -79,6 +79,15 @@ export type PTECLog = {
 
 export type PTECScores = PTECLog['scores'];
 
+export type FlareEvent = {
+  id: string;
+  detectedDate: string; // YYYY-MM-DD
+  weekStartDate: string; // PTEC week that triggered
+  ptecScore: number;
+  averageScore: number;
+  percentAboveAvg: number;
+};
+
 export type ActivityLevel = 'low' | 'moderate' | 'high';
 
 export const ACTIVITY_LABELS: Record<ActivityLevel, string> = {

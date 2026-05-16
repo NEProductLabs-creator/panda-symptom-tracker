@@ -16,6 +16,7 @@ import {
   Zap,
   Pill,
   School,
+  HeartHandshake,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ const navItems = [
   { href: "/library", label: "Med Library", icon: BookOpen },
   { href: "/milestones", label: "Milestones", icon: Flag },
   { href: "/baseline", label: "My Child", icon: Heart },
+  { href: "/wellbeing", label: "My Wellbeing", icon: HeartHandshake },
   { href: "/school", label: "School Hub", icon: School },
   { href: "/print", label: "Print Summary", icon: Printer },
   { href: "/export", label: "Export PDF", icon: Download },

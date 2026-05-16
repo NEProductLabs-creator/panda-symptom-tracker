@@ -15,6 +15,7 @@ import { usePTECLogs } from "@/hooks/usePTECLogs";
 import { useMilestones } from "@/hooks/useMilestones";
 import { useTriggerLog } from "@/hooks/useTriggerLog";
 import { useHouseholdHealth } from "@/hooks/useHouseholdHealth";
+import { useWellbeingLogs } from "@/hooks/useWellbeingLogs";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   CalendarRange,
@@ -213,6 +214,7 @@ interface MonthGridProps {
   milestoneDays: Map<string, Milestone>;
   flareDays: Set<string>;
   triggerDays: Set<string>;
+  hardDays: Set<string>;
   onDayClick: (date: string) => void;
   selectedDate: string | null;
 }
@@ -222,6 +224,7 @@ function MonthGrid({
   month,
   logMap,
   milestoneDays,
+  hardDays,
   flareDays,
   triggerDays,
   onDayClick,
@@ -265,6 +268,7 @@ function MonthGrid({
           const hasMilestone = milestoneDays.has(ds);
           const isFlareDay = flareDays.has(ds);
           const isTriggerDay = triggerDays.has(ds);
+          const isHardDay = hardDays.has(ds);
           const hasNotes = !!log?.notes;
 
           return (
@@ -321,6 +325,15 @@ function MonthGrid({
                   title="Has notes"
                 />
               )}
+
+              {/* Bottom-center: hard parent day */}
+              {isHardDay && (
+                <span
+                  className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full"
+                  style={{ backgroundColor: "#fb7185" }}
+                  title="Hard parent day"
+                />
+              )}
             </button>
           );
         })}
@@ -339,7 +352,13 @@ export default function Timeline() {
   const { milestones } = useMilestones();
   const { entries: triggerEntries } = useTriggerLog();
   const { illnesses: householdIllnesses } = useHouseholdHealth();
+  const { logs: wellbeingLogs } = useWellbeingLogs();
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  const hardDaySet = useMemo(
+    () => new Set(wellbeingLogs.filter((l) => l.hardDay).map((l) => l.date)),
+    [wellbeingLogs]
+  );
 
   const logMap = useMemo(() => new Map(logs.map((l) => [l.date, l])), [logs]);
 
@@ -501,6 +520,10 @@ export default function Timeline() {
           <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: "#818cf8" }} />
           <span className="text-xs text-muted-foreground">Has note</span>
         </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: "#fb7185" }} />
+          <span className="text-xs text-muted-foreground">Hard parent day</span>
+        </div>
       </div>
 
       {/* Calendar heat map */}
@@ -527,6 +550,7 @@ export default function Timeline() {
                   milestoneDays={milestoneDays}
                   flareDays={flareDays}
                   triggerDays={triggerDays}
+                  hardDays={hardDaySet}
                   onDayClick={(d) => setSelectedDate((prev) => (prev === d ? null : d))}
                   selectedDate={selectedDate}
                 />

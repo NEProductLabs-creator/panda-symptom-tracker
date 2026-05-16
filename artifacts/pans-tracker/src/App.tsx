@@ -18,6 +18,7 @@ import PTECCheckin from "@/pages/PTECCheckin";
 import TriggerLogPage from "@/pages/TriggerLog";
 import Medications from "@/pages/Medications";
 import SchoolHub from "@/pages/SchoolHub";
+import WellbeingCheckin from "@/pages/WellbeingCheckin";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ function Router() {
         <Route path="/triggers" component={TriggerLogPage} />
         <Route path="/medications" component={Medications} />
         <Route path="/school" component={SchoolHub} />
+        <Route path="/wellbeing" component={WellbeingCheckin} />
         <Route path="/about" component={Intro} />
         <Route component={NotFound} />
       </Switch>

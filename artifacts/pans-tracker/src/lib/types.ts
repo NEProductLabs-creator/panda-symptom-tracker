@@ -156,3 +156,13 @@ export type ChildBaseline = {
   behavioralNotes: string;
   lastUpdated: string; // ISO timestamp
 };
+
+export type WellbeingLog = {
+  id: string;
+  date: string; // YYYY-MM-DD
+  holding: number;   // 1–5: how the caregiver is holding up (5 = thriving)
+  stress: number;    // 1–5: how manageable home stress feels (5 = very calm)
+  connected: number; // 1–5: how connected they feel to support (5 = well-supported)
+  notes?: string;    // private caregiver-only notes
+  hardDay: boolean;  // flags this date as a particularly hard day
+};

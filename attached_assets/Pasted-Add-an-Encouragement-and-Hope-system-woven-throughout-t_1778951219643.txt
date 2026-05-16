@@ -1,0 +1,27 @@
+Add an Encouragement and Hope system woven throughout the app. This is not a separate page but a living presence across the entire experience.
+Part 1: Daily affirmations on the home screen
+Rotate a new message on the dashboard each day. Use this list as the starting set and add 5 more in the same tone:
+
+"You showed up for your child today. That matters more than you know."
+"PANS is treatable. Many children reach full remission. You are not alone in this fight."
+"One hard day does not erase the progress you have made."
+"The fact that you are tracking, advocating, and fighting for answers is extraordinary parenting."
+"Other parents have walked this exact road and come out the other side. So will you."
+"You did not cause this. You cannot always control it. But you are doing everything right."
+"Recovery is not linear, but it is real, and it happens every day for PANS families."
+
+Allow parents to tap a heart icon to save a favorite affirmation. Add a "Hope Board" screen where all saved affirmations are collected.
+Part 2: Milestone celebrations
+Trigger gentle celebration moments automatically when:
+
+3 consecutive days have low or zero symptom scores: "3 good days in a row. Hold onto this."
+A PTEC score drops significantly from the previous entry: "Your data shows real improvement. This is progress."
+A parent completes and exports a doctor report: "You are your child's best advocate. This report could change everything."
+The first week passes with no logged flare, first month, 3 months, and 6 months: celebrate each one with a milestone card
+
+These celebrations should be soft and brief, not intrusive. A gentle banner or card that can be dismissed.
+Part 3: Recovery stories panel
+Add a small rotating panel on the Hope Board screen with 4 brief anonymized recovery stories. Write them in a warm, honest, parent voice. Example:
+"Our daughter had rage episodes every day for 8 months. After finding the right antibiotic protocol, she went back to school full time. It took 14 months but she is mostly herself again."
+Include a call to action at the bottom: "Add your story to help other families" that opens a simple email link.
+Design: Use warm sunrise colors for this feature: soft amber, warm white, and pale gold. Avoid clinical blues and greens in this section specifically.

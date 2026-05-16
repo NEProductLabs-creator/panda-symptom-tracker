@@ -20,10 +20,13 @@ import Medications from "@/pages/Medications";
 import SchoolHub from "@/pages/SchoolHub";
 import WellbeingCheckin from "@/pages/WellbeingCheckin";
 import HopeBoard from "@/pages/HopeBoard";
+import Onboarding from "@/pages/Onboarding";
+import Settings from "@/pages/Settings";
+import { getOnboardingComplete } from "@/hooks/useAppSettings";
 
 const queryClient = new QueryClient();
 
-const NO_SIDEBAR_ROUTES = ["/print", "/about"];
+const NO_SIDEBAR_ROUTES = ["/print", "/about", "/onboarding"];
 
 function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
@@ -46,8 +49,8 @@ function Router() {
   const [location, navigate] = useLocation();
 
   useEffect(() => {
-    if (!hasVisited() && location === "/") {
-      navigate("/about");
+    if (!getOnboardingComplete() && !hasVisited() && location === "/") {
+      navigate("/onboarding");
     }
   }, []);
 
@@ -68,6 +71,8 @@ function Router() {
         <Route path="/school" component={SchoolHub} />
         <Route path="/wellbeing" component={WellbeingCheckin} />
         <Route path="/hope" component={HopeBoard} />
+        <Route path="/onboarding" component={Onboarding} />
+        <Route path="/settings" component={Settings} />
         <Route path="/about" component={Intro} />
         <Route component={NotFound} />
       </Switch>

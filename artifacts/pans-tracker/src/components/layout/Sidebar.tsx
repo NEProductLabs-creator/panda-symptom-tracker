@@ -3,7 +3,6 @@ import { Link, useLocation } from "wouter";
 import {
   LayoutDashboard,
   ClipboardList,
-  Pill,
   Printer,
   Menu,
   X,
@@ -13,6 +12,7 @@ import {
   Flag,
   CalendarRange,
   Heart,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { Button } from "@/components/ui/button";
 const navItems = [
   { href: "/", label: "Dashboard", icon: LayoutDashboard },
   { href: "/log", label: "Daily Log", icon: ClipboardList },
+  { href: "/ptec", label: "Weekly Check-in", icon: ClipboardCheck },
   { href: "/timeline", label: "Timeline", icon: CalendarRange },
   { href: "/library", label: "Med Library", icon: BookOpen },
   { href: "/milestones", label: "Milestones", icon: Flag },
@@ -45,7 +46,7 @@ export default function Sidebar() {
           <p className="text-[11px] text-muted-foreground leading-tight">Symptom Journal</p>
         </div>
       </div>
-      <nav className="flex flex-col gap-1 p-3 flex-1" data-testid="sidebar-nav">
+      <nav className="flex flex-col gap-1 p-3 flex-1 overflow-y-auto" data-testid="sidebar-nav">
         {navItems.map(({ href, label, icon: Icon }) => {
           const isActive = location === href;
           const isBaseline = href === "/baseline";

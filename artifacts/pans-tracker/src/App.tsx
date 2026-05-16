@@ -14,6 +14,7 @@ import MilestonesPage from "@/pages/Milestones";
 import Sidebar from "@/components/layout/Sidebar";
 import Timeline from "@/pages/Timeline";
 import Baseline from "@/pages/Baseline";
+import PTECCheckin from "@/pages/PTECCheckin";
 
 const queryClient = new QueryClient();
 
@@ -54,6 +55,7 @@ function Router() {
         <Route path="/print" component={PrintSummary} />
         <Route path="/export" component={ExportPDF} />
         <Route path="/milestones" component={MilestonesPage} />
+        <Route path="/ptec" component={PTECCheckin} />
         <Route path="/timeline" component={Timeline} />
         <Route path="/baseline" component={Baseline} />
         <Route path="/about" component={Intro} />

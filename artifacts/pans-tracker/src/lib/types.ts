@@ -55,6 +55,30 @@ export type Milestone = {
   notes?: string;
 };
 
+export type PTECLog = {
+  id: string;
+  weekStartDate: string; // YYYY-MM-DD (Monday of the week)
+  date: string; // YYYY-MM-DD (date of actual entry)
+  scores: {
+    ocdBehaviors: number;
+    anxiety: number;
+    emotionalLability: number;
+    aggression: number;
+    restrictiveEating: number;
+    sleepDisturbance: number;
+    urinarySymptoms: number;
+    sensorySensitivities: number;
+    tics: number;
+    handwritingRegression: number;
+    academicDecline: number;
+    personalityChange: number;
+  };
+  totalScore: number; // 0–72
+  notes?: string;
+};
+
+export type PTECScores = PTECLog['scores'];
+
 export type ActivityLevel = 'low' | 'moderate' | 'high';
 
 export const ACTIVITY_LABELS: Record<ActivityLevel, string> = {

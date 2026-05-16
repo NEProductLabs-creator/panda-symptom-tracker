@@ -1,10 +1,11 @@
-import { SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline } from './types';
+import { SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline, PTECLog } from './types';
 
 const SYMPTOM_LOGS_KEY = 'pans_tracker_symptom_logs';
 const MEDICATIONS_KEY = 'pans_tracker_medications';
 const MED_LIBRARY_KEY = 'pans_tracker_med_library';
 const MILESTONES_KEY = 'pans_tracker_milestones';
 const CHILD_BASELINE_KEY = 'childBaseline';
+const PTEC_LOG_KEY = 'ptecLog';
 
 export const storage = {
   getLogs: (): SymptomLog[] => {
@@ -60,5 +61,30 @@ export const storage = {
 
   clearChildBaseline: () => {
     localStorage.removeItem(CHILD_BASELINE_KEY);
+  },
+
+  getPTECLogs: (): PTECLog[] => {
+    const data = localStorage.getItem(PTEC_LOG_KEY);
+    return data ? JSON.parse(data) : [];
+  },
+
+  savePTECLogs: (logs: PTECLog[]) => {
+    localStorage.setItem(PTEC_LOG_KEY, JSON.stringify(logs));
+  },
+
+  addOrUpdatePTECLog: (log: PTECLog) => {
+    const existing = storage.getPTECLogs();
+    const idx = existing.findIndex((l) => l.weekStartDate === log.weekStartDate);
+    if (idx >= 0) {
+      existing[idx] = log;
+    } else {
+      existing.push(log);
+    }
+    storage.savePTECLogs(existing);
+  },
+
+  deletePTECLog: (id: string) => {
+    const existing = storage.getPTECLogs().filter((l) => l.id !== id);
+    storage.savePTECLogs(existing);
   },
 };

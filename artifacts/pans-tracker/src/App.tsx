@@ -39,6 +39,11 @@ function Layout({ children }: { children: ReactNode }) {
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <main className="flex-1 md:ml-60 min-h-screen">
+        {/* Pushes content below the fixed mobile header + Dynamic Island safe area */}
+        <div
+          className="md:hidden"
+          style={{ height: "calc(env(safe-area-inset-top) + 3.5rem)" }}
+        />
         {children}
       </main>
     </div>

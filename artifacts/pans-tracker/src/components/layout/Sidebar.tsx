@@ -240,25 +240,30 @@ export default function Sidebar() {
         {navContent}
       </aside>
 
-      {/* Mobile header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar border-b border-sidebar-border flex items-center justify-between px-4 z-30">
-        <div className="flex items-center gap-2">
-          <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center">
-            <Activity className="w-3.5 h-3.5 text-primary-foreground" />
+      {/* Mobile header — sits at top, pads for Dynamic Island / notch via safe-area-inset-top */}
+      <div
+        className="md:hidden fixed top-0 left-0 right-0 bg-sidebar border-b border-sidebar-border z-30"
+        style={{ paddingTop: "env(safe-area-inset-top)" }}
+      >
+        <div className="flex items-center justify-between px-4 h-14">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
+              <Activity className="w-3.5 h-3.5 text-primary-foreground" />
+            </div>
+            <span className="font-bold text-sm text-foreground truncate" style={{ fontFamily: "Outfit, sans-serif" }}>
+              {childName ? `Tracking for ${childName}` : "PANS & PANDAS Tracker"}
+            </span>
           </div>
-          <span className="font-bold text-sm text-foreground" style={{ fontFamily: "Outfit, sans-serif" }}>
-            {childName ? `Tracking for ${childName}` : "PANS & PANDAS Tracker"}
-          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setMobileOpen(!mobileOpen)}
+            data-testid="mobile-menu-toggle"
+            className="w-8 h-8 flex-shrink-0"
+          >
+            {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={() => setMobileOpen(!mobileOpen)}
-          data-testid="mobile-menu-toggle"
-          className="w-8 h-8"
-        >
-          {mobileOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-        </Button>
       </div>
 
       {/* Mobile drawer */}
@@ -268,14 +273,14 @@ export default function Sidebar() {
             className="md:hidden fixed inset-0 bg-black/20 z-40"
             onClick={closeMobile}
           />
-          <aside className="md:hidden fixed top-0 left-0 h-screen w-72 bg-sidebar border-r border-sidebar-border z-50 flex flex-col">
+          <aside
+            className="md:hidden fixed top-0 left-0 h-screen w-72 bg-sidebar border-r border-sidebar-border z-50 flex flex-col"
+            style={{ paddingTop: "env(safe-area-inset-top)" }}
+          >
             {navContent}
           </aside>
         </>
       )}
-
-      {/* Mobile top spacer */}
-      <div className="md:hidden h-14" />
     </>
   );
 }

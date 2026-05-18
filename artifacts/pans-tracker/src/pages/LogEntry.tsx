@@ -36,18 +36,21 @@ const CATEGORIES = [
 const today = format(new Date(), "yyyy-MM-dd");
 
 
-function ScoreBubble({ value, active, onClick }: { value: number; active: boolean; onClick: () => void }) {
+function ScoreBubble({ value, active, onClick, label }: { value: number; active: boolean; onClick: () => void; label?: string }) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className={`w-10 h-10 rounded-xl text-sm font-semibold transition-all ${
+      className={`flex-1 h-10 rounded-xl text-sm font-semibold transition-all flex flex-col items-center justify-center ${
         active
           ? "bg-primary text-primary-foreground shadow-sm scale-105"
           : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
       }`}
     >
-      {value}
+      <span className="leading-none">{value}</span>
+      {label && (
+        <span className="text-[9px] leading-none mt-0.5 font-medium opacity-75">{label}</span>
+      )}
     </button>
   );
 }
@@ -193,6 +196,16 @@ export default function LogEntry() {
         </CardHeader>
         <CardContent className="space-y-5">
 
+          {/* Scale legend */}
+          <p className="text-[11px] text-muted-foreground leading-snug">
+            <span className="font-medium text-foreground/70">0</span> = None &nbsp;·&nbsp;
+            <span className="font-medium text-foreground/70">1</span> = Mild &nbsp;·&nbsp;
+            <span className="font-medium text-foreground/70">2</span> = Moderate &nbsp;·&nbsp;
+            <span className="font-medium text-foreground/70">3</span> = Significant &nbsp;·&nbsp;
+            <span className="font-medium text-foreground/70">4</span> = Severe &nbsp;·&nbsp;
+            <span className="font-medium text-foreground/70">5</span> = Extreme
+          </p>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {CATEGORIES.map((cat) => (
               <div key={cat.key} className="space-y-2">
@@ -206,6 +219,7 @@ export default function LogEntry() {
                       value={n}
                       active={scores[cat.key] === n}
                       onClick={() => setScores((s) => ({ ...s, [cat.key]: n }))}
+                      label={n === 0 ? "None" : n === 5 ? "Extreme" : undefined}
                     />
                   ))}
                 </div>

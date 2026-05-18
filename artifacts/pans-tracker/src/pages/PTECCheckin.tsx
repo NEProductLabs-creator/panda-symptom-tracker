@@ -72,13 +72,18 @@ function PTECScoreRow({
             key={n}
             type="button"
             onClick={() => onChange(n)}
-            className={`flex-1 py-2 rounded-lg text-xs font-bold transition-all touch-manipulation ${
+            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all touch-manipulation flex flex-col items-center justify-center ${
               value === n
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             }`}
           >
-            {n}
+            <span className="leading-none">{n}</span>
+            {(n === 0 || n === 6) && (
+              <span className="text-[9px] leading-none mt-0.5 font-medium opacity-70">
+                {n === 0 ? "None" : "Extreme"}
+              </span>
+            )}
           </button>
         ))}
       </div>
@@ -210,13 +215,15 @@ export default function PTECCheckin() {
         </button>
       </div>
 
-      {/* Score scale legend */}
-      <div className="flex flex-wrap gap-x-3 gap-y-1">
-        {[0, 1, 2, 3, 4, 5, 6].map((n) => (
-          <span key={n} className="text-xs text-muted-foreground">
-            <span className="font-semibold text-foreground">{n}</span> = {PTEC_SCALE_LABELS[n]}
-          </span>
-        ))}
+      {/* Score scale legend — sticky so it stays visible while scrolling the symptom list */}
+      <div className="sticky top-0 z-10 -mx-5 md:-mx-8 px-5 md:px-8 py-2.5 bg-background border-b border-border/60">
+        <div className="flex flex-wrap gap-x-3 gap-y-1">
+          {[0, 1, 2, 3, 4, 5, 6].map((n) => (
+            <span key={n} className="text-xs text-muted-foreground">
+              <span className="font-semibold text-foreground">{n}</span> = {PTEC_SCALE_LABELS[n]}
+            </span>
+          ))}
+        </div>
       </div>
 
       {/* Symptom form */}

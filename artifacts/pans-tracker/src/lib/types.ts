@@ -37,12 +37,13 @@ export type Medication = {
   missedDoses?: MissedDose[];
 };
 
-export type FrequencyOption = 'once' | 'twice' | 'three_times';
+export type FrequencyOption = 'once' | 'twice' | 'three_times' | 'as_needed';
 
 export const FREQUENCY_LABELS: Record<FrequencyOption, string> = {
   once: 'Once a day',
   twice: 'Twice a day',
   three_times: 'Three times a day',
+  as_needed: 'As needed',
 };
 
 export type MedLibraryItem = {

@@ -389,6 +389,7 @@ export default function SetupWizard({ onDismiss }: { onDismiss: () => void }) {
                         <SelectItem value="once">Once a day</SelectItem>
                         <SelectItem value="twice">Twice a day</SelectItem>
                         <SelectItem value="three_times">3× a day</SelectItem>
+                        <SelectItem value="as_needed">As needed</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

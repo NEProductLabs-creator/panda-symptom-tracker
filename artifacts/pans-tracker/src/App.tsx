@@ -103,9 +103,9 @@ function Router() {
       return;
     }
 
-    // Guest landed on the auth screen → send straight to the app (no onboarding)
+    // Guest landed on the auth screen → onboarding first, then app
     if (isGuest && location === "/auth") {
-      navigate("/");
+      navigate(getOnboardingComplete() ? "/" : "/onboarding");
       return;
     }
 

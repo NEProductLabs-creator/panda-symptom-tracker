@@ -59,7 +59,7 @@ const NAV_SECTIONS: NavSection[] = [
   },
   {
     href: "/ptec",
-    label: "Weekly Check-In",
+    label: "Weekly PTEC Check-In",
     subtitle: "PTEC clinical assessment",
     icon: ClipboardCheck,
   },

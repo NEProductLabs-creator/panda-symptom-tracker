@@ -142,7 +142,7 @@ export default function LogEntry() {
         <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Outfit, sans-serif" }}>
           Daily Log
         </h1>
-        <p className="text-sm text-muted-foreground mt-0.5">Record symptom scores for any day</p>
+        <p className="text-sm text-muted-foreground mt-0.5">Quick daily check — 5 categories, takes under a minute.</p>
       </div>
 
       {/* Date navigator */}

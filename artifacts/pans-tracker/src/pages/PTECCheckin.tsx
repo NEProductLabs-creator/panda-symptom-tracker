@@ -177,10 +177,8 @@ export default function PTECCheckin() {
           Weekly Check-in
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          {childName
-            ? `PTEC-style symptom rating for ${childName}`
-            : "PTEC-style weekly symptom rating"}
-          {" · "}0–6 per symptom · 72 total
+          Full PTEC assessment — complete once a week for doctor-visit-ready data.
+          {childName ? ` Tracking ${childName}.` : ""}
         </p>
       </div>
 

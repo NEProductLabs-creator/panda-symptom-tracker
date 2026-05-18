@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect, useRef } from "react";
-import { format, subDays, parseISO } from "date-fns";
+import { format, subDays, parseISO, startOfWeek } from "date-fns";
 import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedications } from "@/hooks/useMedications";
@@ -278,6 +278,9 @@ export default function Dashboard() {
   const childName = baseline?.childName?.trim();
   const showBaselineReminder = baseline && existingToday && todayTotal >= 15;
 
+  const currentWeekStart = format(startOfWeek(new Date(), { weekStartsOn: 1 }), "yyyy-MM-dd");
+  const thisWeekPTEC = ptecLogs.find((l) => l.weekStartDate === currentWeekStart);
+
   return (
     <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-4 pb-28">
 
@@ -413,17 +416,22 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* Prompt to start PTEC if no data */}
-          {ptecLogs.length === 0 && (
-            <div className="mt-3 pt-3 border-t border-border/50">
+          {/* Weekly PTEC check-in status */}
+          <div className="mt-3 pt-3 border-t border-border/50">
+            {thisWeekPTEC ? (
+              <div className="flex items-center gap-2 text-xs font-medium text-emerald-600">
+                <CheckCircle2 className="w-3.5 h-3.5 flex-shrink-0" />
+                Weekly check-in done
+              </div>
+            ) : (
               <Link href="/ptec">
-                <div className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
-                  <ClipboardCheck className="w-3.5 h-3.5 text-amber-500" />
-                  <span>Complete your first weekly check-in to see PTEC trends →</span>
+                <div className="flex items-center gap-2 text-xs font-medium text-amber-600 hover:text-amber-700 transition-colors cursor-pointer">
+                  <ClipboardCheck className="w-3.5 h-3.5 flex-shrink-0 text-amber-500" />
+                  Weekly PTEC check-in due — takes 3 minutes
                 </div>
               </Link>
-            </div>
-          )}
+            )}
+          </div>
         </CardContent>
       </Card>
 

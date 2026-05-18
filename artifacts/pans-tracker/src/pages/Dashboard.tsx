@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { format, subDays, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
@@ -73,7 +73,7 @@ function ScoreInput({
 }
 
 export default function Dashboard() {
-  const { logs, addLog } = useSymptomLogs();
+  const { logs, loading, addLog } = useSymptomLogs();
   const { medications } = useMedications();
   const { medLibrary } = useMedLibrary();
   const { milestones } = useMilestones();
@@ -83,19 +83,23 @@ export default function Dashboard() {
 
   const existingToday = logs.find((l) => l.date === today);
 
-  const [scores, setScores] = useState({
-    ocd: existingToday?.ocd ?? 0,
-    anxiety: existingToday?.anxiety ?? 0,
-    rage: existingToday?.rage ?? 0,
-    tics: existingToday?.tics ?? 0,
-    sleep: existingToday?.sleep ?? 0,
-    cognition: existingToday?.cognition ?? 0,
-  });
-  const [notes, setNotes] = useState(existingToday?.notes ?? "");
-  const [medicationsTaken, setMedicationsTaken] = useState<string[]>(
-    existingToday?.medicationsTaken ?? []
-  );
+  const [scores, setScores] = useState({ ocd: 0, anxiety: 0, rage: 0, tics: 0, sleep: 0, cognition: 0 });
+  const [notes, setNotes] = useState("");
+  const [medicationsTaken, setMedicationsTaken] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
+
+  // Once Supabase data loads, pre-fill the form with today's existing entry (if any)
+  const formInitialized = useRef(false);
+  useEffect(() => {
+    if (loading || formInitialized.current) return;
+    formInitialized.current = true;
+    const entry = logs.find((l) => l.date === today);
+    if (entry) {
+      setScores({ ocd: entry.ocd, anxiety: entry.anxiety, rage: entry.rage, tics: entry.tics, sleep: entry.sleep, cognition: entry.cognition });
+      setNotes(entry.notes ?? "");
+      setMedicationsTaken(entry.medicationsTaken ?? []);
+    }
+  }, [loading, logs]);
   const [chartDays, setChartDays] = useState<7 | 14 | 30>(30);
 
   function toggleMed(id: string) {

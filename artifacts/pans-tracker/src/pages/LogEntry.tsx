@@ -3,7 +3,7 @@ import { format, subDays, addDays, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedLibrary } from "@/hooks/useMedLibrary";
-import { storage } from "@/lib/storage";
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -35,17 +35,6 @@ const CATEGORIES = [
 
 const today = format(new Date(), "yyyy-MM-dd");
 
-function getInitialFormValues(date: string) {
-  const allLogs = storage.getLogs();
-  const entry = allLogs.find((l) => l.date === date);
-  return {
-    scores: entry
-      ? { ocd: entry.ocd, anxiety: entry.anxiety, rage: entry.rage, tics: entry.tics, sleep: entry.sleep, cognition: entry.cognition }
-      : { ocd: 0, anxiety: 0, rage: 0, tics: 0, sleep: 0, cognition: 0 },
-    notes: entry?.notes ?? "",
-    medicationsTaken: entry?.medicationsTaken ?? [] as string[],
-  };
-}
 
 function ScoreBubble({ value, active, onClick }: { value: number; active: boolean; onClick: () => void }) {
   return (
@@ -103,19 +92,21 @@ export default function LogEntry() {
       ? format(parseISO(selectedDate), "EEEE, MMMM d, yyyy")
       : null;
 
-  // Initialize synchronously from localStorage so today's data appears immediately on page load
-  const initial = getInitialFormValues(today);
-  const [scores, setScores] = useState(initial.scores);
-  const [notes, setNotes] = useState(initial.notes);
-  const [medicationsTaken, setMedicationsTaken] = useState<string[]>(initial.medicationsTaken);
+  const [scores, setScores] = useState({ ocd: 0, anxiety: 0, rage: 0, tics: 0, sleep: 0, cognition: 0 });
+  const [notes, setNotes] = useState("");
+  const [medicationsTaken, setMedicationsTaken] = useState<string[]>([]);
 
-  // Re-populate when the user switches to a different date
+  // Populate form when selected date changes or when Supabase data first loads
   useEffect(() => {
-    const vals = getInitialFormValues(selectedDate);
-    setScores(vals.scores);
-    setNotes(vals.notes);
-    setMedicationsTaken(vals.medicationsTaken);
-  }, [selectedDate]);
+    const entry = logs.find((l) => l.date === selectedDate);
+    setScores(
+      entry
+        ? { ocd: entry.ocd, anxiety: entry.anxiety, rage: entry.rage, tics: entry.tics, sleep: entry.sleep, cognition: entry.cognition }
+        : { ocd: 0, anxiety: 0, rage: 0, tics: 0, sleep: 0, cognition: 0 }
+    );
+    setNotes(entry?.notes ?? "");
+    setMedicationsTaken(entry?.medicationsTaken ?? []);
+  }, [selectedDate, logs]);
 
   function toggleMed(id: string) {
     setMedicationsTaken((prev) =>

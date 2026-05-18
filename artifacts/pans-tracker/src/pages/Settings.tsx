@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 type DiagnosisStatus = "confirmed" | "suspected" | "exploring" | "";
 
@@ -115,10 +116,18 @@ export default function Settings() {
     toast({ title: "School information saved" });
   }
 
-  function clearAllData() {
-    if (!window.confirm("This will permanently delete all app data on this device. Are you sure?")) return;
+  async function clearAllData() {
+    if (!window.confirm("This will permanently delete all app data on this device and in the cloud. Are you sure?")) return;
+
+    // Delete symptom logs from Supabase for this user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      await supabase.from("symptom_logs").delete().eq("user_id", user.id);
+    }
+
     const keys = [
       "pans_tracker_symptom_logs",
+      "pans_tracker_sb_migrated_v1",
       "pans_tracker_medications",
       "pans_tracker_med_library",
       "pans_tracker_milestones",

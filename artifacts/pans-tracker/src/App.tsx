@@ -1,4 +1,4 @@
-import { ReactNode, useEffect } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { Switch, Route, Router as WouterRouter, useLocation, Link } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -27,6 +27,8 @@ import AuthPage from "@/pages/AuthPage";
 import AuthCallback from "@/pages/AuthCallback";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { getOnboardingComplete } from "@/hooks/useAppSettings";
+import SetupWizard, { SETUP_WIZARD_FLAG } from "@/components/SetupWizard";
+import { storage } from "@/lib/storage";
 
 const queryClient = new QueryClient();
 
@@ -88,9 +90,17 @@ function Layout({ children }: { children: ReactNode }) {
 
 // ─── Router ────────────────────────────────────────────────────────────────────
 
+const NO_WIZARD_ROUTES = ["/auth", "/auth/callback", "/onboarding", "/print", "/about"];
+
 function Router() {
   const { user, loading, isGuest } = useAuth();
   const [location, navigate] = useLocation();
+
+  // Setup wizard: shown once when no child profile exists yet
+  const [showWizard, setShowWizard] = useState(() => (
+    localStorage.getItem(SETUP_WIZARD_FLAG) !== "1" &&
+    !storage.getChildBaseline()
+  ));
 
   useEffect(() => {
     if (loading) return;
@@ -123,8 +133,13 @@ function Router() {
   const authRoutes = ["/auth", "/auth/callback"];
   if (!user && !isGuest && !authRoutes.includes(location)) return <LoadingScreen />;
 
+  const isWizardRoute = NO_WIZARD_ROUTES.some((r) => location === r || location.startsWith(r + "/"));
+
   return (
     <Layout>
+      {showWizard && !isWizardRoute && (
+        <SetupWizard onDismiss={() => setShowWizard(false)} />
+      )}
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/log" component={LogEntry} />

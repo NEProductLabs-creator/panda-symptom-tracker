@@ -3,6 +3,7 @@ import { Activity, Mail, Eye, EyeOff, ArrowRight, ChevronDown } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
 
 // ─── Brand icons ──────────────────────────────────────────────────────────────
 
@@ -174,6 +175,7 @@ function EmailForm() {
 export default function AuthPage() {
   const [showEmail, setShowEmail] = useState(false);
   const [oauthError, setOauthError] = useState<string | null>(null);
+  const { enterGuestMode } = useAuth();
 
   const redirectTo = `${window.location.origin}/auth/callback`;
 
@@ -274,6 +276,21 @@ export default function AuthPage() {
           <br className="hidden sm:block" />
           Nothing is shared without your knowledge.
         </p>
+
+        {/* GUEST MODE — remove this block when launching with auth required */}
+        <div className="text-center space-y-1">
+          <button
+            type="button"
+            onClick={enterGuestMode}
+            className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+          >
+            Continue without an account
+          </button>
+          <p className="text-[10px] text-muted-foreground/50">
+            Data stays on this device only
+          </p>
+        </div>
+
       </div>
     </div>
   );

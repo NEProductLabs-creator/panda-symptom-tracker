@@ -3,6 +3,9 @@ import { SymptomLog } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { supabase } from '@/lib/supabase';
 
+const GUEST_KEY = 'pans_tracker_guest_mode';
+const MIGRATED_KEY = 'pans_tracker_sb_migrated_v1';
+
 // ─── DB row ↔ app type helpers ─────────────────────────────────────────────────
 
 type DbRow = {
@@ -53,27 +56,28 @@ function logToInsert(log: SymptomLog, userId: string): DbInsert {
   };
 }
 
-// One-time migration flag — set once localStorage data has been uploaded
-const MIGRATED_KEY = 'pans_tracker_sb_migrated_v1';
-
 // ─── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useSymptomLogs() {
-  const [logs, setLogs] = useState<SymptomLog[]>([]);
-  const [loading, setLoading] = useState(true);
+  // isGuest is stable for the lifetime of this hook instance (changes cause navigation/remount)
+  const isGuest = localStorage.getItem(GUEST_KEY) === '1';
+
+  const [logs, setLogs] = useState<SymptomLog[]>(() => isGuest ? storage.getLogs() : []);
+  const [loading, setLoading] = useState(!isGuest);
 
   useEffect(() => {
+    // Guest mode: data is already loaded from localStorage in the initial state
+    if (isGuest) return;
+
     let cancelled = false;
 
     async function load() {
-      // Get the signed-in user
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) {
         if (!cancelled) setLoading(false);
         return;
       }
 
-      // Fetch all logs for this user
       const { data, error } = await supabase
         .from('symptom_logs')
         .select('*')
@@ -95,9 +99,7 @@ export function useSymptomLogs() {
         const local = storage.getLogs();
         if (local.length > 0) {
           const rows = local.map((l) => logToInsert(l, user.id));
-          const { error: migrateErr } = await supabase
-            .from('symptom_logs')
-            .upsert(rows);
+          const { error: migrateErr } = await supabase.from('symptom_logs').upsert(rows);
           if (migrateErr) {
             console.error('[symptom_logs] migration error', migrateErr.message);
           } else if (!cancelled) {
@@ -117,43 +119,51 @@ export function useSymptomLogs() {
 
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Upsert a log (optimistic: updates local state immediately, persists in background)
   const addLog = useCallback((log: SymptomLog) => {
+    // Optimistic UI update
     setLogs((prev) => {
       const idx = prev.findIndex((l) => l.date === log.date);
-      if (idx >= 0) {
-        const next = [...prev];
-        next[idx] = log;
-        return next;
-      }
+      if (idx >= 0) { const next = [...prev]; next[idx] = log; return next; }
       return [...prev, log];
     });
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      supabase
-        .from('symptom_logs')
-        .upsert(logToInsert(log, user.id))
-        .then(({ error }) => {
-          if (error) console.error('[symptom_logs] upsert error', error.message);
-        });
-    });
-  }, []);
+    if (isGuest) {
+      // Persist to localStorage
+      const current = storage.getLogs();
+      const idx = current.findIndex((l) => l.date === log.date);
+      if (idx >= 0) { current[idx] = log; } else { current.push(log); }
+      storage.saveLogs(current);
+    } else {
+      // Persist to Supabase (fire and forget)
+      supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) return;
+        supabase
+          .from('symptom_logs')
+          .upsert(logToInsert(log, user.id))
+          .then(({ error }) => {
+            if (error) console.error('[symptom_logs] upsert error', error.message);
+          });
+      });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Delete a log (optimistic)
   const deleteLog = useCallback((id: string) => {
     setLogs((prev) => prev.filter((l) => l.id !== id));
 
-    supabase
-      .from('symptom_logs')
-      .delete()
-      .eq('id', id)
-      .then(({ error }) => {
-        if (error) console.error('[symptom_logs] delete error', error.message);
-      });
-  }, []);
+    if (isGuest) {
+      storage.saveLogs(storage.getLogs().filter((l) => l.id !== id));
+    } else {
+      supabase
+        .from('symptom_logs')
+        .delete()
+        .eq('id', id)
+        .then(({ error }) => {
+          if (error) console.error('[symptom_logs] delete error', error.message);
+        });
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return { logs, loading, addLog, deleteLog };
 }

@@ -1,5 +1,5 @@
 import { ReactNode, useEffect } from "react";
-import { Switch, Route, Router as WouterRouter, useLocation } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation, Link } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -51,6 +51,7 @@ function LoadingScreen() {
 
 function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
+  const { isGuest } = useAuth();
 
   if (NO_SIDEBAR_ROUTES.includes(location)) {
     return <>{children}</>;
@@ -65,6 +66,20 @@ function Layout({ children }: { children: ReactNode }) {
           className="md:hidden"
           style={{ height: "calc(env(safe-area-inset-top) + 3.5rem)" }}
         />
+        {/* GUEST MODE BANNER — remove this block when launching with auth required */}
+        {isGuest && (
+          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 flex items-center justify-between gap-4">
+            <p className="text-xs text-amber-800 leading-snug">
+              Demo mode — data is stored on this device only
+            </p>
+            <Link
+              href="/auth"
+              className="text-xs font-semibold text-amber-900 hover:underline whitespace-nowrap"
+            >
+              Create account →
+            </Link>
+          </div>
+        )}
         {children}
       </main>
     </div>
@@ -74,7 +89,7 @@ function Layout({ children }: { children: ReactNode }) {
 // ─── Router ────────────────────────────────────────────────────────────────────
 
 function Router() {
-  const { user, loading } = useAuth();
+  const { user, loading, isGuest } = useAuth();
   const [location, navigate] = useLocation();
 
   useEffect(() => {
@@ -82,9 +97,15 @@ function Router() {
 
     const authRoutes = ["/auth", "/auth/callback"];
 
-    // Not logged in → send to auth screen
-    if (!user && !authRoutes.includes(location)) {
+    // Not logged in and not a guest → send to auth screen
+    if (!user && !isGuest && !authRoutes.includes(location)) {
       navigate("/auth");
+      return;
+    }
+
+    // Guest landed on the auth screen → send straight to the app (no onboarding)
+    if (isGuest && location === "/auth") {
+      navigate("/");
       return;
     }
 
@@ -94,13 +115,13 @@ function Router() {
       const localDone = getOnboardingComplete();
       navigate(supabaseDone || localDone ? "/" : "/onboarding");
     }
-  }, [user, loading, location]);
+  }, [user, loading, isGuest, location]);
 
   if (loading) return <LoadingScreen />;
 
   // Show nothing while the redirect fires (avoids flash of protected content)
   const authRoutes = ["/auth", "/auth/callback"];
-  if (!user && !authRoutes.includes(location)) return <LoadingScreen />;
+  if (!user && !isGuest && !authRoutes.includes(location)) return <LoadingScreen />;
 
   return (
     <Layout>

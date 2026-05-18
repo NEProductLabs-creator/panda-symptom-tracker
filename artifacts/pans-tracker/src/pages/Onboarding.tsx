@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
 import { storage } from "@/lib/storage";
+import { supabase } from "@/lib/supabase";
 import { format } from "date-fns";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -532,8 +533,9 @@ export default function Onboarding() {
   const { saveSettings } = useAppSettings();
   const { baseline, saveBaseline } = useChildBaseline();
 
-  function finish() {
+  async function finish() {
     saveSettings({ onboardingComplete: true });
+    await supabase.auth.updateUser({ data: { onboarding_complete: true } });
     navigate("/");
   }
 

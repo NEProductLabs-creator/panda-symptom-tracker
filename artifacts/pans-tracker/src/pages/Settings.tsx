@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Settings2, User, Home, School, Plus, X, Save, CheckCircle2, Trash2 } from "lucide-react";
+import { Settings2, User, Home, School, Plus, X, Save, CheckCircle2, Trash2, LogOut } from "lucide-react";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
 
 type DiagnosisStatus = "confirmed" | "suspected" | "exploring" | "";
 
@@ -57,6 +58,7 @@ export default function Settings() {
   const { settings, saveSettings } = useAppSettings();
   const { baseline, saveBaseline } = useChildBaseline();
   const { toast } = useToast();
+  const { signOut } = useAuth();
 
   // Child section
   const [childName, setChildName] = useState(baseline?.childName ?? "");
@@ -308,6 +310,15 @@ export default function Settings() {
         >
           <Trash2 className="w-3.5 h-3.5" />
           Clear all app data
+        </button>
+        <button
+          type="button"
+          onClick={() => signOut()}
+          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground font-medium transition-colors"
+          data-testid="settings-sign-out"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          Sign out
         </button>
       </div>
     </div>

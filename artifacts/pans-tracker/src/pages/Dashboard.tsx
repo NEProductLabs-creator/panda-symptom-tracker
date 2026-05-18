@@ -287,20 +287,18 @@ export default function Dashboard() {
       {/* How It Works modal */}
       {showHowItWorks && <HowItWorksModal onClose={() => setShowHowItWorks(false)} />}
 
-      {/* "How to use" trigger — subtle link in top-right */}
-      <div className="flex justify-end -mb-1">
+      {/* Daily affirmation with "How to use" anchored inside */}
+      <div className="relative">
+        <DailyAffirmation />
         <button
           type="button"
           onClick={() => setShowHowItWorks(true)}
-          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          className="absolute top-3 right-3 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
         >
           <HelpCircle className="w-3.5 h-3.5" />
           How to use this app
         </button>
       </div>
-
-      {/* Daily affirmation */}
-      <DailyAffirmation />
 
       {/* Milestone celebrations */}
       <MilestoneCelebration />

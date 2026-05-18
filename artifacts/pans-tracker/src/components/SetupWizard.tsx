@@ -21,14 +21,19 @@ export const SETUP_WIZARD_FLAG = "pans_tracker_setup_wizard_done";
 type Step = 1 | 2 | 3 | 4;
 
 export default function SetupWizard({ onDismiss }: { onDismiss: () => void }) {
-  const [step, setStep] = useState<Step>(1);
   const { saveBaseline } = useChildBaseline();
   const { saveMedLibraryItem } = useMedLibrary();
   const [, navigate] = useLocation();
 
-  // Step 1
-  const [childName, setChildName] = useState("");
-  const [childAge, setChildAge] = useState("");
+  // If child info was already collected during onboarding, skip step 1
+  const [step, setStep] = useState<Step>(() => {
+    const b = storage.getChildBaseline();
+    return b?.childName?.trim() ? 2 : 1;
+  });
+
+  // Step 1 — pre-filled from existing baseline if present
+  const [childName, setChildName] = useState(() => storage.getChildBaseline()?.childName ?? "");
+  const [childAge, setChildAge] = useState(() => storage.getChildBaseline()?.childAge ?? "");
 
   // Step 2
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>("moderate");

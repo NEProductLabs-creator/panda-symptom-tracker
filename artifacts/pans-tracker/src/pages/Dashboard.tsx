@@ -26,6 +26,11 @@ import {
   Activity,
   Heart,
   ClipboardCheck,
+  ClipboardList,
+  CalendarRange,
+  FileText,
+  HelpCircle,
+  X,
 } from "lucide-react";
 import { SymptomLog, FREQUENCY_LABELS } from "@/lib/types";
 import { computeDailyScore } from "@/lib/flare";
@@ -33,6 +38,96 @@ import { detectPTECFlare, getPTECSeverity } from "@/lib/ptec";
 
 const today = format(new Date(), "yyyy-MM-dd");
 const todayDisplay = format(new Date(), "EEEE, MMMM d, yyyy");
+
+// ─── How It Works modal ───────────────────────────────────────────────────────
+
+const HOW_IT_WORKS_SLIDES = [
+  {
+    Icon: ClipboardList,
+    title: "Log Today",
+    body: "Takes 60 seconds. Rate your child's symptoms daily to build a picture of their health over time.",
+  },
+  {
+    Icon: ClipboardCheck,
+    title: "Weekly Check-In",
+    body: "A clinical PTEC assessment. Complete this once a week to track detailed symptom patterns for doctor visits.",
+  },
+  {
+    Icon: CalendarRange,
+    title: "Timeline",
+    body: "See every day at a glance. Tap any day to review what you logged.",
+  },
+  {
+    Icon: FileText,
+    title: "Doctor Ready",
+    body: "When you have an appointment coming up, generate a printable summary of your child's recent symptoms and trends.",
+  },
+] as const;
+
+function HowItWorksModal({ onClose }: { onClose: () => void }) {
+  const [slide, setSlide] = useState(0);
+  const { Icon, title, body } = HOW_IT_WORKS_SLIDES[slide];
+  const isLast = slide === HOW_IT_WORKS_SLIDES.length - 1;
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+      <div className="w-full max-w-sm bg-background rounded-2xl shadow-2xl overflow-hidden">
+        <div className="flex justify-between items-center px-5 pt-5 pb-1">
+          <div className="flex gap-1.5">
+            {HOW_IT_WORKS_SLIDES.map((_, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => setSlide(i)}
+                className={`rounded-full transition-all duration-200 ${
+                  i === slide ? "w-5 h-2 bg-primary" : "w-2 h-2 bg-muted hover:bg-muted-foreground/40"
+                }`}
+                aria-label={`Go to slide ${i + 1}`}
+              />
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Close"
+            className="w-7 h-7 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        <div className="px-6 pb-7 pt-4 text-center space-y-4">
+          <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mx-auto">
+            <Icon className="w-7 h-7 text-primary" />
+          </div>
+          <div className="space-y-2">
+            <h3
+              className="text-lg font-bold text-foreground"
+              style={{ fontFamily: "Outfit, sans-serif" }}
+            >
+              {title}
+            </h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
+          </div>
+
+          <div className="flex gap-2 pt-1">
+            {slide > 0 && (
+              <Button variant="outline" className="flex-1" onClick={() => setSlide(slide - 1)}>
+                Back
+              </Button>
+            )}
+            <Button
+              className="flex-1"
+              onClick={() => (isLast ? onClose() : setSlide(slide + 1))}
+            >
+              {isLast ? "Got it!" : "Next"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function ScoreInput({
   label,
@@ -87,6 +182,7 @@ export default function Dashboard() {
   const [notes, setNotes] = useState("");
   const [medicationsTaken, setMedicationsTaken] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   // Once Supabase data loads, pre-fill the form with today's existing entry (if any)
   const formInitialized = useRef(false);
@@ -184,6 +280,21 @@ export default function Dashboard() {
 
   return (
     <div className="p-5 md:p-8 max-w-5xl mx-auto space-y-4 pb-28">
+
+      {/* How It Works modal */}
+      {showHowItWorks && <HowItWorksModal onClose={() => setShowHowItWorks(false)} />}
+
+      {/* "How to use" trigger — subtle link in top-right */}
+      <div className="flex justify-end -mb-1">
+        <button
+          type="button"
+          onClick={() => setShowHowItWorks(true)}
+          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <HelpCircle className="w-3.5 h-3.5" />
+          How to use this app
+        </button>
+      </div>
 
       {/* Daily affirmation */}
       <DailyAffirmation />

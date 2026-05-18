@@ -36,6 +36,7 @@ interface NavChild {
 interface NavSection {
   href: string;
   label: string;
+  subtitle?: string;
   icon: React.ElementType;
   children?: NavChild[];
 }
@@ -49,6 +50,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     href: "/log",
     label: "Log Today",
+    subtitle: "Quick daily symptom check",
     icon: ClipboardList,
     children: [
       { href: "/medications", label: "Medications", icon: Pill },
@@ -58,11 +60,13 @@ const NAV_SECTIONS: NavSection[] = [
   {
     href: "/ptec",
     label: "Weekly Check-In",
+    subtitle: "PTEC clinical assessment",
     icon: ClipboardCheck,
   },
   {
     href: "/timeline",
     label: "Timeline",
+    subtitle: "Your full symptom history",
     icon: CalendarRange,
   },
   {
@@ -77,6 +81,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     href: "/export",
     label: "Doctor Ready",
+    subtitle: "Reports for appointments",
     icon: FileText,
     children: [
       { href: "/school", label: "School Letters", icon: School },
@@ -86,6 +91,7 @@ const NAV_SECTIONS: NavSection[] = [
   {
     href: "/wellbeing",
     label: "For You",
+    subtitle: "Your wellbeing as a caregiver",
     icon: HeartHandshake,
     children: [
       { href: "/hope", label: "Hope Board", icon: Sparkles },
@@ -147,7 +153,21 @@ function NavItem({
                 : "opacity-70"
             )}
           />
-          <span className="flex-1 truncate">{section.label}</span>
+          <div className="flex-1 min-w-0">
+            <p className="truncate leading-tight">{section.label}</p>
+            {section.subtitle && (
+              <p className={cn(
+                "text-[10px] leading-tight mt-0.5 truncate font-normal",
+                isActive
+                  ? "text-primary-foreground/65"
+                  : isSectionActive
+                  ? "text-primary/65"
+                  : "text-muted-foreground/70"
+              )}>
+                {section.subtitle}
+              </p>
+            )}
+          </div>
         </div>
       </Link>
 

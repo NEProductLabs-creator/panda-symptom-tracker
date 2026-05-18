@@ -274,6 +274,21 @@ export default function Dashboard() {
     }));
   }, [ptecLogs]);
 
+  // Range-filtered logs + avg severity (both driven by chartDays)
+  const rangeLogs = useMemo(() => {
+    const cutoff = format(subDays(new Date(), chartDays - 1), "yyyy-MM-dd");
+    return logs.filter((l) => l.date >= cutoff);
+  }, [logs, chartDays]);
+
+  const avgSeverity = useMemo(() => {
+    if (rangeLogs.length === 0) return null;
+    const total = rangeLogs.reduce(
+      (sum, l) => sum + ((l.ocd + l.anxiety + l.rage + l.tics + l.sleep + l.cognition) / 6) * 2,
+      0
+    );
+    return Math.round((total / rangeLogs.length) * 10) / 10;
+  }, [rangeLogs]);
+
   const hasAnyLog = logs.length > 0;
   const childName = baseline?.childName?.trim();
   const showBaselineReminder = baseline && existingToday && todayTotal >= 15;
@@ -461,20 +476,49 @@ export default function Dashboard() {
         </Link>
       )}
 
+      {/* Range selector — controls both stats and chart */}
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs text-muted-foreground font-medium">Showing data for the last:</p>
+        <div className="flex rounded-lg border border-border overflow-hidden flex-shrink-0">
+          {([7, 14, 30] as const).map((d) => (
+            <button
+              key={d}
+              onClick={() => setChartDays(d)}
+              className={`px-3 py-1.5 text-xs font-medium transition-colors ${
+                chartDays === d
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted"
+              }`}
+            >
+              {d}d
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Quick stats */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <Card className="border-border shadow-sm">
           <CardContent className="p-4">
             <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
-              Logs (30d)
+              Logs ({chartDays}d)
             </p>
             <p className="text-2xl font-bold text-foreground mt-1" data-testid="stat-log-count">
-              {
-                logs.filter(
-                  (l) => l.date >= format(new Date(Date.now() - 30 * 86400000), "yyyy-MM-dd")
-                ).length
-              }
+              {rangeLogs.length}
             </p>
+          </CardContent>
+        </Card>
+        <Card className="border-border shadow-sm">
+          <CardContent className="p-4">
+            <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium">
+              Avg Severity
+            </p>
+            <p className="text-2xl font-bold text-foreground mt-1" data-testid="stat-avg-severity">
+              {avgSeverity !== null ? avgSeverity.toFixed(1) : "—"}
+            </p>
+            {avgSeverity !== null && (
+              <p className="text-[10px] text-muted-foreground mt-0.5">out of 10</p>
+            )}
           </CardContent>
         </Card>
         <Card className="border-border shadow-sm">
@@ -502,30 +546,13 @@ export default function Dashboard() {
       {/* Symptom trend chart */}
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-2">
-          <div className="flex items-center justify-between gap-3">
-            <CardTitle
-              className="flex items-center gap-2 text-base font-semibold"
-              style={{ fontFamily: "Outfit, sans-serif" }}
-            >
-              <TrendingUp className="w-4 h-4 text-primary" />
-              {chartDays}-Day Trend
-            </CardTitle>
-            <div className="flex rounded-lg border border-border overflow-hidden flex-shrink-0">
-              {([7, 14, 30] as const).map((d) => (
-                <button
-                  key={d}
-                  onClick={() => setChartDays(d)}
-                  className={`px-3 py-1 text-xs font-medium transition-colors ${
-                    chartDays === d
-                      ? "bg-primary text-primary-foreground"
-                      : "text-muted-foreground hover:bg-muted"
-                  }`}
-                >
-                  {d}d
-                </button>
-              ))}
-            </div>
-          </div>
+          <CardTitle
+            className="flex items-center gap-2 text-base font-semibold"
+            style={{ fontFamily: "Outfit, sans-serif" }}
+          >
+            <TrendingUp className="w-4 h-4 text-primary" />
+            {chartDays}-Day Trend
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {logs.length === 0 ? (

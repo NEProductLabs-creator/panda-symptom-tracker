@@ -211,10 +211,21 @@ export default function Sidebar() {
     setMobileOpen(false);
   }
 
+  function handleLogoClick(e: React.MouseEvent) {
+    if (location === "/") {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  }
+
   const navContent = (
     <>
       {/* Logo */}
-      <div className="flex items-center gap-2.5 px-4 py-5 border-b border-border">
+      <Link
+        href="/"
+        onClick={handleLogoClick}
+        className="flex items-center gap-2.5 px-4 py-5 border-b border-border cursor-pointer hover:opacity-80 transition-opacity"
+      >
         <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
           <Activity className="w-4 h-4 text-primary-foreground" />
         </div>
@@ -230,7 +241,7 @@ export default function Sidebar() {
             <p className="text-[11px] text-muted-foreground leading-tight">Symptom Journal</p>
           )}
         </div>
-      </div>
+      </Link>
 
       {/* Nav */}
       <nav className="flex flex-col gap-1 p-3 flex-1 overflow-y-auto" data-testid="sidebar-nav">
@@ -266,14 +277,18 @@ export default function Sidebar() {
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
         <div className="flex items-center justify-between px-4 h-14">
-          <div className="flex items-center gap-2 min-w-0">
+          <Link
+            href="/"
+            onClick={handleLogoClick}
+            className="flex items-center gap-2 min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
+          >
             <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
               <Activity className="w-3.5 h-3.5 text-primary-foreground" />
             </div>
             <span className="font-bold text-sm text-foreground truncate" style={{ fontFamily: "Outfit, sans-serif" }}>
               {childName ? `Tracking for ${childName}` : "PANS & PANDAS Tracker"}
             </span>
-          </div>
+          </Link>
           <Button
             variant="ghost"
             size="icon"

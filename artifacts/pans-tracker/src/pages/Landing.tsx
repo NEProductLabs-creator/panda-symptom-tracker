@@ -98,8 +98,8 @@ export default function Landing() {
 
           {/* Supporting line */}
           <p className="lp-fade lp-d3 text-base sm:text-lg text-muted-foreground max-w-[420px] leading-relaxed mb-11">
-            PANS and PANDAS symptom tracking built for families, designed for
-            doctors.
+            Track the symptoms. Spot the patterns. Walk into every appointment
+            knowing you'll be heard.
           </p>
 
           {/* CTAs */}

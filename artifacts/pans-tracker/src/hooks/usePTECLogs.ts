@@ -2,14 +2,22 @@ import { useState, useCallback } from 'react';
 import { PTECLog, FlareEvent } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { detectPTECFlare } from '@/lib/ptec';
+import { DEMO_PTEC_LOGS } from '@/lib/demoData';
+import { DEMO_KEY } from '@/contexts/DemoContext';
 import { format } from 'date-fns';
 
+const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'));
+
 export function usePTECLogs() {
-  const [ptecLogs, setPTECLogs] = useState<PTECLog[]>(() =>
-    storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate))
-  );
+  const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
+
+  const [ptecLogs, setPTECLogs] = useState<PTECLog[]>(() => {
+    if (isDemoMode) return DEMO_PTEC_LOGS;
+    return storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
+  });
 
   const addOrUpdateLog = useCallback((log: PTECLog) => {
+    if (isDemoMode) { dispatchDemo(); return; }
     storage.addOrUpdatePTECLog(log);
     const updated = storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
     setPTECLogs(updated);
@@ -27,14 +35,15 @@ export function usePTECLogs() {
       };
       storage.addFlareEventIfNew(event);
     }
-  }, []);
+  }, [isDemoMode]);
 
   const deleteLog = useCallback((id: string) => {
+    if (isDemoMode) { dispatchDemo(); return; }
     storage.deletePTECLog(id);
     setPTECLogs(
       storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate))
     );
-  }, []);
+  }, [isDemoMode]);
 
   const getLogForWeek = useCallback(
     (weekStartDate: string) => ptecLogs.find((l) => l.weekStartDate === weekStartDate),

@@ -1,0 +1,23 @@
+Add 6 weeks of weekly PTEC check-in data to the existing demo mode dataset for Alex. This data must be consistent with the daily symptom scores and parent log entries already in the demo, following the same flare pattern: stable in weeks 1 and 2, significant worsening in weeks 3 and 4, gradual improvement in weeks 5 and 6 trending back toward but not fully reaching baseline.
+Add this data in the same location as the existing // DEMO_DATA comment so all demo data stays together.
+Score each of the 10 PTEC subscales on a scale of 0 to 3 where 0 is not present, 1 is mild, 2 is moderate, and 3 is severe. The subscales are: Behavior/Mood, OCD, Anxiety, Food Intake, Tics, Cognitive/Developmental, Sensory, Other, Sleep, and Health.
+Use this recovery pattern by subscale so scores feel clinically realistic and varied rather than uniform:
+
+OCD and Anxiety: spike to 3 during the flare, slowest to recover, still at 2 by week 6
+Sleep: worsens during the flare, recovers relatively quickly by week 5
+Food Intake: reaches 2 during the flare, slow and partial recovery
+Tics: mild to moderate during the flare reaching 2, mostly resolve by week 6
+Cognitive/Developmental and Sensory: moderate worsening during flare, gradual improvement
+Behavior/Mood: mirrors the overall arc closely
+Health: peaks in week 3 reflecting a possible illness trigger, resolves by week 5
+
+Each weekly check-in should include a parent note. Use these in order:
+
+"Alex seems okay this week, a few rough mornings but manageable"
+"Starting to notice more rigidity around routines, keeping an eye on it"
+"OCD rituals around bedtime taking 2 hours, we are all depleted"
+"Called the doctor, symptoms are getting worse not better. Stayed home from school again. Third day this week."
+"Slept through the night for the first time in three weeks, feel cautiously hopeful"
+"Saw a glimmer of our real kid today, small win. Still not fully back but improving"
+
+Make sure the PTEC weekly scores align visually with the existing daily symptom data in any charts, timelines, or dashboard views so both data sources tell the same consistent story.

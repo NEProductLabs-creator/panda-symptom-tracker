@@ -1,10 +1,28 @@
 // DEMO_DATA: update this dataset to reflect latest app features before sharing portfolio
 
-import type { SymptomLog, ChildBaseline, Medication, MedLibraryItem } from "@/lib/types";
+import type { SymptomLog, ChildBaseline, Medication, MedLibraryItem, PTECLog } from "@/lib/types";
+import { computePTECTotal } from "@/lib/ptec";
 
 function daysAgo(n: number): string {
   const d = new Date();
   d.setDate(d.getDate() - n);
+  return d.toISOString().split("T")[0];
+}
+
+// Returns the ISO date of the Monday starting the week that contains the date `n` days ago
+function mondayOf(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  const dow = d.getDay(); // 0 = Sun, 1 = Mon … 6 = Sat
+  const offset = dow === 0 ? -6 : 1 - dow;
+  d.setDate(d.getDate() + offset);
+  return d.toISOString().split("T")[0];
+}
+
+// Returns the ISO date `k` days after a given YYYY-MM-DD string
+function addDays(dateStr: string, k: number): string {
+  const d = new Date(dateStr + "T12:00:00Z");
+  d.setDate(d.getUTCDate() + k);
   return d.toISOString().split("T")[0];
 }
 
@@ -283,4 +301,100 @@ export const DEMO_LOGS: SymptomLog[] = [
     notes:
       "Mild OCD behaviors still present but energy and mood are returning. Cautiously optimistic. Follow-up with Dr. Chen this week.",
   },
+];
+
+// ── PTEC weekly check-ins — 6 weeks, consistent with daily log pattern ─────────
+//
+// Scale per subscale: 0=Absent 1=Minimal 2=Mild 3=Moderate 4=Significant 5=Severe 6=Extreme
+// Total severity zones: 0–12 Mild · 13–30 Moderate · 31–50 Significant · 51–72 Severe
+//
+// Recovery profile by subscale (user-specified):
+//   OCD + Anxiety         → slowest; peak 5, still 3 by week 6
+//   Sleep                 → fastest; recovers to 1 by week 5
+//   Food Intake           → slow/partial; reaches 2 at peak, 1 by week 6
+//   Tics                  → mild-moderate peak 2, mostly resolve week 6
+//   Cognitive/Dev         → moderate peak 3–4, gradual return
+//   Sensory               → moderate peak 3, gradual
+//   Behavior/Mood         → mirrors overall arc
+//   Health (urinary)      → peaks week 3 (illness trigger), resolved week 5
+//
+// Weekly totals: 5 → 7 → 34 → 41 → 24 → 15  (Mild→Mild→Significant→Significant→Moderate→Moderate)
+
+function ptec(
+  week: number,
+  scores: {
+    ocdBehaviors: number; anxiety: number; emotionalLability: number; aggression: number;
+    restrictiveEating: number; sleepDisturbance: number; urinarySymptoms: number;
+    sensorySensitivities: number; tics: number; handwritingRegression: number;
+    academicDecline: number; personalityChange: number;
+  },
+  note: string,
+): PTECLog {
+  // midpoint of each week (days-ago): 38, 31, 24, 17, 10, 3
+  const midpoints = [38, 31, 24, 17, 10, 3];
+  const weekStart = mondayOf(midpoints[week - 1]);
+  return {
+    id: `demo-ptec-w${week}`,
+    weekStartDate: weekStart,
+    date: addDays(weekStart, 4), // Friday of the same week
+    scores,
+    totalScore: computePTECTotal(scores),
+    notes: note,
+  };
+}
+
+export const DEMO_PTEC_LOGS: PTECLog[] = [
+  // ── Week 1 · Stable baseline (total 5 — Mild) ─────────────────────────────
+  ptec(1,
+    { ocdBehaviors: 1, anxiety: 1, emotionalLability: 1, aggression: 0,
+      restrictiveEating: 0, sleepDisturbance: 1, urinarySymptoms: 0,
+      sensorySensitivities: 1, tics: 0, handwritingRegression: 0,
+      academicDecline: 0, personalityChange: 0 },
+    "Alex seems okay this week, a few rough mornings but manageable",
+  ),
+
+  // ── Week 2 · Stable, slight rigidity emerging (total 7 — Mild) ───────────
+  ptec(2,
+    { ocdBehaviors: 1, anxiety: 1, emotionalLability: 1, aggression: 0,
+      restrictiveEating: 0, sleepDisturbance: 1, urinarySymptoms: 0,
+      sensorySensitivities: 1, tics: 1, handwritingRegression: 0,
+      academicDecline: 0, personalityChange: 1 },
+    "Starting to notice more rigidity around routines, keeping an eye on it",
+  ),
+
+  // ── Week 3 · Flare onset + possible illness trigger (total 34 — Significant)
+  ptec(3,
+    { ocdBehaviors: 4, anxiety: 4, emotionalLability: 3, aggression: 3,
+      restrictiveEating: 2, sleepDisturbance: 3, urinarySymptoms: 2,
+      sensorySensitivities: 3, tics: 2, handwritingRegression: 2,
+      academicDecline: 3, personalityChange: 3 },
+    "OCD rituals around bedtime taking 2 hours, we are all depleted",
+  ),
+
+  // ── Week 4 · Peak flare (total 41 — Significant) ─────────────────────────
+  ptec(4,
+    { ocdBehaviors: 5, anxiety: 5, emotionalLability: 4, aggression: 4,
+      restrictiveEating: 2, sleepDisturbance: 4, urinarySymptoms: 1,
+      sensorySensitivities: 3, tics: 2, handwritingRegression: 3,
+      academicDecline: 4, personalityChange: 4 },
+    "Called the doctor, symptoms are getting worse not better. Stayed home from school again. Third day this week.",
+  ),
+
+  // ── Week 5 · Early recovery — sleep returns first (total 24 — Moderate) ──
+  ptec(5,
+    { ocdBehaviors: 4, anxiety: 4, emotionalLability: 2, aggression: 2,
+      restrictiveEating: 2, sleepDisturbance: 1, urinarySymptoms: 0,
+      sensorySensitivities: 2, tics: 1, handwritingRegression: 2,
+      academicDecline: 2, personalityChange: 2 },
+    "Slept through the night for the first time in three weeks, feel cautiously hopeful",
+  ),
+
+  // ── Week 6 · Continuing recovery — OCD/anxiety still elevated (total 15 — Moderate)
+  ptec(6,
+    { ocdBehaviors: 3, anxiety: 3, emotionalLability: 1, aggression: 1,
+      restrictiveEating: 1, sleepDisturbance: 1, urinarySymptoms: 0,
+      sensorySensitivities: 1, tics: 1, handwritingRegression: 1,
+      academicDecline: 1, personalityChange: 1 },
+    "Saw a glimmer of our real kid today, small win. Still not fully back but improving",
+  ),
 ];

@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
-import { track, identifyUser, identifyAsDemo } from "@/lib/analytics";
+import { track, identifyUser, identifyAsDemo, enableSurveys } from "@/lib/analytics";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, useUser, useClerk } from "@clerk/react";
@@ -249,6 +249,13 @@ function Router() {
     localStorage.getItem(SETUP_WIZARD_FLAG) !== "1" &&
     !storage.getChildBaseline()
   ));
+
+  // Enable PostHog surveys only once the user is authenticated or in demo mode
+  useEffect(() => {
+    if (isSignedIn || isDemoMode) {
+      enableSurveys();
+    }
+  }, [isSignedIn, isDemoMode]);
 
   useEffect(() => {
     if (!isLoaded && !isDemoMode) return;

@@ -14,7 +14,13 @@ export function initAnalytics(): void {
     capture_pageleave: false,
     autocapture: false,
     disable_session_recording: true,
+    disable_surveys: true,
   });
+}
+
+export function enableSurveys(): void {
+  if (!analyticsReady) return;
+  posthog.config.disable_surveys = false;
 }
 
 // ─── Identity ─────────────────────────────────────────────────────────────────

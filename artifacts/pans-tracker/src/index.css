@@ -230,3 +230,10 @@
     pointer-events: none;
   }
 }
+
+/* Hide the Replit platform feedback widget */
+#replit-feedback-button,
+[id^="replit-feedback"],
+[class*="replit-feedback"] {
+  display: none !important;
+}

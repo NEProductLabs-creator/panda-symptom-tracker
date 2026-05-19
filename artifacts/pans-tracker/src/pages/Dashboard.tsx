@@ -390,7 +390,7 @@ export default function Dashboard() {
                   {todayScoreLabel}
                 </span>
               ) : (
-                <Link href="#log-form">
+                <Link href="/log">
                   <Button size="sm" className="text-xs h-8" data-testid="button-log-today-snapshot">
                     Log Today
                   </Button>
@@ -565,7 +565,7 @@ export default function Dashboard() {
             <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
               <TrendingUp className="w-8 h-8 mb-2 opacity-30" />
               <p className="text-sm">No symptom data yet.</p>
-              <p className="text-xs mt-1">Log today's symptoms below to get started.</p>
+              <p className="text-xs mt-1">Use the Quick Entry below or the <Link href="/log"><span className="text-primary hover:underline cursor-pointer">Log page</span></Link> to get started.</p>
             </div>
           ) : (
             <SymptomChart
@@ -582,18 +582,25 @@ export default function Dashboard() {
       {/* Today's quick log */}
       <Card className="border-border shadow-sm" id="log-form">
         <CardHeader className="pb-3">
-          <CardTitle
-            className="text-base font-semibold flex items-center gap-2"
-            style={{ fontFamily: "Outfit, sans-serif" }}
-          >
-            {existingToday && <CheckCircle2 className="w-4 h-4 text-primary" />}
-            {existingToday ? "Update Today's Log" : "Log Today's Symptoms"}
-          </CardTitle>
-          {existingToday && (
-            <p className="text-xs text-muted-foreground">
-              You've already logged today — update below if needed.
-            </p>
-          )}
+          <div className="flex items-start justify-between gap-3">
+            <CardTitle
+              className="text-base font-semibold flex items-center gap-2"
+              style={{ fontFamily: "Outfit, sans-serif" }}
+            >
+              {existingToday && <CheckCircle2 className="w-4 h-4 text-primary" />}
+              Quick Entry
+            </CardTitle>
+            <Link href="/log">
+              <span className="text-xs text-primary hover:underline cursor-pointer whitespace-nowrap font-medium flex-shrink-0 mt-0.5">
+                Full log page →
+              </span>
+            </Link>
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {existingToday
+              ? "Already logged today — update below if needed."
+              : "Score each symptom quickly, or use the full log page for more detail."}
+          </p>
         </CardHeader>
         <CardContent className="space-y-0 p-5 pt-0">
           <div className="divide-y-0">

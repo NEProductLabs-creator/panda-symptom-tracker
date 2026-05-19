@@ -580,17 +580,24 @@ export default function SymptomChart({
       </ResponsiveContainer>
 
       {(medBands.length > 0 || milestoneMarkers.length > 0) && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {medications.map((med, i) => (
-            <span
-              key={med.id}
-              className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full border border-border"
-              style={{ backgroundColor: MED_COLORS[i % MED_COLORS.length] }}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground opacity-60" />
-              {med.name}
-            </span>
-          ))}
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {medications.length > 0 && (
+            <>
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide flex-shrink-0">
+                Meds:
+              </span>
+              {medications.map((med, i) => (
+                <span
+                  key={med.id}
+                  className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full border border-border"
+                  style={{ backgroundColor: MED_COLORS[i % MED_COLORS.length] }}
+                >
+                  <span className="inline-block w-[10px] h-[4px] rounded-sm bg-muted-foreground/60 flex-shrink-0" />
+                  {med.name}
+                </span>
+              ))}
+            </>
+          )}
           {milestoneMarkers.length > 0 && (
             <span className="inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-full border border-border bg-primary/5">
               <span className="w-2 h-2 rounded-full bg-primary opacity-80" />

@@ -521,9 +521,13 @@ export default function Medications() {
       notes: form.notes.trim() || undefined,
       missedDoses: editing?.missedDoses ?? [],
     };
-    addMedication(med);
-    setDialogOpen(false);
-    toast({ title: editing ? "Medication updated" : "Medication added" });
+    try {
+      addMedication(med);
+      setDialogOpen(false);
+      toast({ title: editing ? "Medication updated" : "Medication added", variant: "success" });
+    } catch {
+      toast({ title: "Couldn't save — please try again", variant: "destructive" });
+    }
   }
 
   // Computed end date preview for treatment courses

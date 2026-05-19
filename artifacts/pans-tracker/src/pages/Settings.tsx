@@ -60,6 +60,9 @@ export default function Settings() {
   const { toast } = useToast();
   const { signOut } = useAuth();
 
+  const [savedChild, setSavedChild] = useState(false);
+  const [savedSchool, setSavedSchool] = useState(false);
+
   // Child section
   const [childName, setChildName] = useState(baseline?.childName ?? "");
   const [childAge, setChildAge] = useState(baseline?.childAge ?? "");
@@ -75,23 +78,29 @@ export default function Settings() {
   const [schoolName, setSchoolName] = useState(settings.schoolName);
 
   function saveChild() {
-    saveBaseline({
-      ...(baseline ?? {
-        sleepHours: "",
-        appetite: "",
-        activityLevel: "moderate" as const,
-        socialBehavior: "",
-        schoolPerformance: "",
-        behavioralNotes: "",
+    try {
+      saveBaseline({
+        ...(baseline ?? {
+          sleepHours: "",
+          appetite: "",
+          activityLevel: "moderate" as const,
+          socialBehavior: "",
+          schoolPerformance: "",
+          behavioralNotes: "",
+          lastUpdated: new Date().toISOString(),
+        }),
+        childName,
+        childAge,
+        description: childDesc,
         lastUpdated: new Date().toISOString(),
-      }),
-      childName,
-      childAge,
-      description: childDesc,
-      lastUpdated: new Date().toISOString(),
-    });
-    saveSettings({ diagnosisStatus: diagnosis });
-    toast({ title: "Child profile saved" });
+      });
+      saveSettings({ diagnosisStatus: diagnosis });
+      setSavedChild(true);
+      toast({ title: "Child profile saved", variant: "success" });
+      setTimeout(() => setSavedChild(false), 1500);
+    } catch {
+      toast({ title: "Couldn't save — please try again", variant: "destructive" });
+    }
   }
 
   function addMember() {
@@ -111,8 +120,14 @@ export default function Settings() {
   }
 
   function saveSchool() {
-    saveSettings({ teacherName, schoolName });
-    toast({ title: "School information saved" });
+    try {
+      saveSettings({ teacherName, schoolName });
+      setSavedSchool(true);
+      toast({ title: "School information saved", variant: "success" });
+      setTimeout(() => setSavedSchool(false), 1500);
+    } catch {
+      toast({ title: "Couldn't save — please try again", variant: "destructive" });
+    }
   }
 
   function clearAllData() {
@@ -212,7 +227,7 @@ export default function Settings() {
 
         <Button onClick={saveChild} className="w-full gap-2">
           <Save className="w-4 h-4" />
-          Save child profile
+          {savedChild ? "Saved ✓" : "Save child profile"}
         </Button>
       </SectionCard>
 
@@ -290,7 +305,7 @@ export default function Settings() {
 
         <Button onClick={saveSchool} className="w-full gap-2">
           <Save className="w-4 h-4" />
-          Save school information
+          {savedSchool ? "Saved ✓" : "Save school information"}
         </Button>
       </SectionCard>
 

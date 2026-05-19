@@ -100,6 +100,7 @@ export default function LogEntry() {
   const [scores, setScores] = useState({ ocd: 0, anxiety: 0, rage: 0, tics: 0, sleep: 0, cognition: 0 });
   const [notes, setNotes] = useState("");
   const [medicationsTaken, setMedicationsTaken] = useState<string[]>([]);
+  const [saved, setSaved] = useState(false);
 
   // Populate form when selected date changes or when Supabase data first loads
   useEffect(() => {
@@ -120,18 +121,24 @@ export default function LogEntry() {
   }
 
   function handleSave() {
-    const log: SymptomLog = {
-      id: existing?.id ?? `log-${Date.now()}`,
-      date: selectedDate,
-      ...scores,
-      notes,
-      medicationsTaken,
-    };
-    addLog(log);
-    toast({
-      title: existing ? "Entry updated" : "Entry saved",
-      description: `Symptoms saved for ${format(new Date(selectedDate + "T12:00:00"), "MMMM d, yyyy")}.`,
-    });
+    try {
+      const log: SymptomLog = {
+        id: existing?.id ?? `log-${Date.now()}`,
+        date: selectedDate,
+        ...scores,
+        notes,
+        medicationsTaken,
+      };
+      addLog(log);
+      setSaved(true);
+      toast({
+        title: existing ? "Entry updated" : "Entry saved",
+        variant: "success",
+      });
+      setTimeout(() => setSaved(false), 1500);
+    } catch {
+      toast({ title: "Couldn't save — please try again", variant: "destructive" });
+    }
   }
 
   const recent = [...logs]
@@ -307,7 +314,7 @@ export default function LogEntry() {
           </div>
 
           <Button onClick={handleSave} data-testid="button-save-entry">
-            {existing ? "Update Entry" : "Save Entry"}
+            {saved ? "Saved ✓" : existing ? "Update Entry" : "Save Entry"}
           </Button>
         </CardContent>
       </Card>

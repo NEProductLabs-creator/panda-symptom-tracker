@@ -205,17 +205,21 @@ export default function Dashboard() {
   }
 
   function handleSave() {
-    const log: SymptomLog = {
-      id: existingToday?.id ?? `log-${Date.now()}`,
-      date: today,
-      ...scores,
-      notes,
-      medicationsTaken,
-    };
-    addLog(log);
-    setSaved(true);
-    toast({ title: "Log saved", description: "Today's symptoms have been recorded." });
-    setTimeout(() => setSaved(false), 3000);
+    try {
+      const log: SymptomLog = {
+        id: existingToday?.id ?? `log-${Date.now()}`,
+        date: today,
+        ...scores,
+        notes,
+        medicationsTaken,
+      };
+      addLog(log);
+      setSaved(true);
+      toast({ title: "Today's log saved", variant: "success" });
+      setTimeout(() => setSaved(false), 1500);
+    } catch {
+      toast({ title: "Couldn't save — please try again", variant: "destructive" });
+    }
   }
 
   // Snapshot score (0–10 display scale for the badge).
@@ -692,7 +696,7 @@ export default function Dashboard() {
             size="lg"
             data-testid="button-save-log"
           >
-            {saved ? "Saved!" : existingToday ? "Update Log" : "Save Today's Log"}
+            {saved ? "Saved ✓" : existingToday ? "Update Log" : "Save Today's Log"}
           </Button>
         </div>
       </div>

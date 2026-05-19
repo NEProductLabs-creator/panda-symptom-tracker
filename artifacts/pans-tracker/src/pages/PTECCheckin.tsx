@@ -136,21 +136,26 @@ export default function PTECCheckin() {
   }
 
   function handleSave() {
-    const log: PTECLog = {
-      id: existingEntry?.id ?? `ptec-${Date.now()}`,
-      weekStartDate: weekStart,
-      date: format(new Date(), "yyyy-MM-dd"),
-      scores,
-      totalScore: total,
-      notes,
-    };
-    addOrUpdateLog(log);
-    setSaved(true);
-    toast({
-      title: "Check-in saved",
-      description: `Week of ${thisWeekLabel} recorded. Total: ${total}/72 (${severity.label})`,
-    });
-    setTimeout(() => setSaved(false), 3000);
+    try {
+      const log: PTECLog = {
+        id: existingEntry?.id ?? `ptec-${Date.now()}`,
+        weekStartDate: weekStart,
+        date: format(new Date(), "yyyy-MM-dd"),
+        scores,
+        totalScore: total,
+        notes,
+      };
+      addOrUpdateLog(log);
+      setSaved(true);
+      toast({
+        title: "Check-in saved",
+        description: `Week of ${thisWeekLabel} recorded. Total: ${total}/72 (${severity.label})`,
+        variant: "success",
+      });
+      setTimeout(() => setSaved(false), 1500);
+    } catch {
+      toast({ title: "Couldn't save — please try again", variant: "destructive" });
+    }
   }
 
   function handleDelete() {
@@ -316,7 +321,7 @@ export default function PTECCheckin() {
       <div className="flex gap-3">
         <Button onClick={handleSave} className="flex-1 gap-2" size="lg">
           <CheckCircle2 className="w-4 h-4" />
-          {saved ? "Saved!" : existingEntry ? "Update This Week" : "Save Check-in"}
+          {saved ? "Saved ✓" : existingEntry ? "Update This Week" : "Save Check-in"}
         </Button>
         {existingEntry && (
           <Button

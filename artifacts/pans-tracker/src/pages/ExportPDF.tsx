@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { track } from "@/lib/analytics";
 import { format, parseISO, subDays, differenceInDays } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
@@ -515,6 +516,7 @@ export default function ExportPDF() {
   // ─── PDF generator ────────────────────────────────────────────────────────
 
   function generatePDF() {
+    track('export_triggered');
     const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "letter" });
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();

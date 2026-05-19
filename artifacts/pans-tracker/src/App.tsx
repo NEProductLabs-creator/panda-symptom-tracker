@@ -1,4 +1,5 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
+import { track, identifyUser, identifyAsDemo } from "@/lib/analytics";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
 import { ClerkProvider, SignIn, SignUp, useUser, useClerk } from "@clerk/react";
@@ -142,7 +143,11 @@ function SignInPage() {
         </div>
         <button
           type="button"
-          onClick={enterDemoMode}
+          onClick={() => {
+            track('demo_viewed');
+            identifyAsDemo();
+            enterDemoMode();
+          }}
           className="text-sm font-semibold text-primary hover:underline transition-colors"
         >
           View Demo →
@@ -156,6 +161,7 @@ function SignInPage() {
 }
 
 function SignUpPage() {
+  useEffect(() => { track('signup_started'); }, []);
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
       <SignUp
@@ -165,6 +171,26 @@ function SignUpPage() {
       />
     </div>
   );
+}
+
+// ─── PostHog identity + signup detection ──────────────────────────────────────
+
+function PostHogSync() {
+  const { user, isSignedIn, isLoaded } = useUser();
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || !user) return;
+    identifyUser(user.id);
+    // Fire signup_completed once per session for accounts created < 5 minutes ago
+    const flagKey = `signup_tracked_${user.id}`;
+    const isNewAccount =
+      user.createdAt instanceof Date &&
+      Date.now() - user.createdAt.getTime() < 5 * 60 * 1000;
+    if (isNewAccount && !sessionStorage.getItem(flagKey)) {
+      sessionStorage.setItem(flagKey, '1');
+      track('signup_completed');
+    }
+  }, [isLoaded, isSignedIn, user]);
+  return null;
 }
 
 // ─── Layout ────────────────────────────────────────────────────────────────────
@@ -323,6 +349,7 @@ function AppProviders() {
       routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
     >
       <QueryClientProvider client={queryClient}>
+        <PostHogSync />
         <ClerkCacheInvalidator />
         <TooltipProvider>
           <DemoProvider>

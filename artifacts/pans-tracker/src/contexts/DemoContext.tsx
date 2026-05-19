@@ -10,6 +10,7 @@ import { useLocation } from "wouter";
 import { Link } from "wouter";
 import { X, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { track, identifyAsDemo } from "@/lib/analytics";
 
 export const DEMO_KEY = "pans_tracker_demo_mode";
 
@@ -82,6 +83,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   const enterDemoMode = useCallback(() => {
     localStorage.setItem(DEMO_KEY, "1");
     setIsDemoMode(true);
+    identifyAsDemo();
     navigate("/");
   }, [navigate]);
 
@@ -91,6 +93,10 @@ export function DemoProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const dismissSavePrompt = useCallback(() => setShowSavePrompt(false), []);
+
+  useEffect(() => {
+    if (showSavePrompt) track('demo_save_prompt_shown');
+  }, [showSavePrompt]);
 
   // Hooks dispatch this event when a write is attempted in demo mode
   useEffect(() => {
@@ -108,6 +114,7 @@ export function DemoProvider({ children }: { children: ReactNode }) {
         <DemoSavePrompt
           onDismiss={dismissSavePrompt}
           onSignUp={() => {
+            track('demo_save_prompt_converted');
             dismissSavePrompt();
             exitDemoMode();
             navigate("/sign-up");
@@ -141,7 +148,7 @@ export function DemoBanner() {
         You're viewing a demo.{" "}
         <Link
           href="/sign-up"
-          onClick={() => exitDemoMode()}
+          onClick={() => { track('demo_cta_clicked'); exitDemoMode(); }}
           className="font-semibold underline underline-offset-2 hover:text-violet-900 transition-colors"
         >
           Create a free account

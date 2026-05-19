@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { track } from "@/lib/analytics";
 import { useLocation } from "wouter";
 import {
   Heart,
@@ -124,6 +125,8 @@ export default function Onboarding() {
   const { saveSettings } = useAppSettings();
   const { baseline, saveBaseline } = useChildBaseline();
 
+  useEffect(() => { track('onboarding_started'); }, []);
+
   const next = () => setStep((s) => s + 1);
 
   // Screen 5 – privacy
@@ -165,6 +168,7 @@ export default function Onboarding() {
         });
       }
 
+      track('onboarding_completed');
       navigate("/");
     } finally {
       setSaving(false);

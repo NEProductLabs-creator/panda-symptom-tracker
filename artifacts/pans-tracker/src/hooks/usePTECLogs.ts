@@ -4,6 +4,7 @@ import { storage } from '@/lib/storage';
 import { detectPTECFlare } from '@/lib/ptec';
 import { DEMO_PTEC_LOGS } from '@/lib/demoData';
 import { DEMO_KEY } from '@/contexts/DemoContext';
+import { track } from '@/lib/analytics';
 import { format } from 'date-fns';
 
 const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'));
@@ -21,6 +22,7 @@ export function usePTECLogs() {
     storage.addOrUpdatePTECLog(log);
     const updated = storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
     setPTECLogs(updated);
+    track('ptec_checkin_completed');
 
     // Save flare event if this update triggered a flare
     const flare = detectPTECFlare(updated);

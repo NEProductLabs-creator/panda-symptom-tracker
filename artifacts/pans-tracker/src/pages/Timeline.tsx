@@ -150,6 +150,9 @@ function DayDetail({ log, date, medLibrary, milestone, isFlareDay, onClose }: Da
             <div className="grid grid-cols-2 gap-2">
               {CATEGORIES.map((cat) => {
                 const val = log[cat.key as keyof SymptomLog] as number;
+                // For inverted fields (higher = better), flip the severity color logic
+                const isBad = cat.inverted ? val <= 1 : val >= 4;
+                const isMid = cat.inverted ? val <= 3 : val >= 2;
                 return (
                   <div key={cat.key} className="flex items-center gap-2.5 px-3 py-2 rounded-lg bg-muted/40">
                     <span
@@ -161,7 +164,7 @@ function DayDetail({ log, date, medLibrary, milestone, isFlareDay, onClose }: Da
                     </span>
                     <span
                       className="text-xs font-bold ml-auto"
-                      style={{ color: val >= 4 ? "#ea580c" : val >= 2 ? "#d97706" : "#16a34a" }}
+                      style={{ color: isBad ? "#ea580c" : isMid ? "#d97706" : "#16a34a" }}
                     >
                       {val}
                     </span>

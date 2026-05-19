@@ -218,14 +218,15 @@ export default function Dashboard() {
     setTimeout(() => setSaved(false), 3000);
   }
 
-  // Snapshot score (0–10 display scale for the badge)
+  // Snapshot score (0–10 display scale for the badge).
+  // sleep and cognition use an inverted scale (higher = better), so invert them here.
   const todayRawScore = existingToday
     ? ((existingToday.ocd +
         existingToday.anxiety +
         existingToday.rage +
         existingToday.tics +
-        existingToday.sleep +
-        existingToday.cognition) /
+        (5 - existingToday.sleep) +
+        (5 - existingToday.cognition)) /
         6) *
       2
     : null;
@@ -283,7 +284,9 @@ export default function Dashboard() {
   const avgSeverity = useMemo(() => {
     if (rangeLogs.length === 0) return null;
     const total = rangeLogs.reduce(
-      (sum, l) => sum + ((l.ocd + l.anxiety + l.rage + l.tics + l.sleep + l.cognition) / 6) * 2,
+      (sum, l) =>
+        sum +
+        ((l.ocd + l.anxiety + l.rage + l.tics + (5 - l.sleep) + (5 - l.cognition)) / 6) * 2,
       0
     );
     return Math.round((total / rangeLogs.length) * 10) / 10;

@@ -40,8 +40,8 @@ const CAT_LABELS: Record<(typeof CAT_KEYS)[number], string> = {
   anxiety: "Anxiety",
   rage: "Rage / Irritability",
   tics: "Tics",
-  sleep: "Sleep Disturbance",
-  cognition: "Cognitive / Focus",
+  sleep: "Sleep Quality (5 = excellent)",
+  cognition: "Cognitive / Focus (5 = excellent)",
 };
 
 const TRIGGER_LABELS: Record<TriggerCategory, string> = {
@@ -70,7 +70,8 @@ function fmtShort(d: string) {
 }
 
 function dailyScore(log: SymptomLog) {
-  return log.ocd + log.anxiety + log.rage + log.tics + log.sleep + log.cognition;
+  // sleep and cognition are inverted (higher = better), so invert for severity total
+  return log.ocd + log.anxiety + log.rage + log.tics + (5 - log.sleep) + (5 - log.cognition);
 }
 
 function sectionHeader(doc: jsPDF, title: string, y: number, margin: number): number {

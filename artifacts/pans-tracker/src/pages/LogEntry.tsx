@@ -25,12 +25,12 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const CATEGORIES = [
-  { key: "ocd", label: "OCD Behaviors" },
-  { key: "anxiety", label: "Anxiety" },
-  { key: "rage", label: "Rage / Dysregulation" },
-  { key: "tics", label: "Tics" },
-  { key: "sleep", label: "Sleep Quality" },
-  { key: "cognition", label: "School / Cognition" },
+  { key: "ocd",       label: "OCD Behaviors",        inverted: false },
+  { key: "anxiety",   label: "Anxiety",              inverted: false },
+  { key: "rage",      label: "Rage / Dysregulation", inverted: false },
+  { key: "tics",      label: "Tics",                 inverted: false },
+  { key: "sleep",     label: "Sleep Quality",        inverted: true  },
+  { key: "cognition", label: "School / Cognition",   inverted: true  },
 ] as const;
 
 const today = format(new Date(), "yyyy-MM-dd");
@@ -55,10 +55,12 @@ function ScoreBubble({ value, active, onClick, label }: { value: number; active:
   );
 }
 
-function ScoreBadge({ value }: { value: number }) {
+function ScoreBadge({ value, inverted = false }: { value: number; inverted?: boolean }) {
   const colors = ["bg-slate-100 text-slate-400", "bg-green-100 text-green-700", "bg-lime-100 text-lime-700", "bg-yellow-100 text-yellow-700", "bg-orange-100 text-orange-700", "bg-red-100 text-red-700"];
+  const invertedColors = ["bg-red-100 text-red-700", "bg-orange-100 text-orange-700", "bg-yellow-100 text-yellow-700", "bg-lime-100 text-lime-700", "bg-green-100 text-green-700", "bg-emerald-100 text-emerald-700"];
+  const palette = inverted ? invertedColors : colors;
   return (
-    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold ${colors[value] ?? ""}`}>
+    <span className={`inline-flex items-center justify-center w-6 h-6 rounded-md text-xs font-bold ${palette[value] ?? ""}`}>
       {value}
     </span>
   );
@@ -197,20 +199,29 @@ export default function LogEntry() {
         <CardContent className="space-y-5">
 
           {/* Scale legend */}
-          <p className="text-[11px] text-muted-foreground leading-snug">
-            <span className="font-medium text-foreground/70">0</span> = None &nbsp;·&nbsp;
-            <span className="font-medium text-foreground/70">1</span> = Mild &nbsp;·&nbsp;
-            <span className="font-medium text-foreground/70">2</span> = Moderate &nbsp;·&nbsp;
-            <span className="font-medium text-foreground/70">3</span> = Significant &nbsp;·&nbsp;
-            <span className="font-medium text-foreground/70">4</span> = Severe &nbsp;·&nbsp;
-            <span className="font-medium text-foreground/70">5</span> = Extreme
-          </p>
+          <div className="space-y-0.5">
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              <span className="font-medium text-foreground/70">Symptoms</span>:&nbsp;
+              <span className="font-medium text-foreground/70">0</span> = None &nbsp;→&nbsp;
+              <span className="font-medium text-foreground/70">5</span> = Extreme
+            </p>
+            <p className="text-[11px] text-muted-foreground leading-snug">
+              <span className="font-medium text-foreground/70">Sleep &amp; Cognition</span>:&nbsp;
+              <span className="font-medium text-foreground/70">0</span> = Poor &nbsp;→&nbsp;
+              <span className="font-medium text-foreground/70">5</span> = Excellent &nbsp;(higher = better)
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {CATEGORIES.map((cat) => (
               <div key={cat.key} className="space-y-2">
-                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                <Label className="text-xs font-medium text-muted-foreground uppercase tracking-wide flex items-center gap-1.5">
                   {cat.label}
+                  {cat.inverted && (
+                    <span className="normal-case text-[9px] font-medium text-primary/70 bg-primary/10 px-1.5 py-0.5 rounded-full tracking-normal">
+                      Higher = better
+                    </span>
+                  )}
                 </Label>
                 <div className="flex gap-1.5" data-testid={`score-${cat.key}`}>
                   {[0, 1, 2, 3, 4, 5].map((n) => (
@@ -219,7 +230,11 @@ export default function LogEntry() {
                       value={n}
                       active={scores[cat.key] === n}
                       onClick={() => setScores((s) => ({ ...s, [cat.key]: n }))}
-                      label={n === 0 ? "None" : n === 5 ? "Extreme" : undefined}
+                      label={
+                        cat.inverted
+                          ? (n === 0 ? "Poor" : n === 5 ? "Excel" : undefined)
+                          : (n === 0 ? "None" : n === 5 ? "Extreme" : undefined)
+                      }
                     />
                   ))}
                 </div>
@@ -345,8 +360,8 @@ export default function LogEntry() {
                         <td className="py-3 px-2 text-center"><ScoreBadge value={log.anxiety} /></td>
                         <td className="py-3 px-2 text-center"><ScoreBadge value={log.rage} /></td>
                         <td className="py-3 px-2 text-center"><ScoreBadge value={log.tics} /></td>
-                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.sleep} /></td>
-                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.cognition} /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.sleep} inverted /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.cognition} inverted /></td>
                         <td className="py-3 px-2 text-center">
                           {takenCount > 0 ? (
                             <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">

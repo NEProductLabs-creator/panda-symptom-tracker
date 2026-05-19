@@ -160,7 +160,10 @@ export default function PrintSummary() {
           <h2 className="text-base font-bold text-gray-800 mb-3 uppercase tracking-wide text-xs border-b border-gray-100 pb-1">
             30-Day Symptom Log
           </h2>
-          <p className="text-xs text-gray-400 mb-3">Scores 1 (mild) – 5 (severe)</p>
+          <p className="text-xs text-gray-400 mb-3">
+            OCD, Anxiety, Rage, Tics: 0 (none) – 5 (extreme) &nbsp;·&nbsp;
+            Sleep &amp; Cognition: 0 (poor) – 5 (excellent)
+          </p>
           {recentLogs.length === 0 ? (
             <p className="text-sm text-gray-500 italic">No symptom data recorded for this period.</p>
           ) : (

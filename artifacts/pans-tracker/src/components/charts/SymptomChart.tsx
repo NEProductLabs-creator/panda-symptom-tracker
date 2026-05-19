@@ -23,12 +23,12 @@ import { Button } from "@/components/ui/button";
 import { Eye, EyeOff } from "lucide-react";
 
 const CATEGORIES = [
-  { key: "ocd", label: "OCD Behaviors", color: "hsl(140, 20%, 48%)" },
-  { key: "anxiety", label: "Anxiety", color: "hsl(260, 15%, 58%)" },
-  { key: "rage", label: "Rage / Dysregulation", color: "hsl(30, 25%, 58%)" },
-  { key: "tics", label: "Tics", color: "hsl(200, 20%, 52%)" },
-  { key: "sleep", label: "Sleep Quality", color: "hsl(330, 15%, 58%)" },
-  { key: "cognition", label: "School / Cognition", color: "hsl(180, 15%, 52%)" },
+  { key: "ocd",       label: "OCD Behaviors",         color: "hsl(140, 20%, 48%)", inverted: false, sevKey: "ocd" },
+  { key: "anxiety",   label: "Anxiety",               color: "hsl(260, 15%, 58%)", inverted: false, sevKey: "anxiety" },
+  { key: "rage",      label: "Rage / Dysregulation",  color: "hsl(30, 25%, 58%)",  inverted: false, sevKey: "rage" },
+  { key: "tics",      label: "Tics",                  color: "hsl(200, 20%, 52%)", inverted: false, sevKey: "tics" },
+  { key: "sleep",     label: "Sleep Quality",         color: "hsl(330, 15%, 58%)", inverted: true,  sevKey: "sleepSev" },
+  { key: "cognition", label: "School / Cognition",    color: "hsl(180, 15%, 52%)", inverted: true,  sevKey: "cognitionSev" },
 ] as const;
 
 const MED_COLORS = [
@@ -52,8 +52,10 @@ interface ChartDataPoint {
   anxiety: number;
   rage: number;
   tics: number;
-  sleep: number;
-  cognition: number;
+  sleep: number;       // raw user value (0 = Poor, 5 = Excellent)
+  cognition: number;   // raw user value (0 = Poor, 5 = Excellent)
+  sleepSev: number;    // severity contribution = 5 - sleep
+  cognitionSev: number;// severity contribution = 5 - cognition
   dailyScore: number;
   medicationsTaken: string[];
   note?: string;
@@ -234,20 +236,26 @@ function CustomTooltip({
 
       {showIndividual && (
         <div className="space-y-1 mb-2 border-b border-border pb-2">
-          {CATEGORIES.map((cat) => (
-            <div key={cat.key} className="flex items-center gap-2">
-              <span
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ backgroundColor: cat.color }}
-              />
-              <span className="text-muted-foreground flex-1 truncate">
-                {cat.label}:
-              </span>
-              <span className="font-medium text-foreground">
-                {dataPoint[cat.key as keyof ChartDataPoint] as number}
-              </span>
-            </div>
-          ))}
+          {CATEGORIES.map((cat) => {
+            const rawVal = dataPoint[cat.key as keyof ChartDataPoint] as number;
+            return (
+              <div key={cat.key} className="flex items-center gap-2">
+                <span
+                  className="w-2 h-2 rounded-full flex-shrink-0"
+                  style={{ backgroundColor: cat.color }}
+                />
+                <span className="text-muted-foreground flex-1 truncate">
+                  {cat.label}:
+                </span>
+                <span className="font-medium text-foreground">
+                  {rawVal}
+                  {cat.inverted && (
+                    <span className="text-[9px] text-muted-foreground ml-0.5">↑</span>
+                  )}
+                </span>
+              </div>
+            );
+          })}
         </div>
       )}
 
@@ -353,8 +361,11 @@ export default function SymptomChart({
     const tics = log?.tics ?? 0;
     const sleep = log?.sleep ?? 0;
     const cognition = log?.cognition ?? 0;
+    // sleep/cognition are inverted scales (higher = better), so invert for severity
+    const sleepSev = log ? (5 - sleep) : 0;
+    const cognitionSev = log ? (5 - cognition) : 0;
     const rawAvg = log
-      ? (ocd + anxiety + rage + tics + sleep + cognition) / 6
+      ? (ocd + anxiety + rage + tics + sleepSev + cognitionSev) / 6
       : 0;
     const dailyScore = Math.round(rawAvg * 20) / 10;
 
@@ -367,6 +378,8 @@ export default function SymptomChart({
       tics,
       sleep,
       cognition,
+      sleepSev,
+      cognitionSev,
       dailyScore,
       medicationsTaken: log?.medicationsTaken ?? [],
       note: log?.notes || undefined,
@@ -539,7 +552,7 @@ export default function SymptomChart({
               <Line
                 key={cat.key}
                 type="monotone"
-                dataKey={cat.key}
+                dataKey={cat.sevKey}
                 name={cat.label}
                 stroke={cat.color}
                 strokeWidth={1.5}

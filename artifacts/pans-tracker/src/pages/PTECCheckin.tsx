@@ -31,6 +31,7 @@ import {
   Info,
   TrendingUp,
   Trash2,
+  HelpCircle,
 } from "lucide-react";
 
 function getWeekStart(date: Date): string {
@@ -53,8 +54,8 @@ function PTECScoreRow({
 }) {
   const sev = getPTECSeverity(value);
   return (
-    <div className="py-3.5 border-b border-border/50 last:border-0">
-      <div className="flex items-start justify-between gap-3 mb-2.5">
+    <div className="py-4 sm:py-3.5 border-b border-border/50 last:border-0">
+      <div className="flex items-start justify-between gap-3 mb-3">
         <div className="min-w-0">
           <p className="text-sm font-semibold text-foreground leading-tight">{label}</p>
           <p className="text-xs text-muted-foreground mt-0.5 leading-snug">{description}</p>
@@ -66,22 +67,23 @@ function PTECScoreRow({
           {value} — {PTEC_SCALE_LABELS[value]}
         </span>
       </div>
-      <div className="flex gap-1">
+      {/* On mobile: 4-col grid (wraps to 4+3); on sm+: all 7 in one row */}
+      <div className="grid grid-cols-4 sm:grid-cols-7 gap-1.5 sm:gap-1">
         {[0, 1, 2, 3, 4, 5, 6].map((n) => (
           <button
             key={n}
             type="button"
             onClick={() => onChange(n)}
-            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all touch-manipulation flex flex-col items-center justify-center ${
+            className={`min-h-[44px] sm:min-h-0 sm:py-1.5 rounded-lg text-xs font-bold transition-all touch-manipulation flex flex-col items-center justify-center ${
               value === n
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
             }`}
           >
             <span className="leading-none">{n}</span>
-            {(n === 0 || n === 6) && (
+            {(n === 0 || n === 3 || n === 6) && (
               <span className="text-[9px] leading-none mt-0.5 font-medium opacity-70">
-                {n === 0 ? "None" : "Extreme"}
+                {n === 0 ? "None" : n === 3 ? "Mod" : "Max"}
               </span>
             )}
           </button>
@@ -106,6 +108,7 @@ export default function PTECCheckin() {
   );
   const [notes, setNotes] = useState(existingEntry?.notes ?? "");
   const [saved, setSaved] = useState(false);
+  const [showLegend, setShowLegend] = useState(false);
 
   const total = computePTECTotal(scores);
   const severity = getPTECSeverity(total);
@@ -213,9 +216,35 @@ export default function PTECCheckin() {
         </button>
       </div>
 
-      {/* Score scale legend — sticky so it stays visible while scrolling the symptom list */}
+      {/* Score scale legend — sticky; collapsible on mobile, always visible on desktop */}
       <div className="sticky top-0 z-10 -mx-5 md:-mx-8 px-5 md:px-8 py-2.5 bg-background border-b border-border/60">
-        <div className="flex flex-wrap gap-x-3 gap-y-1">
+        {/* Mobile: single line with toggle */}
+        <div className="flex items-center justify-between sm:hidden">
+          <span className="text-xs text-muted-foreground font-medium">
+            Score scale: <span className="text-foreground font-semibold">0</span> = None →{" "}
+            <span className="text-foreground font-semibold">6</span> = Extreme
+          </span>
+          <button
+            type="button"
+            onClick={() => setShowLegend((v) => !v)}
+            className="flex items-center gap-1 text-xs text-primary font-medium ml-3 flex-shrink-0"
+          >
+            <HelpCircle className="w-3.5 h-3.5" />
+            {showLegend ? "Hide" : "Details"}
+          </button>
+        </div>
+        {/* Mobile expanded detail */}
+        {showLegend && (
+          <div className="sm:hidden flex flex-wrap gap-x-3 gap-y-1 mt-2 pt-2 border-t border-border/40">
+            {[0, 1, 2, 3, 4, 5, 6].map((n) => (
+              <span key={n} className="text-xs text-muted-foreground">
+                <span className="font-semibold text-foreground">{n}</span> = {PTEC_SCALE_LABELS[n]}
+              </span>
+            ))}
+          </div>
+        )}
+        {/* Desktop: always visible full legend */}
+        <div className="hidden sm:flex flex-wrap gap-x-3 gap-y-1">
           {[0, 1, 2, 3, 4, 5, 6].map((n) => (
             <span key={n} className="text-xs text-muted-foreground">
               <span className="font-semibold text-foreground">{n}</span> = {PTEC_SCALE_LABELS[n]}

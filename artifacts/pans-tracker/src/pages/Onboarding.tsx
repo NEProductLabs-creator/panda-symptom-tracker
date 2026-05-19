@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
-import { supabase } from "@/lib/supabase";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -163,19 +162,6 @@ export default function Onboarding() {
           childName,
           childAge: age,
           lastUpdated: new Date().toISOString(),
-        });
-      }
-
-      // Skip Supabase update in guest mode (no session)
-      if (localStorage.getItem("pans_tracker_guest_mode") !== "1") {
-        await supabase.auth.updateUser({
-          data: {
-            onboarding_complete: true,
-            child_name: childName || undefined,
-            child_dob: childDob || undefined,
-            symptoms_start_date: symptomsDate || undefined,
-            diagnosis: diagnosis || undefined,
-          },
         });
       }
 

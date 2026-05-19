@@ -1,6 +1,9 @@
-import { ReactNode, useEffect, useState } from "react";
-import { Switch, Route, Router as WouterRouter, useLocation, Link } from "wouter";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactNode, useEffect, useRef, useState } from "react";
+import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
+import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
+import { ClerkProvider, SignIn, SignUp, useUser, useClerk } from "@clerk/react";
+import { publishableKeyFromHost } from "@clerk/react/internal";
+import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Activity } from "lucide-react";
@@ -23,16 +26,87 @@ import WellbeingCheckin from "@/pages/WellbeingCheckin";
 import HopeBoard from "@/pages/HopeBoard";
 import Onboarding from "@/pages/Onboarding";
 import Settings from "@/pages/Settings";
-import AuthPage from "@/pages/AuthPage";
-import AuthCallback from "@/pages/AuthCallback";
-import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { DemoProvider, DemoBanner, useDemoContext } from "@/contexts/DemoContext";
 import { getOnboardingComplete } from "@/hooks/useAppSettings";
 import SetupWizard, { SETUP_WIZARD_FLAG } from "@/components/SetupWizard";
 import { storage } from "@/lib/storage";
 
 const queryClient = new QueryClient();
 
-const NO_SIDEBAR_ROUTES = ["/print", "/about", "/onboarding", "/auth", "/auth/callback"];
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// REQUIRED — copy verbatim. Resolves the publishable key from the hostname.
+const clerkPubKey = publishableKeyFromHost(
+  window.location.hostname,
+  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
+);
+
+// REQUIRED — copy verbatim. Empty in dev, auto-set in prod.
+const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
+
+function stripBase(path: string): string {
+  return basePath && path.startsWith(basePath)
+    ? path.slice(basePath.length) || "/"
+    : path;
+}
+
+if (!clerkPubKey) {
+  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
+}
+
+// ─── Clerk appearance — warm muted-sage brand ─────────────────────────────────
+
+const clerkAppearance = {
+  theme: shadcn,
+  cssLayerName: "clerk",
+  options: {
+    logoPlacement: "inside" as const,
+    logoLinkUrl: basePath || "/",
+    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
+    socialButtonsVariant: "blockButton" as const,
+  },
+  variables: {
+    colorPrimary: "hsl(140, 15%, 45%)",
+    colorForeground: "hsl(210, 20%, 20%)",
+    colorMutedForeground: "hsl(210, 10%, 40%)",
+    colorDanger: "hsl(0, 40%, 60%)",
+    colorBackground: "hsl(40, 20%, 98%)",
+    colorInput: "hsl(40, 10%, 85%)",
+    colorInputForeground: "hsl(210, 20%, 20%)",
+    colorNeutral: "hsl(210, 10%, 88%)",
+    fontFamily: "'Plus Jakarta Sans', sans-serif",
+    borderRadius: "0.75rem",
+  },
+  elements: {
+    rootBox: "w-full flex justify-center",
+    cardBox: "bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-lg",
+    card: "!shadow-none !border-0 !bg-transparent !rounded-none",
+    footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
+    headerTitle: "text-foreground font-bold",
+    headerSubtitle: "text-muted-foreground",
+    socialButtonsBlockButtonText: "text-foreground font-medium",
+    formFieldLabel: "text-foreground text-xs font-semibold uppercase tracking-wide",
+    footerActionLink: "text-primary font-semibold",
+    footerActionText: "text-muted-foreground",
+    dividerText: "text-muted-foreground text-xs",
+    identityPreviewEditButton: "text-primary",
+    formFieldSuccessText: "text-emerald-600",
+    alertText: "text-foreground text-sm",
+    logoBox: "flex justify-center mb-1",
+    logoImage: "w-12 h-12 rounded-xl",
+    socialButtonsBlockButton: "border border-border bg-white hover:bg-accent transition-colors h-11",
+    formButtonPrimary: "bg-primary text-white hover:bg-primary/90 transition-colors h-11 font-semibold",
+    formFieldInput: "border border-border bg-white text-foreground h-11",
+    footerAction: "border-t border-border bg-transparent",
+    dividerLine: "bg-border",
+    alert: "border border-border rounded-xl",
+    otpCodeFieldInput: "border border-border bg-white h-11",
+    formFieldRow: "",
+    main: "",
+  },
+};
+
+const NO_SIDEBAR_ROUTES = ["/print", "/about", "/onboarding", "/sign-in", "/sign-up"];
 
 // ─── Loading screen ────────────────────────────────────────────────────────────
 
@@ -49,95 +123,144 @@ function LoadingScreen() {
   );
 }
 
+// ─── Sign-in page (with View Demo button) ─────────────────────────────────────
+
+function SignInPage() {
+  const { enterDemoMode } = useDemoContext();
+  return (
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-8 gap-6">
+      <SignIn
+        routing="path"
+        path={`${basePath}/sign-in`}
+        signUpUrl={`${basePath}/sign-up`}
+      />
+      <div className="w-full max-w-[440px] space-y-2 text-center">
+        <div className="flex items-center gap-3">
+          <div className="h-px bg-border flex-1" />
+          <span className="text-xs text-muted-foreground">Just exploring?</span>
+          <div className="h-px bg-border flex-1" />
+        </div>
+        <button
+          type="button"
+          onClick={enterDemoMode}
+          className="text-sm font-semibold text-primary hover:underline transition-colors"
+        >
+          View Demo →
+        </button>
+        <p className="text-[11px] text-muted-foreground">
+          See 6 weeks of realistic PANDAS symptom data — no account needed
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function SignUpPage() {
+  return (
+    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
+      <SignUp
+        routing="path"
+        path={`${basePath}/sign-up`}
+        signInUrl={`${basePath}/sign-in`}
+      />
+    </div>
+  );
+}
+
 // ─── Layout ────────────────────────────────────────────────────────────────────
 
 function Layout({ children }: { children: ReactNode }) {
   const [location] = useLocation();
-  const { isGuest } = useAuth();
+  const { isDemoMode } = useDemoContext();
 
-  if (NO_SIDEBAR_ROUTES.includes(location)) {
-    return <>{children}</>;
-  }
+  const isNoSidebar = NO_SIDEBAR_ROUTES.some(
+    (r) => location === r || location.startsWith(r + "/"),
+  );
+  if (isNoSidebar) return <>{children}</>;
 
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
       <main className="flex-1 md:ml-60 min-h-screen">
-        {/* Pushes content below the fixed mobile header + Dynamic Island safe area */}
         <div
           className="md:hidden"
           style={{ height: "calc(env(safe-area-inset-top) + 3.5rem)" }}
         />
-        {/* GUEST MODE BANNER — remove this block when launching with auth required */}
-        {isGuest && (
-          <div className="bg-amber-50 border-b border-amber-200 px-4 py-2.5 flex items-center justify-between gap-4">
-            <p className="text-xs text-amber-800 leading-snug">
-              Demo mode — data is stored on this device only
-            </p>
-            <Link
-              href="/auth"
-              className="text-xs font-semibold text-amber-900 hover:underline whitespace-nowrap"
-            >
-              Create account →
-            </Link>
-          </div>
-        )}
+        {isDemoMode && <DemoBanner />}
         {children}
       </main>
     </div>
   );
 }
 
+// ─── Cache invalidation when signed-in user changes ───────────────────────────
+
+function ClerkCacheInvalidator() {
+  const { addListener } = useClerk();
+  const qc = useQueryClient();
+  const prevId = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    return addListener(({ user }) => {
+      const id = user?.id ?? null;
+      if (prevId.current !== undefined && prevId.current !== id) qc.clear();
+      prevId.current = id;
+    });
+  }, [addListener, qc]);
+  return null;
+}
+
 // ─── Router ────────────────────────────────────────────────────────────────────
 
-const NO_WIZARD_ROUTES = ["/auth", "/auth/callback", "/onboarding", "/print", "/about"];
+const NO_WIZARD_ROUTES = ["/sign-in", "/sign-up", "/onboarding", "/print", "/about"];
 
 function Router() {
-  const { user, loading, isGuest } = useAuth();
+  const { isSignedIn, isLoaded } = useUser();
+  const { isDemoMode } = useDemoContext();
   const [location, navigate] = useLocation();
 
-  // Setup wizard: shown once when no child profile exists yet
   const [showWizard, setShowWizard] = useState(() => (
     localStorage.getItem(SETUP_WIZARD_FLAG) !== "1" &&
     !storage.getChildBaseline()
   ));
 
   useEffect(() => {
-    if (loading) return;
+    if (!isLoaded && !isDemoMode) return;
 
-    const authRoutes = ["/auth", "/auth/callback"];
+    const publicPrefixes = ["/sign-in", "/sign-up", "/about", "/print"];
+    const isPublic = publicPrefixes.some(
+      (r) => location === r || location.startsWith(r + "/"),
+    );
 
-    // Not logged in and not a guest → send to auth screen
-    if (!user && !isGuest && !authRoutes.includes(location)) {
-      navigate("/auth");
+    if (!isSignedIn && !isDemoMode && !isPublic) {
+      navigate("/sign-in");
       return;
     }
 
-    // Guest landed on the auth screen → onboarding first, then app
-    if (isGuest && location === "/auth") {
+    if ((isSignedIn || isDemoMode) && location === "/sign-in") {
       navigate(getOnboardingComplete() ? "/" : "/onboarding");
       return;
     }
 
-    // Logged in but still on the auth screen → route based on onboarding state
-    if (user && location === "/auth") {
-      const supabaseDone = user.user_metadata?.onboarding_complete;
-      const localDone = getOnboardingComplete();
-      navigate(supabaseDone || localDone ? "/" : "/onboarding");
+    if (isSignedIn && location === "/sign-up") {
+      navigate("/");
     }
-  }, [user, loading, isGuest, location]);
+  }, [isSignedIn, isLoaded, isDemoMode, location]);
 
-  if (loading) return <LoadingScreen />;
+  if (!isLoaded && !isDemoMode) return <LoadingScreen />;
 
-  // Show nothing while the redirect fires (avoids flash of protected content)
-  const authRoutes = ["/auth", "/auth/callback"];
-  if (!user && !isGuest && !authRoutes.includes(location)) return <LoadingScreen />;
+  const publicPrefixes = ["/sign-in", "/sign-up", "/about", "/print"];
+  const isPublic = publicPrefixes.some(
+    (r) => location === r || location.startsWith(r + "/"),
+  );
+  if (!isSignedIn && !isDemoMode && !isPublic) return <LoadingScreen />;
 
-  const isWizardRoute = NO_WIZARD_ROUTES.some((r) => location === r || location.startsWith(r + "/"));
+  const isWizardRoute = NO_WIZARD_ROUTES.some(
+    (r) => location === r || location.startsWith(r + "/"),
+  );
 
   return (
     <Layout>
-      {showWizard && !isWizardRoute && (
+      {showWizard && !isWizardRoute && !isDemoMode && (
         <SetupWizard onDismiss={() => setShowWizard(false)} />
       )}
       <Switch>
@@ -157,29 +280,74 @@ function Router() {
         <Route path="/hope" component={HopeBoard} />
         <Route path="/onboarding" component={Onboarding} />
         <Route path="/settings" component={Settings} />
-        <Route path="/auth" component={AuthPage} />
-        <Route path="/auth/callback" component={AuthCallback} />
         <Route path="/about" component={Intro} />
+        {/* Legacy Supabase auth routes → redirect to Clerk paths */}
+        <Route path="/auth">
+          <Redirect to="/sign-in" />
+        </Route>
+        <Route path="/auth/callback">
+          <Redirect to="/sign-in" />
+        </Route>
         <Route component={NotFound} />
       </Switch>
     </Layout>
   );
 }
 
-// ─── App ───────────────────────────────────────────────────────────────────────
+// ─── App providers ────────────────────────────────────────────────────────────
+
+function AppProviders() {
+  const [, setLocation] = useLocation();
+  return (
+    <ClerkProvider
+      publishableKey={clerkPubKey}
+      proxyUrl={clerkProxyUrl}
+      appearance={clerkAppearance}
+      signInUrl={`${basePath}/sign-in`}
+      signUpUrl={`${basePath}/sign-up`}
+      localization={{
+        signIn: {
+          start: {
+            title: "Welcome back",
+            subtitle: "Sign in to track your child's symptoms",
+          },
+        },
+        signUp: {
+          start: {
+            title: "Create your free account",
+            subtitle: "Private, secure, and designed for PANS & PANDAS families",
+          },
+        },
+      }}
+      routerPush={(to) => setLocation(stripBase(to))}
+      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
+    >
+      <QueryClientProvider client={queryClient}>
+        <ClerkCacheInvalidator />
+        <TooltipProvider>
+          <DemoProvider>
+            <Switch>
+              {/* Clerk sign-in / sign-up — /*? matches OAuth sub-paths */}
+              <Route path="/sign-in/*?" component={SignInPage} />
+              <Route path="/sign-up/*?" component={SignUpPage} />
+              {/* All other routes go through auth-guarded Router */}
+              <Route component={Router} />
+            </Switch>
+            <Toaster />
+          </DemoProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ClerkProvider>
+  );
+}
+
+// ─── Root ─────────────────────────────────────────────────────────────────────
 
 function App() {
   return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <AuthProvider>
-            <Router />
-          </AuthProvider>
-        </WouterRouter>
-        <Toaster />
-      </TooltipProvider>
-    </QueryClientProvider>
+    <WouterRouter base={basePath}>
+      <AppProviders />
+    </WouterRouter>
   );
 }
 

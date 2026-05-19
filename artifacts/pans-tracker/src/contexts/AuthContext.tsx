@@ -1,59 +1,39 @@
-import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
-import { User } from "@supabase/supabase-js";
-import { supabase } from "@/lib/supabase";
+// Thin compatibility wrapper — auth is now handled by Clerk.
+// Components that call useAuth() continue to work unchanged.
 
-const GUEST_KEY = "pans_tracker_guest_mode";
+import { ReactNode } from "react";
+import { useUser, useClerk } from "@clerk/react";
+import { DEMO_KEY } from "@/contexts/DemoContext";
+
+const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 interface AuthContextType {
-  user: User | null;
+  user: { id: string } | null;
   loading: boolean;
   isGuest: boolean;
   signOut: () => Promise<void>;
   enterGuestMode: () => void;
 }
 
-const AuthContext = createContext<AuthContextType | null>(null);
-
+// AuthProvider is now a passthrough — ClerkProvider in App.tsx handles auth state
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isGuest, setIsGuest] = useState(() => localStorage.getItem(GUEST_KEY) === "1");
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    localStorage.removeItem(GUEST_KEY);
-    setIsGuest(false);
-  };
-
-  const enterGuestMode = useCallback(() => {
-    localStorage.setItem(GUEST_KEY, "1");
-    setIsGuest(true);
-  }, []);
-
-  return (
-    <AuthContext.Provider value={{ user, loading, isGuest, signOut, enterGuestMode }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <>{children}</>;
 }
 
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
+export function useAuth(): AuthContextType {
+  const { user, isLoaded } = useUser();
+  const { signOut: clerkSignOut } = useClerk();
+  const isDemoMode = localStorage.getItem(DEMO_KEY) === "1";
+
+  return {
+    user: isDemoMode ? null : (user ? { id: user.id } : null),
+    loading: isDemoMode ? false : !isLoaded,
+    isGuest: isDemoMode,
+    signOut: async () => {
+      await clerkSignOut({
+        redirectUrl: `${window.location.origin}${basePath}/sign-in`,
+      });
+    },
+    enterGuestMode: () => {},
+  };
 }

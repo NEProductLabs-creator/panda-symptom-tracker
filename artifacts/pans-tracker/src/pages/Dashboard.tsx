@@ -305,17 +305,20 @@ export default function Dashboard() {
       {/* How It Works modal */}
       {showHowItWorks && <HowItWorksModal onClose={() => setShowHowItWorks(false)} />}
 
-      {/* Daily affirmation with "How to use" anchored inside */}
-      <div className="relative">
+      {/* "How to use" link + affirmation card grouped together */}
+      <div className="space-y-1">
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={() => setShowHowItWorks(true)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-1"
+          >
+            <HelpCircle className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="sm:inline hidden">How to use this app</span>
+            <span className="sm:hidden inline">How to use</span>
+          </button>
+        </div>
         <DailyAffirmation />
-        <button
-          type="button"
-          onClick={() => setShowHowItWorks(true)}
-          className="absolute top-3 right-3 flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
-        >
-          <HelpCircle className="w-3.5 h-3.5" />
-          How to use this app
-        </button>
       </div>
 
       {/* Milestone celebrations */}

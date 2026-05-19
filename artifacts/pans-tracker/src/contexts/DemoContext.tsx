@@ -130,6 +130,11 @@ export function DemoBanner() {
   const { exitDemoMode } = useDemoContext();
   const [, navigate] = useLocation();
 
+  function handleExit(to: string) {
+    exitDemoMode();
+    navigate(to);
+  }
+
   return (
     <div className="bg-violet-50 border-b border-violet-200 px-4 py-2.5 flex items-center justify-between gap-3 flex-shrink-0">
       <p className="text-xs text-violet-800 leading-snug flex-1 min-w-0">
@@ -143,6 +148,13 @@ export function DemoBanner() {
         </Link>{" "}
         to track your child's symptoms across all your devices.
       </p>
+      <button
+        type="button"
+        onClick={() => handleExit("/sign-in")}
+        className="text-xs text-violet-700 hover:text-violet-900 whitespace-nowrap font-medium transition-colors flex-shrink-0"
+      >
+        ← Sign in
+      </button>
     </div>
   );
 }

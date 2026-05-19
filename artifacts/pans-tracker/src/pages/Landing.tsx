@@ -66,7 +66,7 @@ export default function Landing() {
 
         {/* ── Hero ──────────────────────────────────────────────────────────── */}
         <section
-          className="flex flex-1 flex-col items-center justify-center text-center px-5 pt-20 pb-24 relative overflow-hidden"
+          className="flex flex-col items-center justify-center text-center px-5 pt-20 pb-16 relative overflow-hidden"
           style={{
             background:
               "radial-gradient(ellipse 90% 55% at 50% -2%, hsl(140 22% 91%), transparent)",

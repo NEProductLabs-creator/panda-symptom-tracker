@@ -48,6 +48,10 @@ export function resetIdentity(): void {
 // ─── Events ───────────────────────────────────────────────────────────────────
 
 export type AnalyticsEvent =
+  | 'landing_page_viewed'
+  | 'landing_cta_create_account'
+  | 'landing_cta_login'
+  | 'landing_cta_demo'
   | 'demo_viewed'
   | 'demo_cta_clicked'
   | 'demo_save_prompt_shown'

@@ -28,6 +28,7 @@ import HopeBoard from "@/pages/HopeBoard";
 import Onboarding from "@/pages/Onboarding";
 import Settings from "@/pages/Settings";
 import { DemoProvider, DemoBanner, useDemoContext } from "@/contexts/DemoContext";
+import Landing from "@/pages/Landing";
 import { getOnboardingComplete } from "@/hooks/useAppSettings";
 import SetupWizard, { SETUP_WIZARD_FLAG } from "@/components/SetupWizard";
 import { storage } from "@/lib/storage";
@@ -257,7 +258,8 @@ function Router() {
       (r) => location === r || location.startsWith(r + "/"),
     );
 
-    if (!isSignedIn && !isDemoMode && !isPublic) {
+    // Root is the landing page for unauthenticated visitors — don't redirect them
+    if (!isSignedIn && !isDemoMode && !isPublic && location !== "/") {
       navigate("/sign-in");
       return;
     }
@@ -271,6 +273,12 @@ function Router() {
       navigate("/");
     }
   }, [isSignedIn, isLoaded, isDemoMode, location]);
+
+  // Unauthenticated users at root → landing page (show LoadingScreen while Clerk initialises)
+  if (!isSignedIn && !isDemoMode && location === "/") {
+    if (!isLoaded) return <LoadingScreen />;
+    return <Landing />;
+  }
 
   if (!isLoaded && !isDemoMode) return <LoadingScreen />;
 

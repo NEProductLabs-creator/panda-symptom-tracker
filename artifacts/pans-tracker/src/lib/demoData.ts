@@ -34,7 +34,7 @@ export const DEMO_BASELINE: ChildBaseline = {
   description:
     "Alex is usually curious, playful, and loves Lego and soccer. At baseline he's calm, sleeps well, and excels at school.",
   sleepHours: "9",
-  appetite: "Good — eats most foods without fuss",
+  appetite: "Good - eats most foods without fuss",
   activityLevel: "moderate",
   socialBehavior: "Very social. Loves playing with friends and his younger sister.",
   schoolPerformance: "A/B student, strong in reading and math, well-liked by teachers.",
@@ -64,7 +64,7 @@ export const DEMO_MEDICATIONS: Medication[] = [
     endDate: null,
     prescribingDoctor: "Dr. Chen",
     courseType: "prophylactic",
-    notes: "Prophylactic antibiotic — maintaining dose since PANDAS diagnosis.",
+    notes: "Prophylactic antibiotic - maintaining dose since PANDAS diagnosis.",
   },
   {
     id: "demo-med-2",
@@ -74,7 +74,7 @@ export const DEMO_MEDICATIONS: Medication[] = [
     type: "other",
     startDate: daysAgo(180),
     endDate: null,
-    notes: "As-needed for flares — anti-inflammatory effect helps reduce severity.",
+    notes: "As-needed for flares - anti-inflammatory effect helps reduce severity.",
   },
   {
     id: "demo-med-3",
@@ -118,7 +118,7 @@ export const DEMO_LOGS: SymptomLog[] = [
     ocd: 1, anxiety: 1, rage: 1, tics: 1, sleep: 3, cognition: 4,
     medicationsTaken: daily,
     notes:
-      "Good day overall — Alex played soccer after school and was relaxed all evening. Hoping the stable stretch continues.",
+      "Good day overall - Alex played soccer after school and was relaxed all evening. Hoping the stable stretch continues.",
   },
   {
     id: "dl-38", date: daysAgo(38),
@@ -135,7 +135,7 @@ export const DEMO_LOGS: SymptomLog[] = [
     ocd: 2, anxiety: 2, rage: 1, tics: 1, sleep: 3, cognition: 3,
     medicationsTaken: daily,
     notes:
-      "Some repetitive questioning before bed — asked if the front door was locked four times. Settled after reassurance.",
+      "Some repetitive questioning before bed - asked if the front door was locked four times. Settled after reassurance.",
   },
   {
     id: "dl-34", date: daysAgo(34),
@@ -168,7 +168,7 @@ export const DEMO_LOGS: SymptomLog[] = [
     ocd: 3, anxiety: 3, rage: 2, tics: 1, sleep: 2, cognition: 3,
     medicationsTaken: daily,
     notes:
-      "Meltdown before school — couldn't get dressed for 45 minutes. This is very out of character for him. Calling the doctor tomorrow.",
+      "Meltdown before school - couldn't get dressed for 45 minutes. This is very out of character for him. Calling the doctor tomorrow.",
   },
   {
     id: "dl-26", date: daysAgo(26),
@@ -208,7 +208,7 @@ export const DEMO_LOGS: SymptomLog[] = [
     ocd: 5, anxiety: 5, rage: 4, tics: 3, sleep: 1, cognition: 1,
     medicationsTaken: dailyPlusIbu,
     notes:
-      "OCD significantly elevated — checking locks, refusing to touch the car door handle, repeating rituals. Hard day for everyone.",
+      "OCD significantly elevated - checking locks, refusing to touch the car door handle, repeating rituals. Hard day for everyone.",
   },
   {
     id: "dl-18", date: daysAgo(18),
@@ -248,7 +248,7 @@ export const DEMO_LOGS: SymptomLog[] = [
     ocd: 3, anxiety: 3, rage: 3, tics: 2, sleep: 2, cognition: 2,
     medicationsTaken: daily,
     notes:
-      "Still not himself, but slightly calmer. Teacher emailed — Alex is struggling to focus and seems 'far away' in class.",
+      "Still not himself, but slightly calmer. Teacher emailed - Alex is struggling to focus and seems 'far away' in class.",
   },
   {
     id: "dl-11", date: daysAgo(11),
@@ -287,7 +287,7 @@ export const DEMO_LOGS: SymptomLog[] = [
     ocd: 1, anxiety: 2, rage: 1, tics: 1, sleep: 3, cognition: 4,
     medicationsTaken: daily,
     notes:
-      "Much better day — laughed at his little sister's jokes at dinner for the first time in weeks. I actually cried after he went to bed.",
+      "Much better day - laughed at his little sister's jokes at dinner for the first time in weeks. I actually cried after he went to bed.",
   },
   {
     id: "dl-2", date: daysAgo(2),

@@ -139,12 +139,12 @@ function ScoreInput({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="flex items-center gap-2 py-3 border-b border-border/50 last:border-0">
-      <span className="text-sm font-medium text-foreground flex-1 min-w-0 leading-tight">
+    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 py-3 border-b border-border/50 last:border-0">
+      <span className="text-sm font-medium text-foreground leading-tight sm:flex-1 sm:min-w-0">
         {label}
       </span>
       <div
-        className="flex gap-1 flex-shrink-0"
+        className="flex gap-1 sm:flex-shrink-0"
         data-testid={`score-${label.toLowerCase().replace(/\s|\//g, "-")}`}
       >
         {[0, 1, 2, 3, 4, 5].map((n) => (
@@ -153,7 +153,7 @@ function ScoreInput({
             type="button"
             onClick={() => onChange(n)}
             data-testid={`score-btn-${label.toLowerCase().replace(/\s|\//g, "-")}-${n}`}
-            className={`w-10 h-10 rounded-lg text-sm font-bold transition-all touch-manipulation ${
+            className={`flex-1 sm:flex-none sm:w-10 h-10 rounded-lg text-sm font-bold transition-all touch-manipulation ${
               value === n
                 ? "bg-primary text-primary-foreground shadow-sm scale-105"
                 : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"

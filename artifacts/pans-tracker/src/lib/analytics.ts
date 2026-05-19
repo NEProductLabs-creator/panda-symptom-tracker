@@ -68,7 +68,10 @@ export type AnalyticsEvent =
   | 'onboarding_completed'
   | 'symptom_log_created'
   | 'ptec_checkin_completed'
-  | 'export_triggered';
+  | 'export_triggered'
+  | 'pwa_install_prompt_shown'
+  | 'pwa_install_accepted'
+  | 'pwa_install_dismissed';
 
 export function track(event: AnalyticsEvent): void {
   if (!analyticsReady) return;

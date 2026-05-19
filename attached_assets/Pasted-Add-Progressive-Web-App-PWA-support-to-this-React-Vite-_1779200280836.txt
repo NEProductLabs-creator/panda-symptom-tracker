@@ -1,0 +1,16 @@
+Add Progressive Web App (PWA) support to this React Vite app so parents can install it on their phone's home screen and use it like a native app. Use the vite-plugin-pwa package to handle the implementation.
+Configure the PWA with the following settings:
+
+App name: use the existing app name
+Short name: a shortened version suitable for a home screen icon label
+Description: "PANS and PANDAS symptom tracking built for families, designed for doctors."
+Display mode: standalone so it opens without a browser address bar
+Orientation: portrait
+Theme color and background color: match the existing app's primary background and accent colors exactly so the splash screen feels native
+
+Icons: Generate the required PWA icon sizes (72, 96, 128, 144, 152, 192, 384, and 512px) from the existing app logo. If no logo file exists, create a simple placeholder icon using the app's primary color with the app initials centered in a clean sans-serif font, and leave a comment that says // TODO: Replace with final app icon before sharing portfolio
+Caching strategy: Use a network-first strategy for all Supabase API calls so data is always fresh when online. Use a cache-first strategy for all static assets (JS, CSS, fonts, icons) so the app loads instantly. Cache the app shell so the app opens and displays something meaningful even when the device is fully offline, with a simple message that says "You're offline. Your data will sync when you reconnect."
+Install prompt: Add a subtle install banner that appears at the bottom of the screen after a user has visited the app twice, with the text "Add to your home screen for quick access" and two options: Install and Maybe Later. If the user dismisses it, do not show it again for 7 days. Do not show it at all during demo mode.
+iOS support: Add the necessary Apple-specific meta tags to index.html including apple-mobile-web-app-capable, apple-mobile-web-app-status-bar-style set to default, and apple-touch-icon pointing to the 192px icon. iOS does not support the native install prompt so the banner should instead say "To install: tap the Share button then Add to Home Screen" when the device is detected as iOS.
+PostHog events to add: Track pwa_install_prompt_shown, pwa_install_accepted, and pwa_install_dismissed so you can see how many users are installing the app.
+Do not change any existing functionality, routing, auth, or data behavior. The PWA layer should sit on top of the existing app transparently.

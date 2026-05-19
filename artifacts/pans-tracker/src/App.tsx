@@ -29,6 +29,8 @@ import Onboarding from "@/pages/Onboarding";
 import Settings from "@/pages/Settings";
 import { DemoProvider, DemoBanner, useDemoContext } from "@/contexts/DemoContext";
 import Landing from "@/pages/Landing";
+import InstallPrompt from "@/components/InstallPrompt";
+import OfflineBanner from "@/components/OfflineBanner";
 import { getOnboardingComplete } from "@/hooks/useAppSettings";
 import SetupWizard, { SETUP_WIZARD_FLAG } from "@/components/SetupWizard";
 import { storage } from "@/lib/storage";
@@ -368,6 +370,7 @@ function AppProviders() {
         <ClerkCacheInvalidator />
         <TooltipProvider>
           <DemoProvider>
+            <OfflineBanner />
             <Switch>
               {/* Clerk sign-in / sign-up — /*? matches OAuth sub-paths */}
               <Route path="/sign-in/*?" component={SignInPage} />
@@ -376,6 +379,7 @@ function AppProviders() {
               <Route component={Router} />
             </Switch>
             <Toaster />
+            <InstallPrompt />
           </DemoProvider>
         </TooltipProvider>
       </QueryClientProvider>

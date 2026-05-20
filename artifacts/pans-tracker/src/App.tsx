@@ -1,8 +1,8 @@
 import { ReactNode, useEffect, useRef, useState } from "react";
 import { track, identifyUser, identifyAsDemo, enableSurveys } from "@/lib/analytics";
-import { Switch, Route, Router as WouterRouter, useLocation, Redirect } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation, Redirect, Link } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, useUser, useClerk } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, useUser, useClerk, useAuth } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/toaster";
@@ -28,6 +28,10 @@ import HopeBoard from "@/pages/HopeBoard";
 import Onboarding from "@/pages/Onboarding";
 import Settings from "@/pages/Settings";
 import Privacy from "@/pages/Privacy";
+import Terms from "@/pages/Terms";
+import TermsGate from "@/pages/TermsGate";
+import { useTermsStatus } from "@/hooks/useTermsStatus";
+import { CURRENT_TERMS_VERSION } from "@/lib/termsVersion";
 import { DemoProvider, DemoBanner, useDemoContext } from "@/contexts/DemoContext";
 import Landing from "@/pages/Landing";
 import InstallPrompt from "@/components/InstallPrompt";
@@ -128,10 +132,49 @@ function LoadingScreen() {
   );
 }
 
-// ─── Sign-in page (with View Demo button) ─────────────────────────────────────
+// ─── Sign-in page (with two-step View Demo flow) ──────────────────────────────
 
 function SignInPage() {
   const { enterDemoMode } = useDemoContext();
+  const [demoStep, setDemoStep] = useState<0 | 1 | 2>(0);
+  const [demoEmail, setDemoEmail] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [demoAgreed, setDemoAgreed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  function handleDemoClick() {
+    track('demo_viewed');
+    setDemoStep(1);
+  }
+
+  function handleEmailContinue() {
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(demoEmail)) {
+      setEmailError('Please enter a valid email address.');
+      return;
+    }
+    setEmailError('');
+    setDemoStep(2);
+  }
+
+  async function handleDemoAgree() {
+    if (!demoAgreed || submitting) return;
+    setSubmitting(true);
+    try {
+      await fetch('/api/terms/agree', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: demoEmail,
+          terms_version: CURRENT_TERMS_VERSION,
+          context: 'demo',
+        }),
+      });
+    } catch { /* best-effort */ }
+    identifyAsDemo();
+    enterDemoMode();
+    setSubmitting(false);
+  }
+
   return (
     <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-8 gap-6">
       <SignIn
@@ -139,40 +182,212 @@ function SignInPage() {
         path={`${basePath}/sign-in`}
         signUpUrl={`${basePath}/sign-up`}
       />
-      <div className="w-full max-w-[440px] space-y-2 text-center">
-        <div className="flex items-center gap-3">
-          <div className="h-px bg-border flex-1" />
-          <span className="text-xs text-muted-foreground">Just exploring?</span>
-          <div className="h-px bg-border flex-1" />
+
+      {demoStep === 0 && (
+        <div className="w-full max-w-[440px] space-y-2 text-center">
+          <div className="flex items-center gap-3">
+            <div className="h-px bg-border flex-1" />
+            <span className="text-xs text-muted-foreground">Just exploring?</span>
+            <div className="h-px bg-border flex-1" />
+          </div>
+          <button
+            type="button"
+            onClick={handleDemoClick}
+            className="text-sm font-semibold text-primary hover:underline transition-colors"
+          >
+            View Demo →
+          </button>
+          <p className="text-[11px] text-muted-foreground">
+            See 6 weeks of realistic PANDAS symptom data — no account needed
+          </p>
         </div>
-        <button
-          type="button"
-          onClick={() => {
-            track('demo_viewed');
-            identifyAsDemo();
-            enterDemoMode();
-          }}
-          className="text-sm font-semibold text-primary hover:underline transition-colors"
-        >
-          View Demo →
-        </button>
-        <p className="text-[11px] text-muted-foreground">
-          See 6 weeks of realistic PANDAS symptom data — no account needed
-        </p>
-      </div>
+      )}
+
+      {demoStep === 1 && (
+        <div className="w-full max-w-[440px] space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="h-px bg-border flex-1" />
+            <span className="text-xs text-muted-foreground">Demo access</span>
+            <div className="h-px bg-border flex-1" />
+          </div>
+          <div className="bg-card rounded-xl border border-border p-5 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground" htmlFor="demo-email">
+                Your email address
+              </label>
+              <input
+                id="demo-email"
+                type="email"
+                value={demoEmail}
+                onChange={(e) => { setDemoEmail(e.target.value); setEmailError(''); }}
+                onKeyDown={(e) => e.key === 'Enter' && handleEmailContinue()}
+                placeholder="you@example.com"
+                className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-ring"
+                autoFocus
+              />
+              {emailError && <p className="text-xs text-destructive">{emailError}</p>}
+              <p className="text-[11px]" style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', color: 'var(--ink-soft)' }}>
+                We ask for your email to keep demo access fair and to contact you if anything important changes.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleEmailContinue}
+              className="w-full py-2 rounded-lg text-sm font-semibold"
+              style={{ background: 'var(--clay)', color: '#fff', cursor: 'pointer' }}
+            >
+              Continue
+            </button>
+          </div>
+        </div>
+      )}
+
+      {demoStep === 2 && (
+        <div className="w-full max-w-[440px] space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="h-px bg-border flex-1" />
+            <span className="text-xs text-muted-foreground">Demo access</span>
+            <div className="h-px bg-border flex-1" />
+          </div>
+          <div className="bg-card rounded-xl border border-border p-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm" style={{ fontFamily: "'Fraunces', serif", fontStyle: 'italic', color: 'var(--ink-soft)' }}>
+                Continuing as {demoEmail}
+              </span>
+              <button
+                type="button"
+                onClick={() => { setDemoStep(1); setDemoAgreed(false); }}
+                className="text-xs text-primary hover:underline"
+              >
+                Change
+              </button>
+            </div>
+            <label className="flex items-start gap-3 cursor-pointer select-none" onClick={() => setDemoAgreed((v) => !v)}>
+              <div className="mt-0.5 flex-shrink-0">
+                <div
+                  className="w-4 h-4 rounded flex items-center justify-center transition-colors"
+                  style={{
+                    border: demoAgreed ? '2px solid var(--clay)' : '2px solid var(--rule-soft)',
+                    backgroundColor: demoAgreed ? 'var(--clay)' : 'transparent',
+                  }}
+                >
+                  {demoAgreed && (
+                    <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden>
+                      <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  )}
+                </div>
+              </div>
+              <span className="text-sm text-foreground leading-snug">
+                I have read and agree to the{" "}
+                <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:underline font-medium">Terms and Conditions</a>
+                {" "}and{" "}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:underline font-medium">Privacy Policy</a>.
+              </span>
+            </label>
+            <button
+              type="button"
+              onClick={handleDemoAgree}
+              disabled={!demoAgreed || submitting}
+              className="w-full py-2 rounded-lg text-sm font-semibold transition-all"
+              style={
+                demoAgreed && !submitting
+                  ? { background: 'var(--clay)', color: '#fff', cursor: 'pointer' }
+                  : { background: 'var(--bg-subtle)', color: 'var(--ink-muted)', cursor: 'not-allowed' }
+              }
+            >
+              {submitting ? 'Starting demo…' : 'Enter Demo'}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
 
 function SignUpPage() {
+  const [agreed, setAgreed] = useState(false);
+  const [showClerkForm, setShowClerkForm] = useState(false);
+
   useEffect(() => { track('signup_started'); }, []);
+
+  function handleContinue() {
+    sessionStorage.setItem(
+      'pans_terms_pending',
+      JSON.stringify({ version: CURRENT_TERMS_VERSION, agreedAt: new Date().toISOString() }),
+    );
+    setShowClerkForm(true);
+  }
+
+  if (showClerkForm) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
+        <SignUp
+          routing="path"
+          path={`${basePath}/sign-up`}
+          signInUrl={`${basePath}/sign-in`}
+        />
+      </div>
+    );
+  }
+
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
-      <SignUp
-        routing="path"
-        path={`${basePath}/sign-up`}
-        signInUrl={`${basePath}/sign-in`}
-      />
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-12 gap-6">
+      <div className="w-full max-w-[440px] space-y-6">
+        <div className="text-center space-y-1">
+          <h1 style={{ fontFamily: "'Fraunces', serif", fontWeight: 500, fontSize: '24px', color: 'var(--ink)' }}>
+            Create your account
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Before we get started, please review our terms.
+          </p>
+        </div>
+
+        <div className="bg-card rounded-xl border border-border p-6 space-y-5">
+          <label className="flex items-start gap-3 cursor-pointer select-none" onClick={() => setAgreed((v) => !v)}>
+            <div className="mt-0.5 flex-shrink-0">
+              <div
+                className="w-4 h-4 rounded flex items-center justify-center transition-colors"
+                style={{
+                  border: agreed ? '2px solid var(--clay)' : '2px solid var(--rule-soft)',
+                  backgroundColor: agreed ? 'var(--clay)' : 'transparent',
+                }}
+              >
+                {agreed && (
+                  <svg width="10" height="8" viewBox="0 0 10 8" fill="none" aria-hidden>
+                    <path d="M1 4L3.5 6.5L9 1" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                )}
+              </div>
+            </div>
+            <span className="text-sm text-foreground leading-snug">
+              I have read and agree to the{" "}
+              <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:underline font-medium">Terms and Conditions</a>
+              {" "}and{" "}
+              <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:underline font-medium">Privacy Policy</a>.
+            </span>
+          </label>
+
+          <button
+            type="button"
+            onClick={handleContinue}
+            disabled={!agreed}
+            className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all"
+            style={
+              agreed
+                ? { background: 'var(--clay)', color: '#fff', cursor: 'pointer' }
+                : { background: 'var(--bg-subtle)', color: 'var(--ink-muted)', cursor: 'not-allowed' }
+            }
+          >
+            Continue to create account
+          </button>
+        </div>
+
+        <p className="text-center text-xs text-muted-foreground">
+          Already have an account?{" "}
+          <Link href="/sign-in" className="text-primary hover:underline">Sign in</Link>
+        </p>
+      </div>
     </div>
   );
 }
@@ -181,10 +396,10 @@ function SignUpPage() {
 
 function PostHogSync() {
   const { user, isSignedIn, isLoaded } = useUser();
+  const { getToken } = useAuth();
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !user) return;
     identifyUser(user.id);
-    // Fire signup_completed once per session for accounts created < 5 minutes ago
     const flagKey = `signup_tracked_${user.id}`;
     const isNewAccount =
       user.createdAt instanceof Date &&
@@ -192,8 +407,28 @@ function PostHogSync() {
     if (isNewAccount && !sessionStorage.getItem(flagKey)) {
       sessionStorage.setItem(flagKey, '1');
       track('signup_completed');
+      // Record the T&C agreement captured during the signup pre-step
+      const pending = sessionStorage.getItem('pans_terms_pending');
+      if (pending) {
+        try {
+          const { version } = JSON.parse(pending) as { version: string };
+          const email = user.emailAddresses?.[0]?.emailAddress;
+          getToken().then((token) => {
+            fetch('/api/terms/agree', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                ...(token ? { Authorization: `Bearer ${token}` } : {}),
+              },
+              body: JSON.stringify({ email, terms_version: version, context: 'signup' }),
+            }).catch(() => {});
+            sessionStorage.setItem('pans_terms_ok', version);
+          }).catch(() => {});
+          sessionStorage.removeItem('pans_terms_pending');
+        } catch { /* ignore */ }
+      }
     }
-  }, [isLoaded, isSignedIn, user]);
+  }, [isLoaded, isSignedIn, user, getToken]);
   return null;
 }
 
@@ -247,6 +482,7 @@ function Router() {
   const { isSignedIn, isLoaded } = useUser();
   const { isDemoMode } = useDemoContext();
   const [location, navigate] = useLocation();
+  const { status: termsStatus, recordAgreement } = useTermsStatus();
 
   const [showWizard, setShowWizard] = useState(() => (
     localStorage.getItem(SETUP_WIZARD_FLAG) !== "1" &&
@@ -297,6 +533,11 @@ function Router() {
     (r) => location === r || location.startsWith(r + "/"),
   );
   if (!isSignedIn && !isDemoMode && !isPublic) return <LoadingScreen />;
+
+  // Block authenticated users who haven't agreed to the current T&C version
+  if (isSignedIn && !isDemoMode && !isPublic && termsStatus === 'needs-agreement') {
+    return <TermsGate onAgree={recordAgreement} />;
+  }
 
   const isWizardRoute = NO_WIZARD_ROUTES.some(
     (r) => location === r || location.startsWith(r + "/"),
@@ -378,6 +619,7 @@ function AppProviders() {
               <Route path="/sign-up/*?" component={SignUpPage} />
               {/* Public pages — no auth required */}
               <Route path="/privacy" component={Privacy} />
+              <Route path="/terms" component={Terms} />
               {/* All other routes go through auth-guarded Router */}
               <Route component={Router} />
             </Switch>

@@ -1,0 +1,91 @@
+Add Terms and Conditions acceptance to the enrollment process and demo mode, with version tracking so users can be re-prompted when the terms are updated.
+
+TERMS VERSION SYSTEM:
+
+Create a constant or environment config value called CURRENT_TERMS_VERSION set to "2026-05-20". This is the version identifier for the current Terms and Conditions. When the terms are updated in the future, this value is the only thing that needs to change to trigger re-agreement from all existing users.
+
+DATABASE CHANGES:
+
+Add a terms_agreements table (or equivalent collection) with these fields:
+  id: primary key
+  user_id: foreign key to the users table (nullable, for cases where only email is stored)
+  email: string (used for demo mode agreements where no account exists yet)
+  terms_version: string, stores the version identifier at time of agreement (e.g. "2026-05-20")
+  agreed_at: timestamp, the exact date and time the user checked the box
+  ip_address: string, the user's IP address at time of agreement (useful for legal records)
+  context: string, either "signup" or "demo" so you know where the agreement was captured
+
+On the users table, add:
+  terms_version_agreed: string, the most recent terms version this user has agreed to
+  terms_agreed_at: timestamp, when they last agreed
+
+Both the terms_agreements table (full history) and the users table (current status) should be kept in sync. The terms_agreements table is the audit log. The users table field is for fast lookups.
+
+ENROLLMENT FLOW CHANGES:
+
+On the signup / create account page, add the following immediately above the Create Account button:
+
+A required checkbox (unchecked by default, cannot be skipped) with the label:
+  "I have read and agree to the Terms and Conditions."
+  The words "Terms and Conditions" should be a link that opens the terms page in a new tab.
+
+The Create Account button should remain visually disabled (use btn-quiet styling, reduced opacity, cursor not-allowed) until the checkbox is checked. Once checked, the button becomes btn-primary and is clickable.
+
+On successful account creation:
+  Insert a record into terms_agreements with context "signup", the user's id, email, IP address, terms_version set to CURRENT_TERMS_VERSION, and agreed_at set to the current timestamp.
+  Set terms_version_agreed and terms_agreed_at on the new user record.
+
+DEMO MODE FLOW CHANGES:
+
+The demo mode entry should be a two-step flow:
+
+Step 1: Ask for email address only.
+  A single field labeled "Your email address" in the form input style from the design system.
+  A small Fraunces italic line beneath: "We ask for your email to keep demo access fair and to contact you if anything important changes."
+  A Continue button (btn-primary). No terms shown yet.
+  Basic email format validation before proceeding. Do not send a verification email, just validate the format.
+
+Step 2: After a valid email is entered and Continue is clicked, show the Terms and Conditions agreement step.
+  Display the email they entered in a small confirmation line at the top: "Continuing as [email]" with a small "Change" link that goes back to step 1.
+  The same required checkbox as the signup flow: "I have read and agree to the Terms and Conditions." with a link to the full terms in a new tab.
+  An Enter Demo button (btn-primary), disabled until the checkbox is checked.
+  On agreement:
+    Insert a record into terms_agreements with context "demo", no user_id (null), the email, IP address, CURRENT_TERMS_VERSION, and current timestamp.
+    Set a short-lived session cookie or token that grants demo access and records which terms version was agreed to.
+
+RE-AGREEMENT FLOW FOR EXISTING USERS:
+
+On every login and on every session resume (when a returning user's session token is validated), check whether the logged-in user's terms_version_agreed matches CURRENT_TERMS_VERSION.
+
+If they do not match, before the user can access any part of the authenticated app, show a full-page interstitial (not a dismissable modal) with:
+
+  Heading in Fraunces: "We've updated our Terms and Conditions."
+  A short line in Newsreader: "Please review and agree to the updated terms to continue."
+  A scrollable or linked view of the terms, or a prominent link to the full terms page in a new tab.
+  The required checkbox: "I have read and agree to the updated Terms and Conditions."
+  A Continue to the app button (btn-primary), disabled until checked.
+  A Log out instead link (btn-text) for users who do not wish to agree.
+
+This interstitial cannot be bypassed. All authenticated routes should redirect to it if the user's terms_version_agreed does not match CURRENT_TERMS_VERSION. The only actions available are agree or log out.
+
+On agreement:
+  Insert a new record into terms_agreements with context "signup", the user's id, CURRENT_TERMS_VERSION, current timestamp, and IP address.
+  Update terms_version_agreed and terms_agreed_at on the user record.
+  Redirect to the dashboard.
+
+PRIVACY POLICY NOTE:
+
+Add the same checkbox pattern to enrollment and the re-agreement interstitial for the Privacy Policy as well, since it is referenced in the Terms and Conditions. The checkbox label should read:
+  "I have read and agree to the Terms and Conditions and Privacy Policy."
+  Both "Terms and Conditions" and "Privacy Policy" should be separate links.
+  Both documents are agreed to in a single checkbox action, and both are recorded in the terms_agreements table using the same agreed_at timestamp.
+
+STYLING:
+
+All new UI elements should use the design system from /styles/design-system.css.
+  Required checkboxes: use a custom checkbox styled with a var(--clay) fill when checked, var(--rule-soft) border when unchecked, 16px size.
+  The "disabled" state of the primary button: var(--bg-subtle) background, var(--ink-muted) text, cursor not-allowed, no hover effect.
+  The re-agreement interstitial: var(--bg-app) full-page background, a centered var(--bg-card) panel at max-width 560px, same panel styling as the auth pages.
+  The demo step 2 confirmation line: Fraunces italic 14px, var(--ink-soft).
+
+Do not change any other part of the signup flow, login flow, or demo mode beyond what is described here. Do not change routing, session management, or any other app functionality.

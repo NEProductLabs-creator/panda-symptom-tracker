@@ -1,0 +1,125 @@
+# Privacy Policy
+
+**Last updated: May 20, 2026**
+
+Hi. We're parents who built this app because we needed it ourselves. You're trusting us with information about your child, and we take that seriously. This policy explains what we collect, what we do with it, and what we will never do.
+
+We've tried to write this in plain language. If anything is unclear, please reach out to us at PansTracker@gmail.com.
+
+## The short version
+
+- We collect only what we need to make the app work.
+- We never sell your data. Not to anyone. Not ever.
+- We never share your child's information with advertisers, marketers, or data brokers.
+- You own your data. You can delete it at any time.
+- We protect your information with industry standard security practices.
+
+## About this service
+
+The PANS & PANDAS Symptom Tracker is a personal tracking tool, not a healthcare service. We are not your healthcare provider, and using this app does not create a doctor-patient relationship. We are not a HIPAA covered entity. If you share your records with your child's doctor, the doctor's use of those records is governed by their own privacy practices and applicable law.
+
+The app is intended to help you observe patterns and communicate with the medical professionals who care for your child. It is not a diagnostic tool and is not a substitute for medical advice.
+
+## What we collect
+
+**Account information.** When you create an account, we collect your name, email address, and a secured (hashed) version of your password. We use this to identify you and let you sign in.
+
+**Demo access.** If you use the app in demo mode, we collect your email address before granting access. We use this to keep demo access fair, to record your agreement to our Terms and Conditions, and to contact you if anything important changes. Demo email addresses are not used for marketing and are not shared with third parties.
+
+**Child profile information.** You may create one or more profiles for the child or children you're tracking. This typically includes a name (or a nickname you choose), date of birth or age, and optional details such as diagnosis status if you choose to enter them.
+
+**Symptom log entries.** When you log symptoms, you may record severity ratings, observations, notes, medications taken, possible exposures, and other context. This is the heart of what the app does, and the data stays yours.
+
+**Technical information.** Like most web applications, we automatically receive basic technical information when you use the app, including device type, browser, IP address, and basic navigation patterns. We use this to keep the app working and to find and fix bugs.
+
+**Communications.** If you contact us by email, we keep that correspondence so we can help you and improve the app.
+
+## What we don't collect
+
+We do not collect:
+
+- Your child's social security number, medical record number, or insurance information
+- Payment card details (if we ever charge for premium features, payments are processed by a third party provider and we never store your card number)
+- Precise location data
+- Data from third party health services unless you actively connect them and authorize the sharing
+
+## How we use your information
+
+We use your information only for these purposes:
+
+- To provide the app's core functions: storing your logs, building your timelines, generating reports for your doctors
+- To send you essential service messages such as account confirmations, password resets, and important updates about the service
+- To respond when you contact us
+- To find and fix technical problems
+- To understand how the app is used in aggregate, so we can make it better
+
+We do not use your information to:
+
+- Train AI models on your child's data
+- Build profiles for advertising or marketing
+- Target you with ads anywhere on the internet
+- Sell or rent to anyone for any purpose
+
+## How we share your information
+
+We share your information only in these specific situations:
+
+**With service providers we use to run the app.** This includes our hosting provider, database provider, and similar infrastructure services. These providers are bound by contract to use your information only to provide their service to us, and not for their own purposes.
+
+**With people you choose to share with.** If you share access with a co-parent, doctor, or therapist, that is your choice and we facilitate it.
+
+**If required by law.** If we receive a valid legal order, we may have to disclose information. We will tell you about it when we are legally allowed to.
+
+**In a business transfer.** If our company is ever acquired, merged, or sold, your information may transfer to the new owner. The new owner would be bound by this same privacy policy, or you would be notified with a chance to delete your data first.
+
+We do not share your information with advertisers, marketers, data brokers, or any other party not described above.
+
+## Your rights
+
+You can, at any time:
+
+- **Correct your data.** Edit any entry, profile, or account detail.
+- **Delete your data.** Delete individual entries, a child profile, or your full account. When you delete your account, your data is removed from our active systems within 30 days. Backups are retained for up to 90 days before being permanently overwritten.
+- **Opt out of non-essential emails.** You can unsubscribe from any non-essential communications.
+
+To exercise any of these rights, contact us by email at PansTracker@gmail.com.
+
+Residents of certain regions, including California, the European Union, and the United Kingdom, may have additional rights under local law, including the right to know what personal information we hold, the right to request correction or deletion, and the right to lodge a complaint with a regulator. Contact us and we will help you exercise any of these rights.
+
+## Children's privacy
+
+This app is designed for use by parents and caregivers, not by children themselves. The data in the app is about a child but is entered, managed, and controlled by the parent or guardian.
+
+We do not knowingly create accounts for users under 13. If a child under 13 has created an account, please contact us and we will close it and delete the associated data.
+
+Because the app holds information about children, we treat that information with extra care. We will never use a child's information for marketing or advertising, and we will never share it with parties not described in this policy.
+
+## Data security
+
+We use industry standard practices to protect your information, including encrypted connections (HTTPS) for all data in transit, encrypted storage of sensitive information at rest, hashed passwords (we cannot see your password), regular security updates, and access controls so that only authorized team members can access production systems.
+
+No system is perfectly secure. If we ever experience a data breach that affects you, we will notify you as required by applicable law and as soon as we reasonably can.
+
+## Data retention
+
+We keep your information for as long as your account is active. When you delete your account, your data is removed from our active systems within 30 days. Backups are retained for up to 90 days before being overwritten.
+
+You can also delete individual entries or profiles at any time without deleting your whole account.
+
+## Cookies and tracking
+
+We use cookies and similar technologies only for purposes necessary to run the app, such as keeping you signed in and remembering your preferences. We do not use advertising cookies, tracking pixels, or cross-site tracking technologies.
+
+## Changes to this policy
+
+If we change this policy, we will update the "Last updated" date at the top. For material changes, we will notify you by email or through the app before the changes take effect.
+
+## Contact us
+
+Questions, concerns, or requests about your privacy can be sent to:
+
+PansTracker@gmail.com
+
+---
+
+*This privacy policy is a starting point. Before publishing, please have a lawyer familiar with privacy law in your jurisdiction review it, particularly with respect to children's data (COPPA in the US), health-adjacent information, and state or international rules such as CCPA, GDPR, and the UK GDPR. Things to confirm: where your servers are located, which third party service providers you use, whether you accept users from regions with extra requirements, and whether your billing or analytics setup needs disclosure.*

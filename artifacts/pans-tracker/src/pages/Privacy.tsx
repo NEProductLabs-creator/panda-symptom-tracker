@@ -57,6 +57,13 @@ export default function Privacy() {
             to identify you and let you sign in.
           </p>
           <p>
+            <strong>Demo access.</strong> If you use the app in demo mode, we collect your email
+            address before granting access. We use this to keep demo access fair, to record your
+            agreement to our Terms and Conditions, and to contact you if anything important
+            changes. Demo email addresses are not used for marketing and are not shared with
+            third parties.
+          </p>
+          <p>
             <strong>Child profile information.</strong> You may create one or more profiles for
             the child or children you're tracking. This typically includes a name (or a nickname
             you choose), date of birth or age, and optional details such as diagnosis status if

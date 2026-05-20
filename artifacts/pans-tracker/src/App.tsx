@@ -70,7 +70,7 @@ const clerkAppearance = {
     socialButtonsVariant: "blockButton" as const,
   },
   variables: {
-    colorPrimary: "hsl(140, 15%, 45%)",
+    colorPrimary: "hsl(185, 30%, 38%)",
     colorForeground: "hsl(210, 20%, 20%)",
     colorMutedForeground: "hsl(210, 10%, 40%)",
     colorDanger: "hsl(0, 40%, 60%)",

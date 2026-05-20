@@ -44,8 +44,8 @@ export default defineConfig({
         short_name: "PANS Tracker",
         description:
           "PANS and PANDAS symptom tracking built for families, designed for doctors.",
-        theme_color: "#61846D",
-        background_color: "#FBFAF9",
+        theme_color: "#44797E",
+        background_color: "#F7F9FB",
         display: "standalone",
         orientation: "portrait",
         scope: pwaScope,

@@ -1,0 +1,32 @@
+I need to update the visual styling of this app to differentiate it from a competitor. Please make the following changes:
+1. Update CSS variables in globals.css (or wherever the :root block is defined)
+Change these existing values:
+css/* OLD → NEW */
+--primary: 140 15% 45%;          /* sage green */
+--background: 40 20% 98%;        /* warm off-white */
+--accent: 40 15% 90%;            /* warm accent */
+--muted: 40 10% 92%;             /* warm muted */
+--border: 40 10% 88%;            /* warm border */
+--sidebar-accent: 40 15% 90%;    /* warm sidebar accent */
+Replace with:
+css--primary: 185 30% 38%;          /* distinct teal-blue */
+--background: 210 15% 98%;       /* cool white */
+--accent: 185 20% 92%;           /* teal-tinted accent */
+--muted: 210 12% 93%;            /* cool muted */
+--border: 210 15% 87%;           /* cool border */
+--sidebar-accent: 185 15% 90%;   /* teal-tinted sidebar accent */
+Also update these to stay consistent with the new primary:
+css--ring: 185 30% 38%;
+--sidebar-primary: 185 30% 38%;
+2. Fix button styling for the secondary "Log In" button
+Find the "Log In" button in the hero section. It currently has class border border-border bg-white. Change it so the secondary button uses a primary-tinted background instead of plain white:
+Remove: bg-white border-border
+Add:    bg-primary/8 border-primary/25 text-primary
+The goal is for the Log In button to have a very subtle teal fill (8% opacity primary color) with a teal-tinted border, so it's visible against the page background but doesn't compete with the primary CTA.
+3. Unify border-radius on all buttons
+The primary CTA uses rounded-xl (12px) but the Install button uses a different radius. Update all <button> and button-like <a> elements site-wide so they consistently use rounded-xl. Search for any rounded-lg or rounded-2xl on button elements and change them to rounded-xl.
+4. Improve h1 font weight and tracking
+The h1 currently uses font-bold (700). Change it to font-extrabold (800) and add tracking-tight if not already present. The class should include font-extrabold tracking-tight.
+5. Update alternating section backgrounds
+Any section that currently uses a background like bg-[#f6f5f3] or a hardcoded warm off-white for alternating sections should be changed to use a primary-tinted background instead. Replace those with bg-primary/5 (5% opacity of the primary teal) so section breaks feel cohesive with the new color palette rather than just a slightly different shade of beige.
+Do not change fonts (Outfit / Plus Jakarta Sans), layout, copy, icons, or any functionality. Only update colors, button styles, and the font weight/tracking on the h1 as described above.

@@ -69,7 +69,7 @@ export default function Landing() {
           className="flex flex-col items-center justify-center text-center px-5 pt-20 pb-16 relative overflow-hidden"
           style={{
             background:
-              "radial-gradient(ellipse 90% 55% at 50% -2%, hsl(140 22% 91%), transparent)",
+              "radial-gradient(ellipse 90% 55% at 50% -2%, hsl(185 25% 91%), transparent)",
           }}
         >
           {/* Logo + wordmark */}
@@ -87,11 +87,11 @@ export default function Landing() {
 
           {/* Headline */}
           <h1
-            className="lp-fade lp-d2 text-4xl sm:text-5xl lg:text-[3.5rem] font-bold text-foreground max-w-2xl leading-[1.14] tracking-tight mb-5"
+            className="lp-fade lp-d2 text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-foreground max-w-2xl leading-[1.14] tracking-tight mb-5"
             style={{ fontFamily: "Outfit, sans-serif" }}
           >
             When your child changes overnight,{" "}
-            <span style={{ color: "hsl(140, 18%, 38%)" }}>
+            <span style={{ color: "hsl(185, 30%, 38%)" }}>
               every detail matters.
             </span>
           </h1>
@@ -124,7 +124,7 @@ export default function Landing() {
               onClick={() => track("landing_cta_login")}
             >
               <button
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl border border-border bg-white text-sm font-semibold text-foreground hover:bg-accent active:scale-[0.98] transition-all"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl border border-primary/25 bg-primary/8 text-primary text-sm font-semibold hover:bg-primary/12 active:scale-[0.98] transition-all"
                 style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
               >
                 Log In
@@ -144,8 +144,7 @@ export default function Landing() {
 
         {/* ── Feature sections ──────────────────────────────────────────────── */}
         <section
-          className="py-20 px-5 border-t border-border/60"
-          style={{ background: "hsl(40, 15%, 96%)" }}
+          className="py-20 px-5 border-t border-border/60 bg-primary/5"
         >
           <div className="max-w-4xl mx-auto grid sm:grid-cols-3 gap-12">
             <Feature

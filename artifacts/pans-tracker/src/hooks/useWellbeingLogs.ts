@@ -2,8 +2,11 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@clerk/react';
 import { WellbeingLog } from '@/lib/types';
 import { createApiClient } from '@/lib/api';
+import { DEMO_WELLBEING_LOGS } from '@/lib/demoData';
+import { DEMO_KEY } from '@/contexts/DemoContext';
 
 const STORAGE_KEY = 'pans_tracker_wellbeing';
+const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'));
 
 function loadLogs(): WellbeingLog[] {
   try {
@@ -19,13 +22,16 @@ function persistLogs(logs: WellbeingLog[]) {
 }
 
 export function useWellbeingLogs() {
+  const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
 
-  const [logs, setLogs] = useState<WellbeingLog[]>(loadLogs);
+  const [logs, setLogs] = useState<WellbeingLog[]>(() =>
+    isDemoMode ? DEMO_WELLBEING_LOGS : loadLogs(),
+  );
 
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || isDemoMode) return;
     api.wellbeing.getAll()
       .then((serverLogs) => {
         if (serverLogs.length > 0) {
@@ -43,6 +49,7 @@ export function useWellbeingLogs() {
 
   const upsertLog = useCallback(
     (entry: Omit<WellbeingLog, 'id'> & { id?: string }) => {
+      if (isDemoMode) { dispatchDemo(); return; }
       setLogs((prev) => {
         const existing = prev.find((l) => l.date === entry.date);
         let next: WellbeingLog[];
@@ -58,11 +65,12 @@ export function useWellbeingLogs() {
         return next;
       });
     },
-    [api],
+    [isDemoMode, api],
   );
 
   const deleteLog = useCallback(
     (id: string) => {
+      if (isDemoMode) return;
       setLogs((prev) => {
         const next = prev.filter((l) => l.id !== id);
         persistLogs(next);
@@ -70,7 +78,7 @@ export function useWellbeingLogs() {
       });
       api.wellbeing.delete(id).catch(() => {});
     },
-    [api],
+    [isDemoMode, api],
   );
 
   return { logs, upsertLog, deleteLog };

@@ -1,6 +1,9 @@
 import { useState } from "react";
+import { DEMO_HOPEBOARD_INDICES } from "@/lib/demoData";
+import { DEMO_KEY } from "@/contexts/DemoContext";
 
 const STORAGE_KEY = "pans_tracker_hopeboard";
+const dispatchDemo = () => window.dispatchEvent(new CustomEvent("pans:demo:save"));
 
 interface HopeBoardData {
   savedIndices: number[];
@@ -21,9 +24,16 @@ function persist(data: HopeBoardData) {
 }
 
 export function useHopeBoard() {
-  const [data, setData] = useState<HopeBoardData>(load);
+  const isDemoMode = localStorage.getItem(DEMO_KEY) === "1";
+
+  const [data, setData] = useState<HopeBoardData>(() =>
+    isDemoMode
+      ? { savedIndices: DEMO_HOPEBOARD_INDICES, dismissedMilestones: [] }
+      : load(),
+  );
 
   function toggleSaved(index: number) {
+    if (isDemoMode) { dispatchDemo(); return; }
     setData((prev) => {
       const saved = prev.savedIndices.includes(index)
         ? prev.savedIndices.filter((i) => i !== index)
@@ -35,6 +45,7 @@ export function useHopeBoard() {
   }
 
   function dismissMilestone(id: string) {
+    if (isDemoMode) return;
     setData((prev) => {
       if (prev.dismissedMilestones.includes(id)) return prev;
       const next = { ...prev, dismissedMilestones: [...prev.dismissedMilestones, id] };

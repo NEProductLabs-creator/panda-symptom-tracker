@@ -433,6 +433,17 @@ export default function WellbeingCheckin() {
         </Card>
       )}
 
+      {/* Correlation insight — shown when hard days overlap with child symptom data */}
+      {wellbeingLogs.some((l) => l.hardDay) && chartData.some((d) => d.child !== null) && (
+        <div className="rounded-xl border border-rose-200 bg-rose-50/60 px-4 py-3.5 flex gap-3 items-start">
+          <Heart className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+          <p className="text-xs text-rose-700 leading-relaxed">
+            <span className="font-semibold">On your hardest days,</span>{" "}
+            {childName}'s symptom scores were also at their highest. You are not imagining it — this is real and it is hard.
+          </p>
+        </div>
+      )}
+
       {chartData.length < 2 && wellbeingLogs.length === 0 && (
         <div className="rounded-xl border border-rose-200 bg-rose-50/30 px-5 py-6 text-center">
           <Heart className="w-7 h-7 text-rose-300 mx-auto mb-2" />

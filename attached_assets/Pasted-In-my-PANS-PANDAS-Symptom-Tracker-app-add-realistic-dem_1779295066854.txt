@@ -1,0 +1,37 @@
+In my PANS/PANDAS Symptom Tracker app, add realistic demo data for the "Just For You" parent wellbeing section that matches and correlates with the existing demo child symptom data already in the app.
+
+The demo parent data should tell a coherent emotional story alongside the child's symptom timeline. When the child's symptoms are severe, the parent's wellbeing scores should reflect that stress. When the child has a good stretch, the parent should show some relief.
+
+PARENT DAILY CHECK-IN DEMO DATA
+Generate 90 days of parent check-in entries with these three ratings (1–5 each):
+1. How are you holding up today?
+2. Stress level in the home?
+3. How connected do you feel to support?
+
+The data should follow this emotional arc to match the child's symptom timeline:
+- Days 1–20: Scores mostly 2–3. Parent is struggling, stressed, feeling isolated. Optional notes reflect exhaustion and confusion ("I don't recognize my child anymore", "another sleepless night", "called the pediatrician again, still no answers")
+- Days 21–40: Scores drop to 1–2 during a flare period. Notes reflect crisis ("worst week yet", "missed work again", "crying in the car before I go inside")
+- Days 41–55: Slight uptick to 2–3 as a treatment starts. Notes show cautious hope ("tried the new antibiotic, maybe seeing a tiny improvement?", "had one almost normal dinner as a family")
+- Days 56–75: Scores rise to 3–4 during a good stretch. Notes show relief and reconnection ("three good days in a row", "laughed together for the first time in months")
+- Days 76–90: Scores settle at 3, reflecting a new cautious normal. Notes show resilience ("still watching for signs but feeling more in control", "found a PANS parent group online, not alone anymore")
+
+PARENT NOTES DEMO DATA
+Add 8–10 standalone parent journal entries (separate from daily check-ins) spread across the 90 days:
+- Mix of emotional processing, practical observations, and notes to share with the doctor
+- Tone should feel real and raw, not polished
+- Examples:
+  - "I keep a notebook in my purse now with everything I notice. Date, time, what happened, what they ate, who they were around. I never thought I'd be this person."
+  - "Called my mom tonight. First time in weeks. She doesn't fully understand but it helped just to hear her voice."
+  - "Read about another family whose child fully recovered after 18 months. I screenshot it and look at it when things get bad."
+
+CORRELATION DISPLAY
+- On the parent wellbeing chart, overlay a faint line showing the child's total symptom score for the same period so the connection is visually obvious
+- Add a subtle insight card: "On your hardest days, your child's symptom scores were also at their highest. You are not imagining it — this is real and it is hard."
+
+HOPE BOARD DEMO DATA
+Pre-populate the hope board with 3 saved affirmations so it does not appear empty:
+- "You did not cause this. You cannot always control it. But you are doing everything right."
+- "Recovery is not linear, but it is real and it happens every day for PANS families."
+- "The fact that you are tracking, advocating, and fighting for answers is extraordinary parenting."
+
+Make sure all demo data is clearly flagged as demo data in the database so it is cleanly removed when a real user creates an account, exactly the same way the existing child demo data is handled.

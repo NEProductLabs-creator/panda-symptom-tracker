@@ -176,7 +176,7 @@ export default function WellbeingCheckin() {
 
       const child = sLog
         ? Math.round(
-            ((sLog.ocd + sLog.anxiety + sLog.rage + sLog.tics + sLog.sleep + sLog.cognition) / 6) * 10
+            (((sLog.ocd ?? 0) + (sLog.anxiety ?? 0) + (sLog.rage ?? 0) + (sLog.tics ?? 0) + (sLog.sleep ?? 0) + (sLog.cognition ?? 0)) / 6) * 10
           ) / 10
         : null;
 
@@ -209,7 +209,7 @@ export default function WellbeingCheckin() {
       .filter((v) => v !== null) as number[];
 
     const sScores = sInMonth.map(
-      (l) => (l.ocd + l.anxiety + l.rage + l.tics + l.sleep + l.cognition) / 6
+      (l) => ((l.ocd ?? 0) + (l.anxiety ?? 0) + (l.rage ?? 0) + (l.tics ?? 0) + (l.sleep ?? 0) + (l.cognition ?? 0)) / 6
     );
 
     const avgWellbeing = wScores.length > 0 ? wScores.reduce((a, b) => a + b, 0) / wScores.length : null;

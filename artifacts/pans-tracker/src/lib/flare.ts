@@ -4,7 +4,14 @@ import { format, subDays, parseISO } from 'date-fns';
 export function computeDailyScore(log: SymptomLog): number {
   // sleep and cognition use an inverted scale (higher = better),
   // so we invert them before summing to get a proper severity contribution.
-  return log.ocd + log.anxiety + log.rage + log.tics + (5 - log.sleep) + (5 - log.cognition);
+  // Null means "not tracked" — treat as 0 for scoring purposes.
+  const ocd = log.ocd ?? 0;
+  const anxiety = log.anxiety ?? 0;
+  const rage = log.rage ?? 0;
+  const tics = log.tics ?? 0;
+  const sleep = log.sleep ?? 0;
+  const cognition = log.cognition ?? 0;
+  return ocd + anxiety + rage + tics + (5 - sleep) + (5 - cognition);
 }
 
 export interface FlarePeriod {

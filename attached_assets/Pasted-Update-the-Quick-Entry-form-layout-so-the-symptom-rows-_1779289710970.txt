@@ -1,0 +1,47 @@
+Update the Quick Entry form layout so the symptom rows feel tighter, more connected, and start in a true empty state.
+
+Layout changes for each symptom row:
+
+Replace the current space-between flex layout with a CSS grid layout per row:
+  display: grid;
+  grid-template-columns: minmax(180px, 280px) auto;
+  align-items: center;
+  gap: 40px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--rule-soft);
+
+This places the symptom label in a left column of bounded width and the severity dots immediately to its right, with any extra horizontal space falling to the right of the dot group rather than between the label and the dots. The dot group should NOT be pushed to the far right edge of the container.
+
+Container constraint:
+Wrap the symptom rows in a wrapper with max-width: 720px, so on wide screens the whole symptom block stays comfortably scaled rather than stretching the full panel width. Align this wrapper to the left of the panel, not centered, so it lines up with the panel heading "Quick Entry" and the "Score each symptom quickly" subtext above it.
+
+Dot sizing and styling:
+Reduce each severity dot from its current size to 36px diameter. Spacing between dots: 8px. Numbers inside the dots: Newsreader 14px, weight 400.
+
+Color states for each dot (six dots representing 0 through 5):
+  Unselected default: background var(--bg-subtle), color var(--ink-soft), no border
+  Hover: background var(--clay-wash), color var(--ink), cursor pointer
+  Selected, position 0: background var(--mist), color var(--ink), 1px solid #8aa395
+  Selected, position 1: background var(--clay-wash), color var(--ink)
+  Selected, position 2: background var(--clay-soft), color var(--ink)
+  Selected, position 3: background #d68866, color #ffffff
+  Selected, position 4: background var(--clay), color #ffffff
+  Selected, position 5: background var(--clay-deep), color #ffffff
+
+Empty state behavior (critical):
+On initial page load, NO dot is selected on any symptom row. Every row begins with all six dots in the unselected state. The "0" is only highlighted when the parent explicitly taps it, which records an intentional "observed, no symptoms" value.
+
+Database behavior:
+  No tap on a row: stored as null, meaning not tracked
+  Tap on 0: stored as 0, meaning explicitly absent
+  Tap on 1 through 5: stored as that integer
+
+A small "Clear" link in italic Newsreader 12px, color var(--ink-soft), appears to the right of the dot group only when a dot is currently selected. Tapping it returns the row to the null / untouched state.
+
+Add a quick action above the symptom list:
+A button labeled "Calm day, nothing to report" sits above the first symptom row (OCD Behaviors). Use the btn-secondary style. Tapping it sets every symptom field to 0 explicitly, marks the entry with a calm_day flag, and visually fills the 0 position on every row with the mist background.
+
+Spacing:
+Reduce the vertical padding between symptom rows from current (looks like 24-28px) down to 16px top and bottom. Combined with the new grid layout this gives the form a much more compact, readable rhythm.
+
+Do not change the symptom names, the "Full log page" link, the Medications section, the Notes textarea, or any other element on the page. Only update the symptom row layout, dot sizing, color states, default empty state, and add the calm day quick action.

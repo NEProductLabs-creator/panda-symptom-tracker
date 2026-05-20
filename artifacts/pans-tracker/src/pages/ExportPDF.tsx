@@ -71,7 +71,7 @@ function fmtShort(d: string) {
 
 function dailyScore(log: SymptomLog) {
   // sleep and cognition are inverted (higher = better), so invert for severity total
-  return log.ocd + log.anxiety + log.rage + log.tics + (5 - log.sleep) + (5 - log.cognition);
+  return (log.ocd ?? 0) + (log.anxiety ?? 0) + (log.rage ?? 0) + (log.tics ?? 0) + (5 - (log.sleep ?? 0)) + (5 - (log.cognition ?? 0));
 }
 
 function sectionHeader(doc: jsPDF, title: string, y: number, margin: number): number {
@@ -445,7 +445,7 @@ export default function ExportPDF() {
   const catStats = useMemo(
     () =>
       CAT_KEYS.map((cat) => {
-        const vals = filteredLogs.map((l) => l[cat]);
+        const vals = filteredLogs.map((l) => l[cat] ?? 0);
         const nonZero = vals.filter((v) => v > 0);
         const avg =
           nonZero.length > 0

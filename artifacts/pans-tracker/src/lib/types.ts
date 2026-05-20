@@ -1,14 +1,15 @@
 export type SymptomLog = {
   id: string;
   date: string; // YYYY-MM-DD
-  ocd: number;
-  anxiety: number;
-  rage: number;
-  tics: number;
-  sleep: number;
-  cognition: number;
+  ocd: number | null;
+  anxiety: number | null;
+  rage: number | null;
+  tics: number | null;
+  sleep: number | null;
+  cognition: number | null;
   notes?: string;
   medicationsTaken?: string[]; // array of MedLibraryItem IDs
+  calmDay?: boolean;
 };
 
 export type MedicationType = 'antibiotic' | 'ssri' | 'supplement' | 'ivig' | 'steroid' | 'other';

@@ -129,44 +129,142 @@ function HowItWorksModal({ onClose }: { onClose: () => void }) {
   );
 }
 
+const DOT_BG: Record<number, string> = {
+  0: 'var(--mist)',
+  1: 'var(--clay-wash)',
+  2: 'var(--clay-soft)',
+  3: '#d68866',
+  4: 'var(--clay)',
+  5: 'var(--clay-deep)',
+};
+const DOT_COLOR: Record<number, string> = {
+  0: 'var(--ink)',
+  1: 'var(--ink)',
+  2: 'var(--ink)',
+  3: '#ffffff',
+  4: '#ffffff',
+  5: '#ffffff',
+};
+
 function ScoreInput({
   label,
   value,
   onChange,
+  isLast = false,
 }: {
   label: string;
-  value: number;
-  onChange: (v: number) => void;
+  value: number | null;
+  onChange: (v: number | null) => void;
+  isLast?: boolean;
 }) {
   return (
-    <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 py-3 border-b border-border/50 last:border-0">
-      <span className="text-sm font-medium text-foreground leading-tight sm:flex-1 sm:min-w-0">
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'minmax(180px, 280px) auto',
+        alignItems: 'center',
+        gap: '40px',
+        padding: '16px 0',
+        borderBottom: isLast ? 'none' : '1px solid var(--rule-soft)',
+      }}
+    >
+      <span
+        style={{
+          fontFamily: 'Newsreader, serif',
+          fontSize: '14px',
+          fontWeight: 400,
+          color: 'var(--ink)',
+          lineHeight: '1.4',
+        }}
+      >
         {label}
       </span>
       <div
-        className="flex gap-1 sm:flex-shrink-0"
-        data-testid={`score-${label.toLowerCase().replace(/\s|\//g, "-")}`}
+        className="flex items-center"
+        style={{ gap: '12px' }}
+        data-testid={`score-${label.toLowerCase().replace(/\s|\//g, '-')}`}
       >
-        {[0, 1, 2, 3, 4, 5].map((n) => (
+        <div className="flex" style={{ gap: '8px' }}>
+          {[0, 1, 2, 3, 4, 5].map((n) => {
+            const selected = value === n;
+            return (
+              <button
+                key={n}
+                type="button"
+                onClick={() => onChange(n)}
+                data-testid={`score-btn-${label.toLowerCase().replace(/\s|\//g, '-')}-${n}`}
+                className="touch-manipulation"
+                style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  fontSize: '14px',
+                  fontFamily: 'Newsreader, serif',
+                  fontWeight: 400,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  background: selected ? DOT_BG[n] : 'var(--bg-subtle)',
+                  color: selected ? DOT_COLOR[n] : 'var(--ink-soft)',
+                  border: selected && n === 0 ? '1px solid #8aa395' : 'none',
+                  outline: 'none',
+                  transition: 'background 0.12s ease, color 0.12s ease',
+                }}
+                onMouseEnter={(e) => {
+                  if (!selected) {
+                    e.currentTarget.style.background = 'var(--clay-wash)';
+                    e.currentTarget.style.color = 'var(--ink)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!selected) {
+                    e.currentTarget.style.background = 'var(--bg-subtle)';
+                    e.currentTarget.style.color = 'var(--ink-soft)';
+                  }
+                }}
+              >
+                {n}
+              </button>
+            );
+          })}
+        </div>
+        {value !== null && (
           <button
-            key={n}
             type="button"
-            onClick={() => onChange(n)}
-            data-testid={`score-btn-${label.toLowerCase().replace(/\s|\//g, "-")}-${n}`}
-            className={`flex-1 sm:flex-none sm:w-10 h-10 rounded-full text-sm font-semibold transition-all touch-manipulation ${
-              value === n
-                ? "shadow-sm scale-105 text-white"
-                : "bg-muted text-muted-foreground hover:bg-muted/70"
-            }`}
-            style={value === n ? { backgroundColor: "var(--terracotta)" } : undefined}
+            onClick={() => onChange(null)}
+            style={{
+              fontFamily: 'Newsreader, serif',
+              fontStyle: 'italic',
+              fontSize: '12px',
+              color: 'var(--ink-soft)',
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              padding: '0',
+              lineHeight: 1,
+              flexShrink: 0,
+            }}
           >
-            {n}
+            Clear
           </button>
-        ))}
+        )}
       </div>
     </div>
   );
 }
+
+type QuickScores = {
+  ocd: number | null;
+  anxiety: number | null;
+  rage: number | null;
+  tics: number | null;
+  sleep: number | null;
+  cognition: number | null;
+};
+const EMPTY_SCORES: QuickScores = { ocd: null, anxiety: null, rage: null, tics: null, sleep: null, cognition: null };
+const CALM_SCORES: QuickScores = { ocd: 0, anxiety: 0, rage: 0, tics: 0, sleep: 0, cognition: 0 };
 
 export default function Dashboard() {
   const { logs, loading, addLog } = useSymptomLogs();
@@ -179,10 +277,11 @@ export default function Dashboard() {
 
   const existingToday = logs.find((l) => l.date === today);
 
-  const [scores, setScores] = useState({ ocd: 0, anxiety: 0, rage: 0, tics: 0, sleep: 0, cognition: 0 });
+  const [scores, setScores] = useState<QuickScores>(EMPTY_SCORES);
   const [notes, setNotes] = useState("");
   const [medicationsTaken, setMedicationsTaken] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
+  const [calmDay, setCalmDay] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   // Once Supabase data loads, pre-fill the form with today's existing entry (if any)
@@ -193,6 +292,7 @@ export default function Dashboard() {
     const entry = logs.find((l) => l.date === today);
     if (entry) {
       setScores({ ocd: entry.ocd, anxiety: entry.anxiety, rage: entry.rage, tics: entry.tics, sleep: entry.sleep, cognition: entry.cognition });
+      setCalmDay(entry.calmDay ?? false);
       setNotes(entry.notes ?? "");
       setMedicationsTaken(entry.medicationsTaken ?? []);
     }
@@ -213,6 +313,7 @@ export default function Dashboard() {
         ...scores,
         notes,
         medicationsTaken,
+        calmDay,
       };
       addLog(log);
       setSaved(true);
@@ -226,14 +327,14 @@ export default function Dashboard() {
   // Snapshot score (0–10 display scale for the badge).
   // sleep and cognition use an inverted scale (higher = better), so invert them here.
   const todayRawScore = existingToday
-    ? ((existingToday.ocd +
-        existingToday.anxiety +
-        existingToday.rage +
-        existingToday.tics +
-        (5 - existingToday.sleep) +
-        (5 - existingToday.cognition)) /
+    ? ((((existingToday.ocd ?? 0) +
+        (existingToday.anxiety ?? 0) +
+        (existingToday.rage ?? 0) +
+        (existingToday.tics ?? 0) +
+        (5 - (existingToday.sleep ?? 0)) +
+        (5 - (existingToday.cognition ?? 0))) /
         6) *
-      2
+      2)
     : null;
   const todayScore = todayRawScore !== null ? Math.round(todayRawScore * 10) / 10 : null;
   const todayScoreColor = todayScore !== null ? getScoreColor(todayScore) : null;
@@ -291,7 +392,7 @@ export default function Dashboard() {
     const total = rangeLogs.reduce(
       (sum, l) =>
         sum +
-        ((l.ocd + l.anxiety + l.rage + l.tics + (5 - l.sleep) + (5 - l.cognition)) / 6) * 2,
+        (((l.ocd ?? 0) + (l.anxiety ?? 0) + (l.rage ?? 0) + (l.tics ?? 0) + (5 - (l.sleep ?? 0)) + (5 - (l.cognition ?? 0))) / 6) * 2,
       0
     );
     return Math.round((total / rangeLogs.length) * 10) / 10;
@@ -601,7 +702,7 @@ export default function Dashboard() {
                       </div>
                       <div className="flex gap-1 flex-shrink-0">
                         {cats.map((k) => {
-                          const raw = log[k];
+                          const raw = log[k] ?? 0;
                           const score = (k === "sleep" || k === "cognition") ? 5 - raw : raw;
                           const filled = score > 0;
                           return (
@@ -699,15 +800,25 @@ export default function Dashboard() {
           </p>
         </CardHeader>
         <CardContent className="space-y-0 p-5 pt-0">
-          <div className="divide-y-0">
-            {CATEGORIES.map((cat) => (
-              <ScoreInput
-                key={cat.key}
-                label={cat.label}
-                value={scores[cat.key as keyof typeof scores]}
-                onChange={(v) => setScores((s) => ({ ...s, [cat.key]: v }))}
-              />
-            ))}
+          <div style={{ maxWidth: '720px' }}>
+            <button
+              type="button"
+              className="btn-secondary mb-4"
+              onClick={() => { setScores(CALM_SCORES); setCalmDay(true); }}
+            >
+              Calm day, nothing to report
+            </button>
+            <div>
+              {CATEGORIES.map((cat, idx) => (
+                <ScoreInput
+                  key={cat.key}
+                  label={cat.label}
+                  value={scores[cat.key as keyof QuickScores]}
+                  onChange={(v) => { setScores((s) => ({ ...s, [cat.key]: v })); setCalmDay(false); }}
+                  isLast={idx === CATEGORIES.length - 1}
+                />
+              ))}
+            </div>
           </div>
 
           <div className="space-y-2 pt-4">

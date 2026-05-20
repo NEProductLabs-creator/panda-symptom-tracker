@@ -108,7 +108,7 @@ export default function LogEntry() {
     const entry = logs.find((l) => l.date === selectedDate);
     setScores(
       entry
-        ? { ocd: entry.ocd, anxiety: entry.anxiety, rage: entry.rage, tics: entry.tics, sleep: entry.sleep, cognition: entry.cognition }
+        ? { ocd: entry.ocd ?? 0, anxiety: entry.anxiety ?? 0, rage: entry.rage ?? 0, tics: entry.tics ?? 0, sleep: entry.sleep ?? 0, cognition: entry.cognition ?? 0 }
         : { ocd: 0, anxiety: 0, rage: 0, tics: 0, sleep: 0, cognition: 0 }
     );
     setNotes(entry?.notes ?? "");
@@ -364,12 +364,12 @@ export default function LogEntry() {
                         <td className="py-3 px-4 font-medium text-foreground whitespace-nowrap">
                           {format(new Date(log.date + "T12:00:00"), "MMM d, yyyy")}
                         </td>
-                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.ocd} /></td>
-                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.anxiety} /></td>
-                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.rage} /></td>
-                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.tics} /></td>
-                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.sleep} inverted /></td>
-                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.cognition} inverted /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.ocd ?? 0} /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.anxiety ?? 0} /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.rage ?? 0} /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.tics ?? 0} /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.sleep ?? 0} inverted /></td>
+                        <td className="py-3 px-2 text-center"><ScoreBadge value={log.cognition ?? 0} inverted /></td>
                         <td className="py-3 px-2 text-center">
                           {takenCount > 0 ? (
                             <span className="inline-flex items-center gap-1 text-xs text-primary font-medium">

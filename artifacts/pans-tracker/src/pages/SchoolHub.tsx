@@ -336,7 +336,7 @@ export default function SchoolHub() {
     if (logs.length === 0) return [];
     const recent = [...logs].sort((a, b) => b.date.localeCompare(a.date))[0];
     const cats = (["ocd", "anxiety", "rage", "tics", "sleep", "cognition"] as const)
-      .map((k) => ({ key: k, score: recent[k] }))
+      .map((k) => ({ key: k, score: recent[k] ?? 0 }))
       .filter((x) => x.score > 0)
       .sort((a, b) => b.score - a.score)
       .slice(0, 3);

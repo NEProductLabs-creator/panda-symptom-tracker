@@ -6,10 +6,8 @@ import {
   Activity,
   Star,
   Sun,
-  Shield,
   User,
   ChevronRight,
-  Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +25,7 @@ const DIAGNOSIS_OPTIONS: { value: DiagnosisOption; label: string }[] = [
   { value: "prefer_not", label: "Prefer not to say" },
 ];
 
-const TOTAL_SCREENS = 6;
+const TOTAL_SCREENS = 5;
 
 // ─── Progress bar ─────────────────────────────────────────────────────────────
 
@@ -129,10 +127,7 @@ export default function Onboarding() {
 
   const next = () => setStep((s) => s + 1);
 
-  // Screen 5 – privacy
-  const [agreed, setAgreed] = useState(false);
-
-  // Screen 6 – child profile
+  // Screen 5 – child profile
   const [childName, setChildName] = useState("");
   const [childDob, setChildDob] = useState("");
   const [symptomsDate, setSymptomsDate] = useState("");
@@ -239,94 +234,14 @@ export default function Onboarding() {
     );
   }
 
-  // ── Screen 5: Privacy ────────────────────────────────────────────────────
-
-  if (step === 5) {
-    return (
-      <div className="min-h-screen flex flex-col bg-background">
-        <div className="px-6 pt-12">
-          <ProgressBar step={5} />
-        </div>
-
-        <div className="flex-1 flex items-center justify-center px-6 py-12">
-          <div className="w-full max-w-sm space-y-6">
-            <div className="flex justify-center">
-              <div className="w-16 h-16 rounded-2xl bg-blue-100 flex items-center justify-center">
-                <Shield className="w-8 h-8 text-blue-600" />
-              </div>
-            </div>
-
-            <div className="text-center">
-              <h1
-                className="text-2xl font-bold text-foreground leading-tight"
-                style={{ fontFamily: "Fraunces, serif" }}
-              >
-                Your data belongs to you.
-              </h1>
-            </div>
-
-            <div className="rounded-xl border border-border bg-muted/40 px-4 py-4 text-xs text-muted-foreground leading-relaxed space-y-3 max-h-44 overflow-y-auto">
-              <p>
-                We store your information securely so you can access it from
-                any device.
-              </p>
-              <p>
-                We never sell your data, share it with third parties, or use
-                it for advertising.
-              </p>
-              <p>You can export or delete your data at any time.</p>
-              <p>
-                This app is not a medical service and is not subject to HIPAA,
-                but we treat your family's information with the same care we'd
-                want for our own.
-              </p>
-            </div>
-
-            <label className="flex items-start gap-3 cursor-pointer select-none">
-              <button
-                type="button"
-                role="checkbox"
-                aria-checked={agreed}
-                onClick={() => setAgreed((v) => !v)}
-                data-testid="privacy-agree"
-                className={`mt-0.5 w-5 h-5 rounded border-2 flex-shrink-0 flex items-center justify-center transition-colors ${
-                  agreed
-                    ? "bg-primary border-primary"
-                    : "bg-background border-border"
-                }`}
-              >
-                {agreed && (
-                  <Check className="w-3 h-3 text-primary-foreground" />
-                )}
-              </button>
-              <span className="text-sm text-foreground leading-snug">
-                I understand and agree to these terms.
-              </span>
-            </label>
-
-            <Button
-              className="w-full h-12 gap-2"
-              onClick={next}
-              disabled={!agreed}
-              data-testid="privacy-next"
-            >
-              Next
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Screen 6: Child profile ───────────────────────────────────────────────
+  // ── Screen 5: Child profile ───────────────────────────────────────────────
 
   const canFinish = childName.trim().length > 0;
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <div className="px-6 pt-12">
-        <ProgressBar step={6} />
+        <ProgressBar step={5} />
       </div>
 
       <div className="flex-1 flex items-center justify-center px-6 py-12">

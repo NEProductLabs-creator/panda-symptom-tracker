@@ -312,10 +312,11 @@ function SignUpPage() {
   useEffect(() => { track('signup_started'); }, []);
 
   function handleContinue() {
-    sessionStorage.setItem(
-      'pans_terms_pending',
-      JSON.stringify({ version: CURRENT_TERMS_VERSION, agreedAt: new Date().toISOString() }),
-    );
+    const pending = JSON.stringify({ version: CURRENT_TERMS_VERSION, agreedAt: new Date().toISOString() });
+    // Write to localStorage so the flag survives a full-page OAuth redirect
+    // (Google sign-up navigates away and back, clearing sessionStorage)
+    sessionStorage.setItem('pans_terms_pending', pending);
+    localStorage.setItem('pans_terms_pending', pending);
     setShowClerkForm(true);
   }
 
@@ -407,8 +408,10 @@ function PostHogSync() {
     if (isNewAccount && !sessionStorage.getItem(flagKey)) {
       sessionStorage.setItem(flagKey, '1');
       track('signup_completed');
-      // Record the T&C agreement captured during the signup pre-step
-      const pending = sessionStorage.getItem('pans_terms_pending');
+      // Record the T&C agreement captured during the signup pre-step.
+      // Check both sessionStorage and localStorage — Google OAuth clears
+      // sessionStorage during the redirect, so localStorage is the fallback.
+      const pending = sessionStorage.getItem('pans_terms_pending') ?? localStorage.getItem('pans_terms_pending');
       if (pending) {
         try {
           const { version } = JSON.parse(pending) as { version: string };
@@ -425,6 +428,7 @@ function PostHogSync() {
             sessionStorage.setItem('pans_terms_ok', version);
           }).catch(() => {});
           sessionStorage.removeItem('pans_terms_pending');
+          localStorage.removeItem('pans_terms_pending');
         } catch { /* ignore */ }
       }
     }

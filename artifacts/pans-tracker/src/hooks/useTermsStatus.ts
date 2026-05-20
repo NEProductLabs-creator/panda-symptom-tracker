@@ -27,8 +27,9 @@ export function useTermsStatus() {
     }
 
     // Pending agreement from the signup T&C step — PostHogSync will record it
-    // shortly; treat as ok immediately so the user isn't blocked
-    const pending = sessionStorage.getItem(PENDING_KEY);
+    // shortly; treat as ok immediately so the user isn't blocked.
+    // Check localStorage too — Google OAuth clears sessionStorage on redirect.
+    const pending = sessionStorage.getItem(PENDING_KEY) ?? localStorage.getItem(PENDING_KEY);
     if (pending) {
       try {
         const { version } = JSON.parse(pending) as { version: string };

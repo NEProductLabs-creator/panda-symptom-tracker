@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
+import { useUser, useClerk } from "@clerk/react";
 import {
   LayoutDashboard,
   ClipboardList,
@@ -200,6 +201,11 @@ export default function Sidebar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { baseline } = useChildBaseline();
   const childName = baseline?.childName?.trim();
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  const displayName = user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || null;
+  const displayEmail = user?.emailAddresses?.[0]?.emailAddress || null;
 
   function closeMobile() {
     setMobileOpen(false);
@@ -245,9 +251,30 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      {/* Footer */}
-      <div className="px-4 py-3 border-t border-border">
-        <p className="text-[11px] text-muted-foreground text-center leading-relaxed">
+      {/* User menu */}
+      <div className="px-4 py-4 border-t border-border space-y-3">
+        {displayName && (
+          <div className="flex items-start justify-between gap-2">
+            <div className="min-w-0">
+              <p className="text-[13px] font-semibold text-foreground truncate leading-tight" style={{ fontFamily: "Fraunces, serif" }}>
+                {displayName}
+              </p>
+              {displayEmail && (
+                <p className="text-[10px] text-muted-foreground truncate mt-0.5">
+                  {displayEmail}
+                </p>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => signOut()}
+              className="text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors flex-shrink-0 px-2 py-1 rounded-md hover:bg-sidebar-accent whitespace-nowrap"
+            >
+              Log out
+            </button>
+          </div>
+        )}
+        <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
           All data stored locally on this device
         </p>
       </div>

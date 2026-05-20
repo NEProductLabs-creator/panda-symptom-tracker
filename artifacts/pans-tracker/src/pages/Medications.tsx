@@ -68,12 +68,12 @@ const MED_TYPE_LABELS: Record<MedicationType, string> = {
 };
 
 const MED_TYPE_COLORS: Record<MedicationType, string> = {
-  antibiotic: "bg-blue-100 text-blue-700 border-blue-200",
-  ssri: "bg-purple-100 text-purple-700 border-purple-200",
-  supplement: "bg-green-100 text-green-700 border-green-200",
-  ivig: "bg-orange-100 text-orange-700 border-orange-200",
-  steroid: "bg-yellow-100 text-yellow-700 border-yellow-200",
-  other: "bg-gray-100 text-gray-600 border-gray-200",
+  antibiotic: "bg-emerald-50 text-emerald-800 border-emerald-200",
+  ssri: "bg-rose-50 text-rose-800 border-rose-200",
+  supplement: "bg-amber-50 text-amber-800 border-amber-200",
+  ivig: "bg-orange-50 text-orange-800 border-orange-200",
+  steroid: "bg-yellow-50 text-yellow-800 border-yellow-200",
+  other: "bg-stone-100 text-stone-600 border-stone-200",
 };
 
 const emptyForm = {
@@ -108,7 +108,7 @@ function TreatmentProgress({ med }: { med: Medication }) {
   const pct = Math.min(100, (daysSinceStart / total) * 100);
 
   const barColor =
-    remaining === 0 ? "#86efac" : remaining <= 2 ? "#f87171" : "#60a5fa";
+    remaining === 0 ? "hsl(142 60% 70%)" : remaining <= 2 ? "hsl(16 53% 55%)" : "hsl(155 21% 40%)";
 
   return (
     <div className="mt-2.5 space-y-1">

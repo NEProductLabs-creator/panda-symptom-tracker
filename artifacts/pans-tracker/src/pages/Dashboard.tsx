@@ -569,6 +569,77 @@ export default function Dashboard() {
         </Card>
       </div>
 
+      {/* Recent entries — feature-list pattern */}
+      {logs.length > 0 && (() => {
+        const recent = [...logs].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
+        const cats = ["ocd", "anxiety", "rage", "tics", "sleep", "cognition"] as const;
+        return (
+          <div>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground" style={{ fontFamily: "Newsreader, serif", letterSpacing: "0.1em" }}>
+                Recent Entries
+              </p>
+              <Link href="/log">
+                <span className="text-xs hover:underline cursor-pointer" style={{ color: "var(--terracotta)" }}>
+                  View all →
+                </span>
+              </Link>
+            </div>
+            <div className="border-t border-border">
+              {recent.map((log) => {
+                const severity = computeDailyScore(log);
+                return (
+                  <Link key={log.id} href="/log">
+                    <div className="flex items-center gap-4 py-3.5 border-b border-border/60 hover:bg-muted/30 transition-colors cursor-pointer px-1 group">
+                      <div className="flex-shrink-0 w-16 text-right">
+                        <p className="text-lg font-medium leading-none" style={{ fontFamily: "Fraunces, serif", color: "var(--terracotta)", fontWeight: 400 }}>
+                          {format(parseISO(log.date), "d")}
+                        </p>
+                        <p className="text-[10px] uppercase tracking-widest text-muted-foreground mt-0.5" style={{ letterSpacing: "0.12em" }}>
+                          {format(parseISO(log.date), "MMM")}
+                        </p>
+                      </div>
+                      <div className="flex gap-1 flex-shrink-0">
+                        {cats.map((k) => {
+                          const raw = log[k];
+                          const score = (k === "sleep" || k === "cognition") ? 5 - raw : raw;
+                          const filled = score > 0;
+                          return (
+                            <span
+                              key={k}
+                              className="w-2.5 h-2.5 rounded-full border border-border transition-colors"
+                              style={{
+                                backgroundColor: filled ? `hsl(16 53% ${70 - score * 8}%)` : "transparent",
+                                borderColor: filled ? `hsl(16 53% ${70 - score * 8}%)` : undefined,
+                              }}
+                              title={k}
+                            />
+                          );
+                        })}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        {log.notes ? (
+                          <p className="text-xs text-muted-foreground truncate italic" style={{ fontFamily: "Newsreader, serif" }}>
+                            {log.notes}
+                          </p>
+                        ) : (
+                          <p className="text-xs text-muted-foreground/50 italic" style={{ fontFamily: "Newsreader, serif" }}>
+                            No notes
+                          </p>
+                        )}
+                      </div>
+                      <span className="text-xs font-semibold flex-shrink-0 tabular-nums" style={{ color: "var(--terracotta)" }}>
+                        {severity}/30
+                      </span>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Symptom trend chart */}
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-2">

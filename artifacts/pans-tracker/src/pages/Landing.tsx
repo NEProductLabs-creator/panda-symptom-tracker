@@ -243,16 +243,19 @@ export default function Landing() {
                 <span>This week</span>
               </div>
 
+              <div className="lp-mockup-btn">+ Log a symptom</div>
+
               <div className="lp-mockup-entry">
                 <div className="lp-mockup-date">
                   <div className="lp-day">14</div>
                   <div className="lp-mo">JAN</div>
                 </div>
                 <div className="lp-mockup-content">
-                  <div className="lp-symptom">OCD, hand washing</div>
-                  <div className="lp-note">Six rounds before breakfast. Calmer after morning meds.</div>
-                  <div className="lp-severity">
-                    <span className="lp-on" /><span className="lp-on" /><span className="lp-on" /><span /><span />
+                  <div className="lp-symptom">Calm day</div>
+                  <div className="lp-note">First in over a week. Hugged his sister this morning.</div>
+                  <div className="lp-calm-marker">
+                    <span className="lp-marker-dot lp-calm-dot" />
+                    nothing to report
                   </div>
                 </div>
               </div>
@@ -263,10 +266,15 @@ export default function Landing() {
                   <div className="lp-mo">JAN</div>
                 </div>
                 <div className="lp-mockup-content">
-                  <div className="lp-symptom">Anxiety spike</div>
-                  <div className="lp-note">Triggered after touching school floor. Took 40 min to recover.</div>
+                  <div className="lp-symptom">OCD, hand washing</div>
+                  <div className="lp-note">Twelve rounds before breakfast. Calmer after morning meds.</div>
                   <div className="lp-severity">
-                    <span className="lp-on" /><span className="lp-on" /><span className="lp-on" /><span className="lp-on" /><span />
+                    <span style={{ backgroundColor: '#ece2d0' }} />
+                    <span style={{ backgroundColor: '#f5d9c7' }} />
+                    <span style={{ backgroundColor: '#e6b598' }} />
+                    <span style={{ backgroundColor: '#d68866' }} />
+                    <span style={{ backgroundColor: '#c4623d' }} />
+                    <span style={{ backgroundColor: '#ece2d0' }} />
                   </div>
                 </div>
               </div>
@@ -277,10 +285,15 @@ export default function Landing() {
                   <div className="lp-mo">JAN</div>
                 </div>
                 <div className="lp-mockup-content">
-                  <div className="lp-symptom">Possible exposure, strep</div>
-                  <div className="lp-note">Classmate sent home sick. Watching for new symptoms.</div>
+                  <div className="lp-symptom">Anxiety, school dropoff</div>
+                  <div className="lp-note">Worried about touching desks. Settled by midday.</div>
                   <div className="lp-severity">
-                    <span className="lp-on" /><span className="lp-on" /><span /><span /><span />
+                    <span style={{ backgroundColor: '#ece2d0' }} />
+                    <span style={{ backgroundColor: '#f5d9c7' }} />
+                    <span style={{ backgroundColor: '#e6b598' }} />
+                    <span style={{ backgroundColor: '#ece2d0' }} />
+                    <span style={{ backgroundColor: '#ece2d0' }} />
+                    <span style={{ backgroundColor: '#ece2d0' }} />
                   </div>
                 </div>
               </div>
@@ -291,10 +304,11 @@ export default function Landing() {
                   <div className="lp-mo">JAN</div>
                 </div>
                 <div className="lp-mockup-content">
-                  <div className="lp-symptom">Calm day</div>
-                  <div className="lp-note">First in over a week. Hugged his sister this morning.</div>
-                  <div className="lp-severity">
-                    <span className="lp-on" /><span /><span /><span /><span />
+                  <div className="lp-symptom">Possible strep exposure</div>
+                  <div className="lp-note">Classmate sent home sick. Watching for new symptoms.</div>
+                  <div className="lp-watch-marker">
+                    <span className="lp-marker-dot lp-watch-dot" />
+                    noted, watching
                   </div>
                 </div>
               </div>

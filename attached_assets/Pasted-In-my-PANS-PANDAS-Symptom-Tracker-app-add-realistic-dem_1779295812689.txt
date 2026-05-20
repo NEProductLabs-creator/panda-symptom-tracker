@@ -1,0 +1,58 @@
+In my PANS/PANDAS Symptom Tracker app, add realistic demo data for the "Just For You" parent wellbeing section that matches and correlates with the existing demo child symptom data already in the app.
+
+The demo parent data should tell a coherent emotional story alongside the child's symptom timeline. When the child's symptoms are severe, the parent's wellbeing scores should reflect that stress. When the child has a good stretch, the parent should show some relief. The correlation should feel natural and human, not mathematically obvious. Real parents have good days when their child is struggling and bad days when things are calm. Add that noise intentionally.
+
+PARENT DAILY CHECK-IN DEMO DATA
+Generate 90 days of parent check-in entries with these three ratings (1–5 each):
+1. How are you holding up today?
+2. Stress level in the home?
+3. How connected do you feel to support?
+
+Check-in frequency rules:
+- Days 1–20: entries on about 60% of days, scattered. Parents in early chaos do not log consistently
+- Days 21–April 22: entries on about 70% of days
+- April 23 through May 15: entries on 90% of days, sometimes two in one day. This is an intense period. The parent is tracking obsessively because things feel out of control
+- May 16 onward: entries on about 65% of days. Slightly less frantic as things stabilize
+
+The data should follow this emotional arc:
+- Days 1–20: Scores mostly 2–3. Parent is struggling, stressed, feeling isolated. Optional notes reflect exhaustion and confusion ("I don't recognize my child anymore", "another sleepless night", "called the pediatrician again, still no answers")
+- Days 21–April 22: Scores drift between 2–3 with occasional 4 on a rare good day
+- April 23–May 1: Scores drop sharply to 1–2. This is a hard stretch. Notes are short and raw ("can't do this today", "didn't sleep", "called out of work again", "everyone in the house is on edge"). A couple of entries have no notes at all, just the scores
+- May 2–8: One or two entries where scores briefly lift to 3 then drop back. Parent thinks they see improvement but is not sure. Notes show that uncertainty ("maybe? hard to tell", "had one good hour this afternoon", "don't want to get my hopes up")
+- May 9–15: Gradual uptick to 2–3. Notes show cautious relief mixed with exhaustion ("starting to breathe again", "slept 6 hours which felt like a miracle", "still watching every little thing")
+- May 16–30: Scores settle at 3–4 during a better stretch. Notes show relief and reconnection ("three good days in a row", "laughed together for the first time in months", "made dinner as a family and it was almost normal")
+- Days 76–90: Scores settle at 3, reflecting a new cautious normal. Notes show resilience ("still watching for signs but feeling more in control", "found a PANS parent group online, not alone anymore")
+
+IMPORTANT — CORRELATION NOISE
+Do not make the parent scores move in perfect lockstep with the child's symptom scores. Add human variability:
+- Occasionally the parent has a 4 day when the child is struggling (found a coping mechanism, had a good call with the doctor, a friend showed up)
+- Occasionally the parent has a 2 day when the child is doing well (anticipatory anxiety, exhaustion catching up, a triggering news article about PANS)
+- The support connection score (question 3) should trend slightly upward across the whole 90 days regardless of child symptoms, reflecting the parent slowly finding their community
+
+PARENT NOTES DEMO DATA
+Add 12–15 standalone parent journal entries spread across the 90 days, with at least 5 falling between April 23 and May 15:
+- Mix of emotional processing, practical observations, and notes to share with the doctor
+- Tone should feel real and raw, not polished. Typos are okay. Incomplete sentences are okay.
+- Examples for the April 23–May 15 window:
+  - "Day 4 of almost no sleep. Making mistakes at work. Can't tell anyone why."
+  - "Doctor appt tomorrow. Spent 2 hours tonight organizing the tracker data into something I can actually show her. Terrified she won't take it seriously."
+  - "He had a moment today around 3pm where he just seemed like himself. It lasted maybe 20 minutes. I sat on the floor of the bathroom afterward and cried."
+  - "Starting to wonder if I need to talk to someone. Not sure I have the bandwidth to even do that."
+  - "My husband and I haven't really talked in two weeks. We're both just surviving."
+- Examples for the recovery window:
+  - "I keep a notebook in my purse now with everything I notice. Date, time, what happened, what they ate, who they were around. I never thought I'd be this person."
+  - "Read about another family whose child fully recovered after 18 months. I screenshot it and look at it when things get bad."
+  - "Called my mom tonight. First time in weeks. She doesn't fully understand but it helped just to hear her voice."
+
+CORRELATION DISPLAY
+- On the parent wellbeing chart, overlay a faint secondary line showing the child's total symptom score for the same period
+- The visual should suggest a relationship without spelling it out
+- Add a subtle insight card beneath the chart: "On your hardest days, your child's symptom scores were also at their highest. You are not imagining it — this is real and it is hard."
+
+HOPE BOARD DEMO DATA
+Pre-populate the hope board with 3 saved affirmations:
+- "You did not cause this. You cannot always control it. But you are doing everything right."
+- "Recovery is not linear, but it is real and it happens every day for PANS families."
+- "The fact that you are tracking, advocating, and fighting for answers is extraordinary parenting."
+
+Make sure all demo data is clearly flagged as demo data in the database so it is cleanly removed when a real user creates an account, exactly the same way the existing child demo data is handled.

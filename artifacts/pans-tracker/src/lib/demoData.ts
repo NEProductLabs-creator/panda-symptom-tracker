@@ -401,81 +401,104 @@ export const DEMO_PTEC_LOGS: PTECLog[] = [
 
 // ── Parent wellbeing check-ins — 90 days, emotional arc matching child symptom timeline ──
 //
-// Arc:
-//   Days 89–70 ago · Phase 1: Struggling but managing       (holding 2–3, stress 2–3, connected 1–2)
-//   Days 69–50 ago · Phase 2: Crisis / peak isolation       (holding 1–2, stress 1–2, connected 1)
-//   Days 49–35 ago · Phase 3: New treatment, cautious hope  (holding 2–3, stress 2–3, connected 2)
-//   Days 34–15 ago · Phase 4: Good stretch, relief          (holding 3–4, stress 3–4, connected 3–4)
-//   Days 14– 1 ago · Phase 5: Cautious new normal           (holding 3,   stress 3,   connected 3–4)
+// Frequency rules (today = May 20, 2026):
+//   Days 1–20  (daysAgo 89–70) · ~60% — 12 entries  · scattered, early chaos
+//   Days 21–April 22 (daysAgo 69–28) · ~70% — 29 entries · drifting 2–3, rare 4
+//   April 23–May 15 (daysAgo 27–5)  · ~90% — 21 entries · crisis then recovery
+//   May 16+   (daysAgo 4–1)         · ~65% —  3 entries  · stabilising
+//
+// Correlation noise: connected score trends UP across all 90 days regardless of child
+// Noise entries: dw-66 (4 when child stable), dw-42 (4 when child flaring),
+//               dw-15 (3 when child at peak), dw-10 (2 when child recovering)
 
 export const DEMO_WELLBEING_LOGS: WellbeingLog[] = [
-  // ── Phase 1: Days 89–70 — struggling but managing ──────────────────────────
+  // ── Phase 1: Days 1–20 (daysAgo 89–70) — 60%, struggling but managing ──────
   { id: "dw-89", date: daysAgo(89), holding: 2, stress: 2, connected: 1, hardDay: false,
-    notes: "I don't recognize my child anymore. It's been six weeks of this. I keep thinking it must be something I did." },
-  { id: "dw-87", date: daysAgo(87), holding: 2, stress: 2, connected: 2, hardDay: false },
-  { id: "dw-85", date: daysAgo(85), holding: 3, stress: 2, connected: 1, hardDay: false,
-    notes: "Another sleepless night. Alex was up until 2am with intrusive thoughts he couldn't name. I sat with him on the hallway floor." },
-  { id: "dw-83", date: daysAgo(83), holding: 2, stress: 2, connected: 2, hardDay: false },
-  { id: "dw-81", date: daysAgo(81), holding: 2, stress: 2, connected: 1, hardDay: false,
-    notes: "Called the pediatrician again. Still no answers. They keep saying it might just be a phase. I know my child and this is not a phase." },
-  { id: "dw-79", date: daysAgo(79), holding: 3, stress: 3, connected: 2, hardDay: false },
-  { id: "dw-77", date: daysAgo(77), holding: 2, stress: 2, connected: 1, hardDay: false,
+    notes: "I don't recognize my child anymore. It's been three weeks of this and I keep thinking I'm missing something obvious." },
+  { id: "dw-87", date: daysAgo(87), holding: 3, stress: 2, connected: 1, hardDay: false },
+  { id: "dw-86", date: daysAgo(86), holding: 2, stress: 2, connected: 2, hardDay: false },
+  { id: "dw-84", date: daysAgo(84), holding: 2, stress: 3, connected: 1, hardDay: false },
+  { id: "dw-82", date: daysAgo(82), holding: 3, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-80", date: daysAgo(80), holding: 2, stress: 2, connected: 1, hardDay: false,
+    notes: "Another sleepless night. Sat with him for two hours. Called the pediatrician again — still no answers." },
+  { id: "dw-78", date: daysAgo(78), holding: 3, stress: 2, connected: 2, hardDay: false },
+  { id: "dw-76", date: daysAgo(76), holding: 2, stress: 2, connected: 1, hardDay: false },
+  { id: "dw-74", date: daysAgo(74), holding: 3, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-72", date: daysAgo(72), holding: 2, stress: 2, connected: 2, hardDay: false },
+  { id: "dw-71", date: daysAgo(71), holding: 3, stress: 3, connected: 1, hardDay: false,
+    notes: "Starting to research this myself. Pediatrician finally suggested a specialist. Six week wait." },
+  { id: "dw-70", date: daysAgo(70), holding: 2, stress: 2, connected: 2, hardDay: false },
+  // ── Phase 2: Days 21–April 22 (daysAgo 69–28) — 70%, drifting 2–3, rare 4 ─
+  { id: "dw-69", date: daysAgo(69), holding: 2, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-68", date: daysAgo(68), holding: 3, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-66", date: daysAgo(66), holding: 4, stress: 3, connected: 2, hardDay: false,
+    notes: "Good call with my sister tonight. She just said 'you're doing everything right.' I needed that more than she knows." },
+  { id: "dw-65", date: daysAgo(65), holding: 3, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-63", date: daysAgo(63), holding: 2, stress: 2, connected: 2, hardDay: false },
+  { id: "dw-62", date: daysAgo(62), holding: 3, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-60", date: daysAgo(60), holding: 2, stress: 2, connected: 2, hardDay: false },
+  { id: "dw-59", date: daysAgo(59), holding: 3, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-57", date: daysAgo(57), holding: 2, stress: 2, connected: 3, hardDay: false },
+  { id: "dw-56", date: daysAgo(56), holding: 3, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-54", date: daysAgo(54), holding: 2, stress: 2, connected: 3, hardDay: false },
+  { id: "dw-53", date: daysAgo(53), holding: 3, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-51", date: daysAgo(51), holding: 2, stress: 2, connected: 3, hardDay: false },
+  { id: "dw-50", date: daysAgo(50), holding: 3, stress: 3, connected: 3, hardDay: false },
+  { id: "dw-48", date: daysAgo(48), holding: 2, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-47", date: daysAgo(47), holding: 3, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-45", date: daysAgo(45), holding: 2, stress: 2, connected: 3, hardDay: false,
     notes: "I keep a notebook in my purse now with everything I notice. Date, time, what happened, what they ate, who they were around. I never thought I'd be this person." },
-  { id: "dw-75", date: daysAgo(75), holding: 2, stress: 2, connected: 2, hardDay: false },
-  { id: "dw-73", date: daysAgo(73), holding: 3, stress: 3, connected: 2, hardDay: false },
-  { id: "dw-71", date: daysAgo(71), holding: 2, stress: 2, connected: 1, hardDay: false },
-  // ── Phase 2: Days 69–50 — crisis, peak isolation ────────────────────────────
-  { id: "dw-69", date: daysAgo(69), holding: 1, stress: 1, connected: 1, hardDay: true,
-    notes: "Worst week yet. I missed work again. Told my boss it was a family emergency. I couldn't explain it even if I tried." },
-  { id: "dw-67", date: daysAgo(67), holding: 2, stress: 1, connected: 1, hardDay: false },
-  { id: "dw-65", date: daysAgo(65), holding: 1, stress: 1, connected: 1, hardDay: true,
-    notes: "Crying in the car before I go inside. I need ten minutes to compose myself every night before I can face the house." },
-  { id: "dw-63", date: daysAgo(63), holding: 2, stress: 2, connected: 1, hardDay: false },
-  { id: "dw-61", date: daysAgo(61), holding: 1, stress: 1, connected: 1, hardDay: true,
-    notes: "Called my mom tonight. First time in weeks. She doesn't fully understand but it helped just to hear her voice." },
-  { id: "dw-59", date: daysAgo(59), holding: 2, stress: 2, connected: 1, hardDay: false },
-  { id: "dw-57", date: daysAgo(57), holding: 1, stress: 1, connected: 1, hardDay: true },
-  { id: "dw-55", date: daysAgo(55), holding: 2, stress: 2, connected: 1, hardDay: false,
+  { id: "dw-44", date: daysAgo(44), holding: 3, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-42", date: daysAgo(42), holding: 4, stress: 4, connected: 3, hardDay: false },
+  { id: "dw-41", date: daysAgo(41), holding: 2, stress: 2, connected: 3, hardDay: false },
+  { id: "dw-39", date: daysAgo(39), holding: 3, stress: 3, connected: 3, hardDay: false },
+  { id: "dw-38", date: daysAgo(38), holding: 2, stress: 3, connected: 2, hardDay: false },
+  { id: "dw-36", date: daysAgo(36), holding: 3, stress: 3, connected: 3, hardDay: false,
     notes: "Read about another family whose child fully recovered after 18 months. I screenshot it and look at it when things get bad." },
-  { id: "dw-53", date: daysAgo(53), holding: 1, stress: 1, connected: 2, hardDay: false },
-  { id: "dw-51", date: daysAgo(51), holding: 2, stress: 2, connected: 1, hardDay: false },
-  // ── Phase 3: Days 49–35 — new treatment, cautious hope ──────────────────────
-  { id: "dw-49", date: daysAgo(49), holding: 2, stress: 2, connected: 2, hardDay: false,
-    notes: "Tried the new antibiotic today. Maybe seeing a tiny improvement? Too soon to tell but I'm holding onto any sign." },
-  { id: "dw-47", date: daysAgo(47), holding: 3, stress: 2, connected: 2, hardDay: false },
-  { id: "dw-45", date: daysAgo(45), holding: 2, stress: 2, connected: 2, hardDay: false,
-    notes: "Had one almost normal dinner as a family. Alex ate everything on his plate and made a joke about his sister's hair. I wanted to film it." },
-  { id: "dw-43", date: daysAgo(43), holding: 2, stress: 3, connected: 2, hardDay: false },
-  { id: "dw-41", date: daysAgo(41), holding: 2, stress: 2, connected: 2, hardDay: false },
-  { id: "dw-39", date: daysAgo(39), holding: 3, stress: 3, connected: 2, hardDay: false },
-  { id: "dw-37", date: daysAgo(37), holding: 2, stress: 2, connected: 2, hardDay: false,
-    notes: "Good appointment with Dr. Chen. She actually listened and adjusted the protocol. Felt heard by a doctor for the first time in this whole ordeal." },
-  { id: "dw-35", date: daysAgo(35), holding: 3, stress: 3, connected: 3, hardDay: false },
-  // ── Phase 4: Days 34–15 — good stretch, relief ──────────────────────────────
+  { id: "dw-35", date: daysAgo(35), holding: 2, stress: 2, connected: 3, hardDay: false },
   { id: "dw-33", date: daysAgo(33), holding: 3, stress: 3, connected: 3, hardDay: false },
-  { id: "dw-31", date: daysAgo(31), holding: 3, stress: 4, connected: 3, hardDay: false,
-    notes: "Three good days in a row. I keep waiting for the other shoe to drop but trying to just be present in the good moments." },
-  { id: "dw-28", date: daysAgo(28), holding: 4, stress: 4, connected: 3, hardDay: false },
-  { id: "dw-26", date: daysAgo(26), holding: 3, stress: 3, connected: 3, hardDay: false,
-    notes: "Laughed together for the first time in months. Alex made a ridiculous face at the dinner table and we all completely lost it." },
-  { id: "dw-23", date: daysAgo(23), holding: 4, stress: 4, connected: 3, hardDay: false },
-  { id: "dw-20", date: daysAgo(20), holding: 3, stress: 3, connected: 3, hardDay: false,
-    notes: "His teacher emailed to say he's been more present in class this week. I read that email three times and then ugly-cried." },
-  { id: "dw-18", date: daysAgo(18), holding: 4, stress: 4, connected: 4, hardDay: false },
-  { id: "dw-16", date: daysAgo(16), holding: 3, stress: 3, connected: 3, hardDay: false },
+  { id: "dw-32", date: daysAgo(32), holding: 2, stress: 3, connected: 3, hardDay: false },
+  { id: "dw-30", date: daysAgo(30), holding: 3, stress: 3, connected: 3, hardDay: false },
+  { id: "dw-29", date: daysAgo(29), holding: 2, stress: 2, connected: 3, hardDay: false },
+  { id: "dw-28", date: daysAgo(28), holding: 3, stress: 3, connected: 3, hardDay: false },
+  // ── April 23–May 1 (daysAgo 27–19) — crisis, scores 1–2, hard days ──────────
+  { id: "dw-27", date: daysAgo(27), holding: 1, stress: 1, connected: 2, hardDay: true,
+    notes: "Day 4 of almost no sleep. Making mistakes at work. Can't tell anyone why." },
+  { id: "dw-26", date: daysAgo(26), holding: 2, stress: 1, connected: 2, hardDay: true,
+    notes: "Doctor appt tomorrow. Spent 2 hrs tonight organizing the tracker data into something I can actually show her. Terrified she won't take it seriously." },
+  { id: "dw-25", date: daysAgo(25), holding: 1, stress: 1, connected: 2, hardDay: true },
+  { id: "dw-24", date: daysAgo(24), holding: 1, stress: 1, connected: 2, hardDay: true,
+    notes: "He had a moment today around 3pm where he just seemed like himself. It lasted maybe 20 minutes. I sat on the floor of the bathroom afterward and cried." },
+  { id: "dw-23", date: daysAgo(23), holding: 2, stress: 1, connected: 2, hardDay: true },
+  { id: "dw-21", date: daysAgo(21), holding: 1, stress: 1, connected: 2, hardDay: true,
+    notes: "My husband and I haven't really talked in two weeks. We're both just surviving." },
+  { id: "dw-20", date: daysAgo(20), holding: 2, stress: 1, connected: 2, hardDay: true },
+  { id: "dw-19", date: daysAgo(19), holding: 1, stress: 2, connected: 2, hardDay: true,
+    notes: "Starting to wonder if I need to talk to someone. Not sure I have the bandwidth to even do that." },
+  // ── May 2–8 (daysAgo 18–12) — uncertainty, brief lifts then back down ────────
+  { id: "dw-18", date: daysAgo(18), holding: 3, stress: 2, connected: 3, hardDay: false,
+    notes: "maybe? hard to tell. had one good hour this afternoon. don't want to get my hopes up" },
+  { id: "dw-17", date: daysAgo(17), holding: 2, stress: 2, connected: 3, hardDay: false },
+  { id: "dw-16", date: daysAgo(16), holding: 2, stress: 2, connected: 3, hardDay: false },
   { id: "dw-15", date: daysAgo(15), holding: 3, stress: 3, connected: 3, hardDay: false },
-  // ── Phase 5: Days 14–1 — cautious new normal ────────────────────────────────
-  { id: "dw-14", date: daysAgo(14), holding: 3, stress: 3, connected: 3, hardDay: false,
-    notes: "Still watching for signs but feeling more in control. I know what a flare looks like now. I know what to do." },
+  { id: "dw-14", date: daysAgo(14), holding: 2, stress: 2, connected: 3, hardDay: false },
+  { id: "dw-13", date: daysAgo(13), holding: 2, stress: 2, connected: 3, hardDay: false,
+    notes: "Still watching every little thing. But slept 6 hours last night which honestly felt like a miracle." },
   { id: "dw-12", date: daysAgo(12), holding: 3, stress: 3, connected: 3, hardDay: false },
-  { id: "dw-10", date: daysAgo(10), holding: 3, stress: 3, connected: 3, hardDay: false },
-  { id: "dw-8",  date: daysAgo(8),  holding: 3, stress: 3, connected: 3, hardDay: false,
-    notes: "Found a PANS parent group online. Read through posts for two hours. Not alone anymore. These people understand in a way no one else can." },
+  // ── May 9–15 (daysAgo 11–5) — gradual uptick, cautious relief ──────────────
+  { id: "dw-11", date: daysAgo(11), holding: 3, stress: 3, connected: 3, hardDay: false,
+    notes: "starting to breathe again. slowly." },
+  { id: "dw-10", date: daysAgo(10), holding: 2, stress: 2, connected: 3, hardDay: false },
+  { id: "dw-8",  date: daysAgo(8),  holding: 3, stress: 3, connected: 4, hardDay: false },
+  { id: "dw-7",  date: daysAgo(7),  holding: 3, stress: 3, connected: 3, hardDay: false },
   { id: "dw-6",  date: daysAgo(6),  holding: 3, stress: 3, connected: 4, hardDay: false },
-  { id: "dw-4",  date: daysAgo(4),  holding: 3, stress: 3, connected: 3, hardDay: false,
-    notes: "Follow-up with Dr. Chen scheduled for next week. Feeling cautiously optimistic. We've been in this moment before but we know so much more now." },
-  { id: "dw-2",  date: daysAgo(2),  holding: 3, stress: 3, connected: 4, hardDay: false },
-  { id: "dw-1",  date: daysAgo(1),  holding: 3, stress: 3, connected: 3, hardDay: false },
+  { id: "dw-5",  date: daysAgo(5),  holding: 3, stress: 3, connected: 3, hardDay: false },
+  // ── May 16–19 (daysAgo 4–1) — better stretch, reconnection ─────────────────
+  { id: "dw-4",  date: daysAgo(4),  holding: 4, stress: 4, connected: 4, hardDay: false,
+    notes: "Three good days in a row. I keep waiting for the other shoe to drop but trying to be present in the good moments." },
+  { id: "dw-2",  date: daysAgo(2),  holding: 3, stress: 3, connected: 4, hardDay: false,
+    notes: "Found a PANS parent group online. Read through posts for hours. Not alone anymore. These people understand in a way no one else can." },
+  { id: "dw-1",  date: daysAgo(1),  holding: 3, stress: 3, connected: 4, hardDay: false },
 ];
 
 // ── Hope board — pre-saved affirmation indices ────────────────────────────────

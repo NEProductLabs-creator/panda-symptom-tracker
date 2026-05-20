@@ -1,185 +1,337 @@
 import { useEffect } from "react";
-import { Link } from "wouter";
-import { ClipboardList, ClipboardCheck, FileDown, ArrowRight } from "lucide-react";
-import { CalendarPulse } from "@/components/icons/CalendarPulse";
-import { useDemoContext } from "@/contexts/DemoContext";
-import { track, identifyAsDemo } from "@/lib/analytics";
-
-// ─── Sub-components ───────────────────────────────────────────────────────────
-
-function Feature({
-  icon: Icon,
-  title,
-  body,
-}: {
-  icon: React.ElementType;
-  title: string;
-  body: string;
-}) {
-  return (
-    <div className="flex flex-col gap-3">
-      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-        <Icon className="w-5 h-5 text-primary" />
-      </div>
-      <div>
-        <h3
-          className="text-base font-bold text-foreground mb-1.5"
-          style={{ fontFamily: "Outfit, sans-serif" }}
-        >
-          {title}
-        </h3>
-        <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
-      </div>
-    </div>
-  );
-}
-
-// ─── Landing page ─────────────────────────────────────────────────────────────
+import { track } from "@/lib/analytics";
+import "./landing.css";
 
 export default function Landing() {
-  const { enterDemoMode } = useDemoContext();
-
   useEffect(() => {
     track("landing_page_viewed");
   }, []);
 
-  function handleDemo() {
-    identifyAsDemo();
-    track("landing_cta_demo");
-    enterDemoMode();
-  }
-
   return (
-    <>
-      <style>{`
-        @keyframes landingFadeUp {
-          from { opacity: 0; transform: translateY(18px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        .lp-fade { opacity: 0; animation: landingFadeUp 0.65s ease-out forwards; }
-        .lp-d1 { animation-delay: 0.08s; }
-        .lp-d2 { animation-delay: 0.22s; }
-        .lp-d3 { animation-delay: 0.36s; }
-        .lp-d4 { animation-delay: 0.50s; }
-      `}</style>
+    <div className="lp-root">
 
-      <div className="min-h-screen flex flex-col bg-background">
-
-        {/* ── Hero ──────────────────────────────────────────────────────────── */}
-        <section
-          className="flex flex-col items-center justify-center text-center px-5 pt-20 pb-16 relative overflow-hidden"
-          style={{
-            background:
-              "radial-gradient(ellipse 90% 55% at 50% -2%, hsl(185 25% 91%), transparent)",
-          }}
-        >
-          {/* Logo + wordmark */}
-          <div className="lp-fade lp-d1 flex flex-col items-center gap-3 mb-9">
-            <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
-              <CalendarPulse className="w-12 h-12 text-primary" />
-            </div>
-            <span
-              className="text-[11px] font-semibold tracking-[0.2em] uppercase text-muted-foreground"
-              style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
-            >
-              PANS &amp; PANDAS Tracker
-            </span>
+      {/* ── NAV ── */}
+      <header className="lp-container">
+        <nav>
+          <div className="lp-logo">
+            <span className="lp-logo-main">PANS &amp; PANDAS</span>
+            <span className="lp-logo-sub">Symptom Tracker</span>
           </div>
 
-          {/* Headline */}
-          <h1
-            className="lp-fade lp-d2 text-4xl sm:text-5xl lg:text-[3.5rem] font-extrabold text-foreground max-w-2xl leading-[1.14] tracking-tight mb-5"
-            style={{ fontFamily: "Outfit, sans-serif" }}
-          >
-            When your child changes overnight,{" "}
-            <span style={{ color: "hsl(185, 30%, 38%)" }}>
-              every detail matters.
-            </span>
-          </h1>
+          <ul className="lp-nav-links">
+            <li><a href="#story">Our Story</a></li>
+            <li><a href="#how">How It Helps</a></li>
+            <li><a href="#resources">Resources</a></li>
+          </ul>
 
-          {/* Supporting line */}
-          <p className="lp-fade lp-d3 text-base sm:text-lg text-muted-foreground max-w-[420px] leading-relaxed mb-11">
-            Track the symptoms. Spot the patterns. Walk into every appointment
-            knowing you'll be heard.
-          </p>
-
-          {/* CTAs */}
-          <div className="flex flex-col items-center gap-3 mt-8 text-center">
+          <div className="lp-nav-right">
             <a
-              href="/sign-up"
-              onClick={() => track("landing_cta_create_account")}
-              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-md hover:shadow-lg hover:opacity-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              <ArrowRight className="w-4 h-4" />
-              Start Tracking Today
-            </a>
-            <p className="text-sm text-muted-foreground">
-              Already have an account?{" "}
-              <a
-                href="/sign-in"
-                onClick={() => track("landing_cta_login")}
-                className="text-primary font-medium underline-offset-4 hover:underline"
-              >
-                Log in →
-              </a>
-            </p>
-
-            {/* Tertiary / demo */}
-            <button
-              onClick={handleDemo}
-              className="text-sm text-muted-foreground hover:text-primary hover:underline underline-offset-2 transition-colors"
-            >
-              View Demo →
-            </button>
-          </div>
-        </section>
-
-        {/* ── Feature sections ──────────────────────────────────────────────── */}
-        <section
-          className="py-20 px-5 border-t border-border/60 bg-primary/5"
-        >
-          <div className="max-w-4xl mx-auto grid sm:grid-cols-3 gap-12">
-            <Feature
-              icon={ClipboardList}
-              title="Track what matters."
-              body="Log daily symptoms across every domain your care team cares about, including OCD, anxiety, sleep, appetite, mood, and focus. Spot patterns before your next appointment."
-            />
-            <Feature
-              icon={ClipboardCheck}
-              title="Built around the PTEC."
-              body="Weekly check-ins follow the PANS/PANDAS Treatment Evaluation Checklist used by leading clinicians. Your data speaks the language your doctor already understands."
-            />
-            <Feature
-              icon={FileDown}
-              title="Your records, always with you."
-              body="Access your child's full symptom history from any device. Export a clean summary PDF to share with your care team in one tap."
-            />
-          </div>
-        </section>
-
-        {/* ── Footer ────────────────────────────────────────────────────────── */}
-        <footer className="border-t border-border py-8 px-5 text-center bg-background">
-          <p className="text-sm text-muted-foreground mb-4 italic">
-            Built by a PANDAS family, for PANDAS families.
-          </p>
-          <div className="flex items-center justify-center gap-6">
-            <Link
               href="/sign-in"
+              className="lp-nav-login"
               onClick={() => track("landing_cta_login")}
-              className="text-sm font-medium text-primary hover:underline underline-offset-2 transition-colors"
             >
               Log In
-            </Link>
-            <Link
+            </a>
+            <a
               href="/sign-up"
+              className="lp-nav-cta"
               onClick={() => track("landing_cta_create_account")}
-              className="text-sm font-medium text-primary hover:underline underline-offset-2 transition-colors"
             >
-              Create Account
-            </Link>
+              Start Tracking
+            </a>
           </div>
-        </footer>
-      </div>
-    </>
+        </nav>
+      </header>
+
+      {/* ── HERO ── */}
+      <section className="lp-hero lp-container">
+        <div className="lp-hero-decor">
+          <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <radialGradient id="lp-g1" cx="50%" cy="50%">
+                <stop offset="0%" stopColor="#c4623d" stopOpacity="0.18" />
+                <stop offset="100%" stopColor="#c4623d" stopOpacity="0" />
+              </radialGradient>
+            </defs>
+            <circle cx="200" cy="200" r="180" fill="url(#lp-g1)" />
+            <circle cx="200" cy="200" r="160" fill="none" stroke="#c4623d" strokeOpacity="0.25" strokeWidth="0.5" />
+            <circle cx="200" cy="200" r="120" fill="none" stroke="#2d4a3e" strokeOpacity="0.2" strokeWidth="0.5" />
+            <circle cx="200" cy="200" r="80"  fill="none" stroke="#c4623d" strokeOpacity="0.3"  strokeWidth="0.5" />
+            <path d="M 60 200 Q 200 60 340 200 Q 200 340 60 200"  fill="none" stroke="#2d4a3e" strokeOpacity="0.2" strokeWidth="0.5" />
+            <path d="M 200 60 Q 340 200 200 340 Q 60 200 200 60" fill="none" stroke="#c4623d" strokeOpacity="0.2" strokeWidth="0.5" />
+          </svg>
+        </div>
+
+        <div className="lp-hero-eyebrow">For families navigating PANS &amp; PANDAS</div>
+        <h1>You haven't lost your child. <em>You're not alone.</em></h1>
+        <p className="lp-hero-sub">
+          If you're here, something is happening to your child that feels impossible to explain.
+          We've been where you are. This is the tool we wish we'd had on the worst days of our lives.
+        </p>
+        <div className="lp-hero-actions">
+          <a
+            href="/sign-up"
+            className="lp-btn-primary"
+            onClick={() => track("landing_cta_create_account")}
+          >
+            Begin Tracking, It's Free
+          </a>
+          <a href="#story" className="lp-btn-text">Read our story</a>
+        </div>
+      </section>
+
+      {/* ── LETTER / STORY ── */}
+      <section className="lp-letter" id="story">
+        <div className="lp-letter-inner">
+          <div className="lp-letter-label">A letter from the parents who built this</div>
+          <h2>
+            One night in December, our 8 year old said goodbye{" "}
+            <em>because he believed he was going to die.</em>
+          </h2>
+          <div className="lp-letter-body">
+            <p className="lp-lead">
+              He had already showered. He kissed each of us, laid down, crossed his arms over his chest,
+              and cried himself to sleep. He was certain he was too dirty to survive the night.
+            </p>
+            <p>
+              A few weeks earlier, he had been our sweet, easygoing boy. In October he came down with
+              strep-like symptoms. Three tests came back negative. A rash on his back was dismissed as
+              something else, until my wife pushed for antibiotics, suspecting scarlet fever. He got better.
+            </p>
+            <p>
+              Then Christmas vacation began, and overnight he was gone. In his place was a child with
+              crushing OCD, terror, anger, and behavior we couldn't recognize. Twelve squirts of soap for
+              each hand, every time he touched anything. Screaming on the floor that he needed to shower or
+              he would die. Saying the most hurtful things he could think of to the people he loved most.
+              He wouldn't hug us. He wouldn't kiss us. His little sister watched her brother disappear and
+              a frightened, angry stranger take his place.
+            </p>
+            <p>
+              We were terrified. We were exhausted. We tested for UTIs and everything else we could think
+              of, and everything came back normal. We started to wonder if this was just who our son was now.
+            </p>
+            <p>
+              In January, after hours of online research, we found PANDAS. His symptoms matched almost
+              exactly. His strep antibodies came back at nearly 2.5 times the normal level. A powerful
+              antibiotic was prescribed, and slowly, our boy came back to us.
+            </p>
+            <p>He has had one flare since then. Because we knew what to watch for, we caught it early.</p>
+
+            <div className="lp-signature">
+              <div className="lp-signature-rule" />
+              With you in this,<br />
+              <em>The family behind PANS &amp; PANDAS Symptom Tracker</em>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── THREE PERSPECTIVES ── */}
+      <section className="lp-perspectives lp-container">
+        <div className="lp-section-header">
+          <div className="lp-section-label">What we want you to know</div>
+          <h2>This illness is happening <em>to your whole family.</em></h2>
+        </div>
+
+        <div className="lp-perspective-grid">
+          <div className="lp-perspective">
+            <div className="lp-perspective-num">01 / For Parents</div>
+            <h3>It looks like behavior. It isn't.</h3>
+            <p>
+              You're watching a different child act strangely, irrationally, sometimes cruelly. It feels
+              like they're acting up. They aren't. This illness is attacking the brain and making them do
+              these things. You're not failing as a parent. You're caring for a child who is sick in a way
+              that hides itself.
+            </p>
+          </div>
+
+          <div className="lp-perspective">
+            <div className="lp-perspective-num">02 / For the Child</div>
+            <h3>Their brain is lying to them.</h3>
+            <p>
+              The OCD feels real. The fear feels real. Everything that used to be a 2 is suddenly a 10.
+              Imagine not being able to trust your own feelings while everyone you love tells you not to
+              worry. They aren't being difficult. They're frightened of things they can't explain, and they
+              need you to believe them.
+            </p>
+          </div>
+
+          <div className="lp-perspective">
+            <div className="lp-perspective-num">03 / For the Siblings</div>
+            <h3>They lost their brother or sister too.</h3>
+            <p>
+              Overnight, the person they shared their life with became someone mean and unrecognizable,
+              getting all of the attention for the worst of reasons. They're scared, confused, and often
+              quietly grieving. They need to be told this isn't their fault, and that you see them too.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── QUIET STATEMENT ── */}
+      <section className="lp-quiet">
+        <div className="lp-quiet-inner">
+          <p>
+            When you're in the middle of it, you are just trying to survive.{" "}
+            <em>You shouldn't also have to remember everything.</em>
+          </p>
+        </div>
+      </section>
+
+      {/* ── APP / HOW IT HELPS ── */}
+      <section className="lp-app-section lp-container" id="how">
+        <div className="lp-app-grid">
+          <div className="lp-app-copy">
+            <div className="lp-section-label" style={{ marginBottom: "20px" }}>
+              Why we built this tracker
+            </div>
+            <h2>The tool we <em>wished</em> we'd had.</h2>
+            <p>
+              When we finally sat down with doctors, they asked us for a timeline. Symptoms, dates,
+              severity, illnesses, exposures. We tried to remember through the fog of the worst weeks of
+              our lives, scribbling notes from memory and group texts.
+            </p>
+            <p>
+              The PANS &amp; PANDAS Symptom Tracker exists so you don't have to do that. Log a moment in
+              seconds. Build a record without thinking about it. Walk into appointments prepared.
+            </p>
+
+            <ul className="lp-feature-list">
+              <li>
+                <div className="lp-feature-icon">i</div>
+                <div className="lp-feature-text">
+                  <strong>Quick symptom logging</strong>
+                  <span>Capture what's happening in under thirty seconds, even at 2 a.m.</span>
+                </div>
+              </li>
+              <li>
+                <div className="lp-feature-icon">ii</div>
+                <div className="lp-feature-text">
+                  <strong>Flare timelines that build themselves</strong>
+                  <span>See onset, severity, and patterns at a glance. No spreadsheet required.</span>
+                </div>
+              </li>
+              <li>
+                <div className="lp-feature-icon">iii</div>
+                <div className="lp-feature-text">
+                  <strong>Doctor ready reports</strong>
+                  <span>Export a clean, organized summary before every appointment.</span>
+                </div>
+              </li>
+              <li>
+                <div className="lp-feature-icon">iv</div>
+                <div className="lp-feature-text">
+                  <strong>Track illnesses and exposures</strong>
+                  <span>Connect the dots between infections, environmental triggers, and flares.</span>
+                </div>
+              </li>
+            </ul>
+
+            <a
+              href="/sign-up"
+              className="lp-btn-primary"
+              onClick={() => track("landing_cta_create_account")}
+            >
+              Start Your Timeline
+            </a>
+          </div>
+
+          <div className="lp-app-mockup">
+            <div className="lp-mockup-screen">
+              <div className="lp-mockup-header">
+                <h4>Lucas, Age 8</h4>
+                <span>This week</span>
+              </div>
+
+              <div className="lp-mockup-entry">
+                <div className="lp-mockup-date">
+                  <div className="lp-day">14</div>
+                  <div className="lp-mo">JAN</div>
+                </div>
+                <div className="lp-mockup-content">
+                  <div className="lp-symptom">OCD, hand washing</div>
+                  <div className="lp-note">Six rounds before breakfast. Calmer after morning meds.</div>
+                  <div className="lp-severity">
+                    <span className="lp-on" /><span className="lp-on" /><span className="lp-on" /><span /><span />
+                  </div>
+                </div>
+              </div>
+
+              <div className="lp-mockup-entry">
+                <div className="lp-mockup-date">
+                  <div className="lp-day">13</div>
+                  <div className="lp-mo">JAN</div>
+                </div>
+                <div className="lp-mockup-content">
+                  <div className="lp-symptom">Anxiety spike</div>
+                  <div className="lp-note">Triggered after touching school floor. Took 40 min to recover.</div>
+                  <div className="lp-severity">
+                    <span className="lp-on" /><span className="lp-on" /><span className="lp-on" /><span className="lp-on" /><span />
+                  </div>
+                </div>
+              </div>
+
+              <div className="lp-mockup-entry">
+                <div className="lp-mockup-date">
+                  <div className="lp-day">12</div>
+                  <div className="lp-mo">JAN</div>
+                </div>
+                <div className="lp-mockup-content">
+                  <div className="lp-symptom">Possible exposure, strep</div>
+                  <div className="lp-note">Classmate sent home sick. Watching for new symptoms.</div>
+                  <div className="lp-severity">
+                    <span className="lp-on" /><span className="lp-on" /><span /><span /><span />
+                  </div>
+                </div>
+              </div>
+
+              <div className="lp-mockup-entry lp-no-border">
+                <div className="lp-mockup-date">
+                  <div className="lp-day">11</div>
+                  <div className="lp-mo">JAN</div>
+                </div>
+                <div className="lp-mockup-content">
+                  <div className="lp-symptom">Calm day</div>
+                  <div className="lp-note">First in over a week. Hugged his sister this morning.</div>
+                  <div className="lp-severity">
+                    <span className="lp-on" /><span /><span /><span /><span />
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── BOTTOM CTA ── */}
+      <section className="lp-cta">
+        <div className="lp-cta-inner">
+          <h2>Whatever today looks like, <em>you don't have to remember it alone.</em></h2>
+          <p>
+            The PANS &amp; PANDAS Symptom Tracker is free to use. Start a timeline in a few minutes.
+            Whether you're in the middle of a flare or trying to understand what just happened,
+            we built this for you.
+          </p>
+          <a
+            href="/sign-up"
+            className="lp-btn-primary"
+            onClick={() => track("landing_cta_create_account")}
+          >
+            Begin Tracking
+          </a>
+        </div>
+      </section>
+
+      {/* ── FOOTER ── */}
+      <footer className="lp-container" id="resources">
+        <p>Built by a family, for families.</p>
+        <div>
+          <a href="#">Privacy</a>
+          <a href="#">Contact</a>
+          <a href="#">Resources</a>
+        </div>
+      </footer>
+
+    </div>
   );
 }

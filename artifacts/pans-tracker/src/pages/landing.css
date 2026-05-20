@@ -909,9 +909,19 @@
   .lp-root .lp-app-mockup {
     margin: 0 20px;
     width: calc(100% - 40px);
-    aspect-ratio: auto;
-    min-height: 340px;
+    aspect-ratio: unset;
+    height: auto;
+    overflow: visible;
+    padding-bottom: 40px;
   }
+
+  .lp-root .lp-mockup-screen {
+    height: auto;
+    overflow: visible;
+    padding-bottom: 24px;
+  }
+
+  .lp-root .lp-app-copy { margin-bottom: 16px; }
 
   /* ── Footer ──────────────────────────────────────────────────────────────── */
   .lp-root footer {

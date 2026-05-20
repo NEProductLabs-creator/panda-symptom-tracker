@@ -306,10 +306,22 @@ function SignInPage() {
 }
 
 function SignUpPage() {
+  const [location] = useLocation();
   const [agreed, setAgreed] = useState(false);
-  const [showClerkForm, setShowClerkForm] = useState(false);
 
-  useEffect(() => { track('signup_started'); }, []);
+  // Skip the pre-step and go straight to the Clerk form when:
+  // 1. We're on a sub-path like /sign-up/sso-callback (Google OAuth callback after redirect)
+  // 2. The user already agreed before the OAuth redirect (flag survives in localStorage)
+  const isOAuthCallback = location !== '/sign-up';
+  const alreadyAgreed = !!(
+    sessionStorage.getItem('pans_terms_pending') ||
+    localStorage.getItem('pans_terms_pending')
+  );
+  const [showClerkForm, setShowClerkForm] = useState(isOAuthCallback || alreadyAgreed);
+
+  useEffect(() => {
+    if (!showClerkForm) track('signup_started');
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleContinue() {
     const pending = JSON.stringify({ version: CURRENT_TERMS_VERSION, agreedAt: new Date().toISOString() });

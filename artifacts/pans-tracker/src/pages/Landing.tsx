@@ -104,41 +104,30 @@ export default function Landing() {
           </p>
 
           {/* CTAs */}
-          <div className="lp-fade lp-d4 flex flex-col items-center gap-4">
-            {/* Primary CTA */}
-            <Link
+          <div className="flex flex-col items-center gap-3 mt-8 text-center">
+            <a
               href="/sign-up"
               onClick={() => track("landing_cta_create_account")}
+              className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold shadow-md hover:shadow-lg hover:opacity-95 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
-              <button
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-primary text-white text-sm font-semibold shadow-md hover:opacity-90 active:scale-[0.98] transition-all"
-                style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
-              >
-                <ArrowRight className="w-4 h-4" />
-                Start Tracking Today
-              </button>
-            </Link>
-
-            {/* Log in text link */}
-            <p
-              className="text-sm text-muted-foreground"
-              style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
-            >
+              <ArrowRight className="w-4 h-4" />
+              Start Tracking Today
+            </a>
+            <p className="text-sm text-muted-foreground">
               Already have an account?{" "}
-              <Link
+              <a
                 href="/sign-in"
                 onClick={() => track("landing_cta_login")}
                 className="text-primary font-medium underline-offset-4 hover:underline"
               >
                 Log in →
-              </Link>
+              </a>
             </p>
 
             {/* Tertiary / demo */}
             <button
               onClick={handleDemo}
               className="text-sm text-muted-foreground hover:text-primary hover:underline underline-offset-2 transition-colors"
-              style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
             >
               View Demo →
             </button>

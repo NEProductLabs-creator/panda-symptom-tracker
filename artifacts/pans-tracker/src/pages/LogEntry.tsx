@@ -336,7 +336,7 @@ export default function LogEntry() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm" data-testid="log-table">
+              <table className="min-w-[600px] w-full text-sm" data-testid="log-table">
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-3 px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Date</th>

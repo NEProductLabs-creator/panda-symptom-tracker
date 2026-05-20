@@ -160,11 +160,7 @@ function ScoreInput({
   return (
     <div
       style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(180px, 280px) auto',
-        alignItems: 'center',
-        gap: '40px',
-        padding: '16px 0',
+        padding: '14px 0',
         borderBottom: isLast ? 'none' : '1px solid var(--rule-soft)',
       }}
     >
@@ -175,16 +171,18 @@ function ScoreInput({
           fontWeight: 400,
           color: 'var(--ink)',
           lineHeight: '1.4',
+          display: 'block',
+          marginBottom: '10px',
         }}
       >
         {label}
       </span>
       <div
         className="flex items-center"
-        style={{ gap: '12px' }}
+        style={{ gap: '10px' }}
         data-testid={`score-${label.toLowerCase().replace(/\s|\//g, '-')}`}
       >
-        <div className="flex" style={{ gap: '8px' }}>
+        <div className="flex" style={{ gap: '6px' }}>
           {[0, 1, 2, 3, 4, 5].map((n) => {
             const selected = value === n;
             return (
@@ -195,8 +193,8 @@ function ScoreInput({
                 data-testid={`score-btn-${label.toLowerCase().replace(/\s|\//g, '-')}-${n}`}
                 className="touch-manipulation"
                 style={{
-                  width: '36px',
-                  height: '36px',
+                  width: '38px',
+                  height: '38px',
                   borderRadius: '50%',
                   fontSize: '14px',
                   fontFamily: 'Newsreader, serif',

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { Link } from "wouter";
 import { track } from "@/lib/analytics";
 import "./landing.css";
 
@@ -340,9 +341,8 @@ export default function Landing() {
       <footer className="lp-container" id="resources">
         <p>Built by a family, for families.</p>
         <div>
-          <a href="#">Privacy</a>
-          <a href="#">Contact</a>
-          <a href="#">Resources</a>
+          <Link href="/privacy">Privacy</Link>
+          <a href="mailto:PansTracker@gmail.com">Contact</a>
         </div>
       </footer>
 

@@ -753,6 +753,69 @@
 
 .lp-root footer a:hover { color: var(--terracotta); }
 
+/* ── PRIVACY PAGE ── */
+.lp-root .lp-privacy-body {
+  padding: 80px 0 120px;
+}
+
+.lp-root .lp-privacy-content {
+  max-width: 680px;
+}
+
+.lp-root .lp-privacy-content h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 40px;
+  font-weight: 500;
+  color: var(--forest-deep);
+  margin-bottom: 8px;
+  line-height: 1.1;
+}
+
+.lp-root .lp-privacy-updated {
+  font-size: 13px;
+  color: var(--ink-soft);
+  margin-bottom: 40px;
+  font-style: italic;
+}
+
+.lp-root .lp-privacy-content h2 {
+  font-family: 'Fraunces', serif;
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--forest-deep);
+  margin-top: 48px;
+  margin-bottom: 14px;
+}
+
+.lp-root .lp-privacy-content p {
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--ink);
+  margin-bottom: 16px;
+}
+
+.lp-root .lp-privacy-content ul {
+  margin: 0 0 16px 0;
+  padding-left: 24px;
+}
+
+.lp-root .lp-privacy-content li {
+  font-size: 16px;
+  line-height: 1.75;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.lp-root .lp-privacy-content a {
+  color: var(--terracotta);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.lp-root .lp-privacy-content a:hover {
+  color: var(--clay-deep, #8a3c1f);
+}
+
 /* ── ANIMATIONS ── */
 @keyframes lp-rise {
   from { opacity: 0; transform: translateY(20px); }

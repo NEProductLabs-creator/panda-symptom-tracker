@@ -27,6 +27,7 @@ import WellbeingCheckin from "@/pages/WellbeingCheckin";
 import HopeBoard from "@/pages/HopeBoard";
 import Onboarding from "@/pages/Onboarding";
 import Settings from "@/pages/Settings";
+import Privacy from "@/pages/Privacy";
 import { DemoProvider, DemoBanner, useDemoContext } from "@/contexts/DemoContext";
 import Landing from "@/pages/Landing";
 import InstallPrompt from "@/components/InstallPrompt";
@@ -375,6 +376,8 @@ function AppProviders() {
               {/* Clerk sign-in / sign-up — /*? matches OAuth sub-paths */}
               <Route path="/sign-in/*?" component={SignInPage} />
               <Route path="/sign-up/*?" component={SignUpPage} />
+              {/* Public pages — no auth required */}
+              <Route path="/privacy" component={Privacy} />
               {/* All other routes go through auth-guarded Router */}
               <Route component={Router} />
             </Switch>

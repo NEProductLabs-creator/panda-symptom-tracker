@@ -128,7 +128,7 @@ export default function Intro() {
         </div>
 
         <p className="text-center text-[11px] text-muted-foreground pb-2">
-          All data is stored only on this device — nothing is sent to any server.
+          Data syncs to your account and is accessible from any device.
         </p>
       </div>
     </div>

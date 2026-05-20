@@ -172,6 +172,9 @@ importers:
       '@clerk/shared':
         specifier: ^4.12.0
         version: 4.12.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@supabase/supabase-js':
+        specifier: ^2.105.4
+        version: 2.105.4
       '@workspace/api-zod':
         specifier: workspace:*
         version: link:../../lib/api-zod

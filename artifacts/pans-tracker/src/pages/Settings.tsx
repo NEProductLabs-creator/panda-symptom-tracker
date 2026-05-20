@@ -313,12 +313,11 @@ export default function Settings() {
       <div className="rounded-2xl border border-border/60 bg-muted/30 px-5 py-4 space-y-3">
         <div className="flex items-center gap-2">
           <CheckCircle2 className="w-4 h-4 text-green-500" />
-          <p className="text-sm font-semibold text-foreground">All data stays on your device</p>
+          <p className="text-sm font-semibold text-foreground">Your data syncs securely</p>
         </div>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Nothing in this app is ever sent to a server. All your logs, medications, and notes are
-          stored only in this browser's local storage. If you clear browser data or switch devices,
-          you'll start fresh.
+          Logs, medications, and notes are saved to your account and sync across devices automatically.
+          Your data is tied to your login — both parents can sign in and see the same records.
         </p>
         <button
           type="button"

@@ -851,7 +851,7 @@ export default function ExportPDF() {
         margin,
         fy
       );
-      doc.text("All data stored locally on this device — not for clinical diagnosis", pageWidth - margin, fy, { align: "right" });
+      doc.text("Not for clinical diagnosis", pageWidth - margin, fy, { align: "right" });
     }
 
     const dateStr = format(new Date(), "yyyy-MM-dd");

@@ -274,9 +274,6 @@ export default function Sidebar() {
             </button>
           </div>
         )}
-        <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
-          All data stored locally on this device
-        </p>
       </div>
     </>
   );

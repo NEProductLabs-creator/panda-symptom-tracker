@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Newsreader:opsz,wght@6..72,300..700&family=Outfit:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Newsreader:opsz,wght@6..72,300..700&family=Plus+Jakarta+Sans:wght@400;500;600&display=swap');
+@import "./styles/design-system.css";
 @layer theme, base, clerk, components, utilities;
 @import "tailwindcss";
 @import '@clerk/themes/shadcn.css';
@@ -70,72 +71,72 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* LIGHT MODE */
+/* LIGHT MODE — editorial palette */
 :root {
-  --button-outline: rgba(0,0,0, .10);
+  --button-outline: rgba(0,0,0, .08);
   --badge-outline: rgba(0,0,0, .05);
 
   --opaque-button-border-intensity: -8;
 
-  --elevate-1: rgba(0,0,0, .03);
-  --elevate-2: rgba(0,0,0, .08);
+  --elevate-1: rgba(31, 42, 38, 0.03);
+  --elevate-2: rgba(31, 42, 38, 0.08);
 
-  /* Teal-blue palette */
-  --background: 210 15% 98%;
-  --foreground: 210 20% 20%;
-  --border: 210 15% 87%;
-  --card: 0 0% 100%;
-  --card-foreground: 210 20% 20%;
-  --card-border: 210 15% 87%;
-  
-  --sidebar: 40 15% 95%;
-  --sidebar-foreground: 210 20% 25%;
-  --sidebar-border: 210 15% 87%;
-  --sidebar-primary: 185 30% 38%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 185 15% 90%;
-  --sidebar-accent-foreground: 210 20% 20%;
-  --sidebar-ring: 185 30% 38%;
+  /* Semantic tokens mapped to cream/forest/terracotta editorial palette */
+  --background: 39 47% 93%;         /* cream        #f5efe4 */
+  --foreground: 155 15% 14%;        /* ink          #1f2a26 */
+  --border: 40 30% 76%;             /* rule         #d4c8b0 */
+  --card: 39 42% 88%;               /* cream-warm   #ede4d3 */
+  --card-foreground: 155 15% 14%;   /* ink */
+  --card-border: 40 30% 76%;        /* rule */
 
-  --popover: 0 0% 100%;
-  --popover-foreground: 210 20% 20%;
-  --popover-border: 210 15% 87%;
+  --sidebar: 39 42% 88%;            /* cream-warm */
+  --sidebar-foreground: 157 10% 25%;/* ink-soft     #3a4742 */
+  --sidebar-border: 40 30% 76%;     /* rule */
+  --sidebar-primary: 155 21% 23%;   /* forest       #2d4a3e */
+  --sidebar-primary-foreground: 39 47% 93%; /* cream */
+  --sidebar-accent: 39 47% 93%;     /* cream */
+  --sidebar-accent-foreground: 157 10% 25%; /* ink-soft */
+  --sidebar-ring: 16 53% 50%;       /* terracotta   #c4623d */
 
-  --primary: 185 30% 38%; /* Distinct teal-blue */
-  --primary-foreground: 0 0% 100%;
-  --secondary: 260 10% 60%; /* Dusty lavender */
-  --secondary-foreground: 0 0% 100%;
-  --muted: 210 12% 93%;
-  --muted-foreground: 210 10% 40%;
-  --accent: 185 20% 92%;
-  --accent-foreground: 210 20% 20%;
-  --destructive: 0 40% 60%;
+  --popover: 39 47% 93%;            /* cream */
+  --popover-foreground: 155 15% 14%;/* ink */
+  --popover-border: 40 30% 76%;     /* rule */
+
+  --primary: 155 21% 23%;           /* forest */
+  --primary-foreground: 39 47% 93%; /* cream */
+  --secondary: 39 42% 88%;          /* cream-warm */
+  --secondary-foreground: 157 10% 25%; /* ink-soft */
+  --muted: 39 42% 88%;              /* cream-warm */
+  --muted-foreground: 157 10% 43%;  /* ink-soft lightened */
+  --accent: 16 53% 50%;             /* terracotta */
+  --accent-foreground: 39 47% 93%;  /* cream */
+  --destructive: 0 40% 58%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 210 12% 87%;
-  --ring: 185 30% 38%;
-  
-  /* Chart Colors - 6 distinct muted colors */
-  --chart-1: 140 20% 50%; /* Sage */
-  --chart-2: 260 15% 60%; /* Lavender */
-  --chart-3: 30 25% 60%;  /* Terracotta */
-  --chart-4: 200 20% 55%; /* Slate blue */
-  --chart-5: 330 15% 60%; /* Dusty rose */
-  --chart-6: 180 15% 55%; /* Teal gray */
+  --input: 40 30% 76%;              /* rule */
+  --ring: 16 53% 50%;               /* terracotta */
 
-  --app-font-sans: 'Plus Jakarta Sans', sans-serif;
-  --app-font-serif: Georgia, serif;
+  /* Chart — forest / terracotta / sage / gold palette */
+  --chart-1: 155 21% 40%;  /* forest mid */
+  --chart-2: 16 53% 50%;   /* terracotta */
+  --chart-3: 111 16% 52%;  /* sage */
+  --chart-4: 37 43% 47%;   /* gold */
+  --chart-5: 18 58% 62%;   /* terracotta-soft */
+  --chart-6: 40 30% 60%;   /* rule mid */
+
+  --app-font-sans: 'Newsreader', Georgia, serif;
+  --app-font-serif: 'Fraunces', serif;
   --app-font-mono: Menlo, monospace;
-  
-  --radius: 0.75rem; /* softer corners */
-  --shadow-2xs: 0px 2px 0px 0px rgba(0,0,0,0.02);
-  --shadow-xs: 0px 2px 0px 0px rgba(0,0,0,0.02);
-  --shadow-sm: 0px 2px 0px 0px rgba(0,0,0,0.02), 0px 1px 2px -1px rgba(0,0,0,0.02);
-  --shadow: 0px 4px 12px rgba(0,0,0,0.04);
-  --shadow-md: 0px 8px 24px rgba(0,0,0,0.05);
-  --shadow-lg: 0px 12px 32px rgba(0,0,0,0.06);
-  --shadow-xl: 0px 16px 40px rgba(0,0,0,0.07);
-  --shadow-2xl: 0px 24px 48px rgba(0,0,0,0.08);
+
+  --radius: 0.375rem;
+  --shadow-2xs: 0px 1px 2px rgba(31, 42, 38, 0.02);
+  --shadow-xs: 0px 1px 2px rgba(31, 42, 38, 0.03);
+  --shadow-sm: 0px 2px 4px rgba(31, 42, 38, 0.04);
+  --shadow: 0px 4px 12px rgba(31, 42, 38, 0.06);
+  --shadow-md: 0px 8px 24px rgba(31, 42, 38, 0.07);
+  --shadow-lg: 0px 12px 32px rgba(31, 42, 38, 0.08);
+  --shadow-xl: 0px 16px 40px rgba(31, 42, 38, 0.09);
+  --shadow-2xl: 0px 24px 48px rgba(31, 42, 38, 0.10);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
@@ -155,47 +156,47 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  /* Dark mode - calm deep slate */
-  --background: 210 20% 12%;
-  --foreground: 40 20% 95%;
-  --border: 210 15% 22%;
-  --card: 210 20% 15%;
-  --card-foreground: 40 20% 95%;
-  --card-border: 210 15% 22%;
-  
-  --sidebar: 210 20% 14%;
-  --sidebar-foreground: 40 20% 90%;
-  --sidebar-border: 210 15% 22%;
-  --sidebar-primary: 185 30% 45%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 210 15% 20%;
-  --sidebar-accent-foreground: 40 20% 95%;
-  --sidebar-ring: 185 30% 45%;
+  /* Dark mode — deep forest tones */
+  --background: 155 28% 10%;        /* very dark forest */
+  --foreground: 39 42% 90%;         /* light cream */
+  --border: 155 15% 22%;            /* dark forest-gray */
+  --card: 155 20% 13%;
+  --card-foreground: 39 42% 90%;
+  --card-border: 155 15% 22%;
 
-  --popover: 210 20% 15%;
-  --popover-foreground: 40 20% 95%;
-  --popover-border: 210 15% 22%;
+  --sidebar: 155 20% 12%;
+  --sidebar-foreground: 39 42% 85%;
+  --sidebar-border: 155 15% 22%;
+  --sidebar-primary: 155 21% 45%;   /* lighter forest */
+  --sidebar-primary-foreground: 39 47% 93%;
+  --sidebar-accent: 155 20% 18%;
+  --sidebar-accent-foreground: 39 42% 85%;
+  --sidebar-ring: 16 53% 55%;
 
-  --primary: 185 30% 50%;
-  --primary-foreground: 0 0% 100%;
-  --secondary: 260 15% 65%;
-  --secondary-foreground: 0 0% 100%;
-  --muted: 210 15% 20%;
-  --muted-foreground: 210 10% 70%;
-  --accent: 210 15% 20%;
-  --accent-foreground: 40 20% 95%;
-  --destructive: 0 40% 50%;
+  --popover: 155 20% 13%;
+  --popover-foreground: 39 42% 90%;
+  --popover-border: 155 15% 22%;
+
+  --primary: 155 21% 48%;           /* lighter forest */
+  --primary-foreground: 39 47% 93%;
+  --secondary: 155 15% 22%;
+  --secondary-foreground: 39 42% 85%;
+  --muted: 155 15% 18%;
+  --muted-foreground: 40 18% 65%;
+  --accent: 16 53% 55%;             /* terracotta brightened */
+  --accent-foreground: 39 47% 93%;
+  --destructive: 0 40% 55%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 210 15% 25%;
-  --ring: 185 30% 50%;
-  
-  --chart-1: 185 25% 50%;
-  --chart-2: 260 15% 65%;
-  --chart-3: 30 25% 65%;
-  --chart-4: 200 20% 60%;
-  --chart-5: 330 15% 65%;
-  --chart-6: 180 15% 60%;
+  --input: 155 15% 22%;
+  --ring: 16 53% 55%;
+
+  --chart-1: 155 21% 50%;
+  --chart-2: 16 53% 58%;
+  --chart-3: 111 16% 55%;
+  --chart-4: 37 43% 52%;
+  --chart-5: 18 58% 65%;
+  --chart-6: 155 15% 45%;
 }
 
 @layer base {
@@ -210,13 +211,15 @@
 
   body {
     @apply font-sans antialiased bg-background text-foreground;
-    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-family: 'Newsreader', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.65;
     overflow-x: hidden;
     max-width: 100%;
   }
   
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Outfit', sans-serif;
+    font-family: 'Fraunces', serif;
   }
 }
 

@@ -1,0 +1,38 @@
+Apply the design system from /styles/design-system.css to the rest of the authenticated app. This includes the dashboard, symptom log entry forms, timeline / history views, child profile pages, and reports / export views.
+
+Global rules across all screens:
+- Background: var(--cream)
+- All headings in Fraunces, body text in Newsreader
+- No bright clinical blues, no purple gradients, no default Material or Bootstrap accents
+- Use var(--forest) and var(--terracotta) as the two primary accent colors. Forest for primary actions and trusted UI elements, terracotta for emphasis, active states, and important highlights
+- All buttons use the btn-primary, btn-secondary, or btn-text classes from the design system
+
+Top navigation (for authenticated views):
+- Same logo block as the landing page (two-line PANS & PANDAS / Symptom Tracker)
+- Nav links in Newsreader, 15px, var(--ink-soft)
+- Active route indicated by a 1px terracotta underline, not a filled background
+- A small user menu on the right showing the parent's name and a Log Out option
+
+Dashboard screen:
+- Section header pattern at the top: small italic terracotta label ("Today" or "This week") above a larger Fraunces heading
+- Recent entries shown in a list styled like the .feature-list pattern from the landing page: each row separated by a 1px rule, generous vertical padding, severity dots in terracotta to match the mockup on the landing page
+- A persistent prominent "Log a symptom" button using btn-primary, easy to find from anywhere
+
+Symptom log entry form:
+- Use the form input styles from the design system
+- Severity selector should match the dot pattern from the landing page mockup (five circles, filled in terracotta as severity increases)
+- Date and time picker should feel like part of the form, not a default browser widget if avoidable
+- Save button uses btn-primary
+
+Timeline / history view:
+- Vertical timeline with dates in Fraunces (day in larger terracotta numerals, month in small uppercase letter-spaced text), matching the mockup
+- Symptoms grouped by day or week
+- Filter controls styled like form inputs, with italic Fraunces labels
+
+Reports / export view:
+- Same warm aesthetic
+- The exported PDF or printable view should also use Fraunces and Newsreader, with the cream background and forest / terracotta accents, so the document a parent hands to a doctor still feels like part of the same product
+
+Empty states across the app should be warm and supportive rather than clinical. Example for an empty dashboard: a Fraunces italic line in var(--ink-soft) saying "Nothing logged yet. When you're ready, we're here."
+
+Do not change any functionality, data structures, or routing. Only update visual styling.

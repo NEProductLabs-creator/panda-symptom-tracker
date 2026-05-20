@@ -27,7 +27,7 @@ function WhyCard({
         <Icon className="w-5 h-5 text-primary" />
       </div>
       <div>
-        <p className="text-sm font-semibold text-foreground leading-tight" style={{ fontFamily: "Outfit, sans-serif" }}>
+        <p className="text-sm font-semibold text-foreground leading-tight" style={{ fontFamily: "Fraunces, serif" }}>
           {title}
         </p>
         <p className="text-sm text-muted-foreground mt-1 leading-relaxed">{body}</p>
@@ -61,7 +61,7 @@ export default function Intro() {
           <div>
             <h1
               className="text-3xl font-bold text-foreground leading-tight"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               PANS &amp; PANDAS Tracker
             </h1>

@@ -33,7 +33,7 @@ function SectionCard({
         </div>
         <h2
           className="text-sm font-bold text-foreground"
-          style={{ fontFamily: "Outfit, sans-serif" }}
+          style={{ fontFamily: "Fraunces, serif" }}
         >
           {title}
         </h2>
@@ -164,7 +164,7 @@ export default function Settings() {
         <div>
           <h1
             className="text-2xl font-bold text-foreground"
-            style={{ fontFamily: "Outfit, sans-serif" }}
+            style={{ fontFamily: "Fraunces, serif" }}
           >
             Settings
           </h1>

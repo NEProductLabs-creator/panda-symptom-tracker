@@ -445,7 +445,7 @@ export default function SchoolHub() {
       <div>
         <h1
           className="text-2xl font-bold text-foreground"
-          style={{ fontFamily: "Outfit, sans-serif" }}
+          style={{ fontFamily: "Fraunces, serif" }}
         >
           School Communication Hub
         </h1>
@@ -461,7 +461,7 @@ export default function SchoolHub() {
           className="w-full flex items-center justify-between px-5 py-3.5 text-left"
           onClick={() => setSettingsOpen((o) => !o)}
         >
-          <span className="text-sm font-semibold text-foreground" style={{ fontFamily: "Outfit, sans-serif" }}>
+          <span className="text-sm font-semibold text-foreground" style={{ fontFamily: "Fraunces, serif" }}>
             Letter Settings
           </span>
           <div className="flex items-center gap-2">
@@ -583,7 +583,7 @@ export default function SchoolHub() {
             <div className="flex-1">
               <CardTitle
                 className="text-base font-semibold"
-                style={{ fontFamily: "Outfit, sans-serif" }}
+                style={{ fontFamily: "Fraunces, serif" }}
               >
                 {meta.label}
               </CardTitle>

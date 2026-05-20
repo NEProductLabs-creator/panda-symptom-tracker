@@ -559,7 +559,7 @@ export default function Medications() {
         <div>
           <h1
             className="text-2xl font-bold text-foreground"
-            style={{ fontFamily: "Outfit, sans-serif" }}
+            style={{ fontFamily: "Fraunces, serif" }}
           >
             Medications
           </h1>
@@ -664,7 +664,7 @@ export default function Medications() {
           <CardHeader className="pb-2 flex-row items-center justify-between">
             <CardTitle
               className="text-base font-semibold"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               Medication History
             </CardTitle>
@@ -747,7 +747,7 @@ export default function Medications() {
           data-testid="dialog-medication"
         >
           <DialogHeader>
-            <DialogTitle style={{ fontFamily: "Outfit, sans-serif" }}>
+            <DialogTitle style={{ fontFamily: "Fraunces, serif" }}>
               {editing ? "Edit Medication" : "Add Medication"}
             </DialogTitle>
           </DialogHeader>

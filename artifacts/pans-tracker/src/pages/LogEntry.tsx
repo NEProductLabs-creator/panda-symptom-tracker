@@ -41,11 +41,12 @@ function ScoreBubble({ value, active, onClick, label }: { value: number; active:
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 h-10 rounded-xl text-sm font-semibold transition-all flex flex-col items-center justify-center ${
+      className={`flex-1 h-10 w-10 rounded-full text-sm font-semibold transition-all flex flex-col items-center justify-center border-2 ${
         active
-          ? "bg-primary text-primary-foreground shadow-sm scale-105"
-          : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+          ? "border-transparent shadow-sm scale-105 text-white"
+          : "border-border bg-transparent text-muted-foreground hover:border-muted-foreground/40"
       }`}
+      style={active ? { backgroundColor: "var(--terracotta)" } : undefined}
     >
       <span className="leading-none">{value}</span>
       {label && (
@@ -148,7 +149,7 @@ export default function LogEntry() {
   return (
     <div className="p-5 md:p-8 max-w-3xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Outfit, sans-serif" }}>
+        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Fraunces, serif" }}>
           Daily Log
         </h1>
         <p className="text-sm text-muted-foreground mt-0.5">Quick daily check — 5 categories, takes under a minute.</p>
@@ -167,7 +168,7 @@ export default function LogEntry() {
           <ChevronLeft className="w-5 h-5" />
         </Button>
         <div className="flex-1 text-center">
-          <p className="text-base font-semibold text-foreground leading-tight" style={{ fontFamily: "Outfit, sans-serif" }}>
+          <p className="text-base font-semibold text-foreground leading-tight" style={{ fontFamily: "Fraunces, serif" }}>
             {dateLabel}
           </p>
           {dateSubLabel && (
@@ -189,7 +190,7 @@ export default function LogEntry() {
 
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2" style={{ fontFamily: "Outfit, sans-serif" }}>
+          <CardTitle className="text-base font-semibold flex items-center gap-2" style={{ fontFamily: "Fraunces, serif" }}>
             {existing ? "Edit Entry" : "New Entry"}
             {existing && (
               <span className="text-xs font-normal text-primary bg-primary/10 px-2 py-0.5 rounded-full">
@@ -322,7 +323,7 @@ export default function LogEntry() {
       {/* Recent entries */}
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2" style={{ fontFamily: "Outfit, sans-serif" }}>
+          <CardTitle className="text-base font-semibold flex items-center gap-2" style={{ fontFamily: "Fraunces, serif" }}>
             <ClipboardList className="w-4 h-4 text-primary" />
             Recent Entries
           </CardTitle>

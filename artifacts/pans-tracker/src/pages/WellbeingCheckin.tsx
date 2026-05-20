@@ -244,7 +244,7 @@ export default function WellbeingCheckin() {
         <div>
           <h1
             className="text-2xl font-bold text-foreground"
-            style={{ fontFamily: "Outfit, sans-serif" }}
+            style={{ fontFamily: "Fraunces, serif" }}
           >
             Just for You
           </h1>
@@ -260,7 +260,7 @@ export default function WellbeingCheckin() {
           <div>
             <p
               className="text-base font-bold text-rose-800"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               You showed up today.
             </p>
@@ -370,7 +370,7 @@ export default function WellbeingCheckin() {
           <CardHeader className="pb-2">
             <CardTitle
               className="text-base font-semibold text-foreground"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               Your wellbeing alongside {childName}'s journey
             </CardTitle>
@@ -446,7 +446,7 @@ export default function WellbeingCheckin() {
         <CardHeader className="pb-2">
           <CardTitle
             className="text-base font-semibold text-foreground"
-            style={{ fontFamily: "Outfit, sans-serif" }}
+            style={{ fontFamily: "Fraunces, serif" }}
           >
             {monthlySummary.monthName}
           </CardTitle>
@@ -514,7 +514,7 @@ export default function WellbeingCheckin() {
       <div>
         <p
           className="text-sm font-semibold text-foreground mb-3"
-          style={{ fontFamily: "Outfit, sans-serif" }}
+          style={{ fontFamily: "Fraunces, serif" }}
         >
           You don't have to do this alone.
         </p>

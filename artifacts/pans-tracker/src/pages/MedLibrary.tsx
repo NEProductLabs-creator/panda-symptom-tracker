@@ -91,7 +91,7 @@ export default function MedLibrary() {
     <div className="p-5 md:p-8 max-w-2xl mx-auto space-y-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Outfit, sans-serif" }}>
+          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "Fraunces, serif" }}>
             Medication Library
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
@@ -106,7 +106,7 @@ export default function MedLibrary() {
 
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold flex items-center gap-2" style={{ fontFamily: "Outfit, sans-serif" }}>
+          <CardTitle className="text-base font-semibold flex items-center gap-2" style={{ fontFamily: "Fraunces, serif" }}>
             <BookOpen className="w-4 h-4 text-primary" />
             Saved Medications ({medLibrary.length})
           </CardTitle>
@@ -195,7 +195,7 @@ export default function MedLibrary() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-sm" data-testid="dialog-library-med">
           <DialogHeader>
-            <DialogTitle style={{ fontFamily: "Outfit, sans-serif" }}>
+            <DialogTitle style={{ fontFamily: "Fraunces, serif" }}>
               {editing ? "Edit Medication" : "Add to Library"}
             </DialogTitle>
           </DialogHeader>

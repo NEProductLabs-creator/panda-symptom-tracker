@@ -900,7 +900,7 @@ export default function ExportPDF() {
       <div>
         <h1
           className="text-2xl font-bold text-foreground"
-          style={{ fontFamily: "Outfit, sans-serif" }}
+          style={{ fontFamily: "Fraunces, serif" }}
         >
           Doctor Report Generator
         </h1>
@@ -916,7 +916,7 @@ export default function ExportPDF() {
         <CardHeader className="pb-3">
           <CardTitle
             className="text-base font-semibold"
-            style={{ fontFamily: "Outfit, sans-serif" }}
+            style={{ fontFamily: "Fraunces, serif" }}
           >
             Date Range
           </CardTitle>
@@ -1062,7 +1062,7 @@ export default function ExportPDF() {
           <div key={label} className="flex flex-col items-center py-3 bg-muted rounded-xl">
             <span
               className="text-xl font-bold text-foreground"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               {value}
             </span>
@@ -1112,7 +1112,7 @@ export default function ExportPDF() {
         <CardHeader className="pb-2">
           <CardTitle
             className="text-base font-semibold"
-            style={{ fontFamily: "Outfit, sans-serif" }}
+            style={{ fontFamily: "Fraunces, serif" }}
           >
             Parent / Caregiver Notes
           </CardTitle>

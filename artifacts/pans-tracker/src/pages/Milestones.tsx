@@ -233,7 +233,7 @@ export default function Milestones() {
         <div>
           <h1
             className="text-2xl font-bold text-foreground"
-            style={{ fontFamily: "Outfit, sans-serif" }}
+            style={{ fontFamily: "Fraunces, serif" }}
           >
             Milestones
           </h1>
@@ -253,7 +253,7 @@ export default function Milestones() {
           <CardHeader className="pb-3">
             <CardTitle
               className="text-base font-semibold"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               {editId ? "Edit Milestone" : "New Milestone"}
             </CardTitle>
@@ -359,7 +359,7 @@ export default function Milestones() {
               <Clock className="w-4 h-4 text-primary" />
               <h2
                 className="text-sm font-semibold text-foreground uppercase tracking-wide"
-                style={{ fontFamily: "Outfit, sans-serif" }}
+                style={{ fontFamily: "Fraunces, serif" }}
               >
                 Upcoming
               </h2>
@@ -389,7 +389,7 @@ export default function Milestones() {
               <History className="w-4 h-4 text-muted-foreground" />
               <h2
                 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide"
-                style={{ fontFamily: "Outfit, sans-serif" }}
+                style={{ fontFamily: "Fraunces, serif" }}
               >
                 Past
               </h2>

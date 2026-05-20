@@ -127,7 +127,7 @@ export default function SetupWizard({ onDismiss }: { onDismiss: () => void }) {
             <div className="space-y-2">
               <h2
                 className="text-xl font-bold text-foreground"
-                style={{ fontFamily: "Outfit, sans-serif" }}
+                style={{ fontFamily: "Fraunces, serif" }}
               >
                 You're all set!
               </h2>
@@ -201,7 +201,7 @@ export default function SetupWizard({ onDismiss }: { onDismiss: () => void }) {
               <div className="space-y-1">
                 <h2
                   className="text-xl font-bold text-foreground"
-                  style={{ fontFamily: "Outfit, sans-serif" }}
+                  style={{ fontFamily: "Fraunces, serif" }}
                 >
                   Tell us about your child
                 </h2>
@@ -261,7 +261,7 @@ export default function SetupWizard({ onDismiss }: { onDismiss: () => void }) {
               <div className="space-y-1">
                 <h2
                   className="text-xl font-bold text-foreground"
-                  style={{ fontFamily: "Outfit, sans-serif" }}
+                  style={{ fontFamily: "Fraunces, serif" }}
                 >
                   What's their baseline?
                 </h2>
@@ -324,7 +324,7 @@ export default function SetupWizard({ onDismiss }: { onDismiss: () => void }) {
               <div className="space-y-1">
                 <h2
                   className="text-xl font-bold text-foreground"
-                  style={{ fontFamily: "Outfit, sans-serif" }}
+                  style={{ fontFamily: "Fraunces, serif" }}
                 >
                   Add their medications
                 </h2>

@@ -17,7 +17,6 @@ import {
   Printer,
   Home,
   Settings2,
-  Activity,
   Menu,
   X,
 } from "lucide-react";
@@ -135,34 +134,28 @@ function NavItem({
       <Link href={section.href} onClick={onNavigate} data-testid={`nav-${section.label.toLowerCase().replace(/\s/g, "-")}`}>
         <div
           className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold transition-all cursor-pointer",
+            "flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-all cursor-pointer",
             isActive
-              ? "bg-primary text-primary-foreground shadow-sm"
+              ? "bg-card font-semibold shadow-sm"
               : isSectionActive
-              ? "bg-primary/10 text-primary"
-              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              ? "font-medium text-foreground/80"
+              : "font-medium text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
           )}
+          style={isActive ? { color: "var(--terracotta)" } : undefined}
         >
           <Icon
             className={cn(
               "w-4 h-4 flex-shrink-0",
-              isActive
-                ? "text-primary-foreground"
-                : isSectionActive
-                ? "text-primary"
-                : "opacity-70"
+              isActive ? "" : isSectionActive ? "opacity-80" : "opacity-60"
             )}
+            style={isActive ? { color: "var(--terracotta)" } : undefined}
           />
           <div className="flex-1 min-w-0">
             <p className="truncate leading-tight">{section.label}</p>
             {section.subtitle && (
               <p className={cn(
                 "text-[10px] leading-tight mt-0.5 truncate font-normal",
-                isActive
-                  ? "text-primary-foreground/65"
-                  : isSectionActive
-                  ? "text-primary/65"
-                  : "text-muted-foreground/70"
+                isActive ? "opacity-70" : "text-muted-foreground/70"
               )}>
                 {section.subtitle}
               </p>
@@ -183,9 +176,10 @@ function NavItem({
                   className={cn(
                     "flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-colors cursor-pointer",
                     childActive
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-card font-semibold"
                       : "text-muted-foreground hover:text-foreground hover:bg-sidebar-accent"
                   )}
+                  style={childActive ? { color: "var(--terracotta)" } : undefined}
                 >
                   <ChildIcon className="w-3.5 h-3.5 flex-shrink-0" />
                   {child.label}
@@ -224,23 +218,19 @@ export default function Sidebar() {
       <Link
         href="/"
         onClick={handleLogoClick}
-        className="flex items-center gap-2.5 px-4 py-5 border-b border-border cursor-pointer hover:opacity-80 transition-opacity"
+        className="block px-5 py-5 border-b border-border cursor-pointer hover:opacity-80 transition-opacity"
       >
-        <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
-          <Activity className="w-4 h-4 text-primary-foreground" />
-        </div>
-        <div className="min-w-0">
-          <p className="font-bold text-sm leading-tight text-foreground truncate" style={{ fontFamily: "Outfit, sans-serif" }}>
-            PANS &amp; PANDAS Tracker
+        <p className="font-semibold text-[15px] leading-tight text-foreground" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.02em" }}>
+          PANS &amp; PANDAS
+        </p>
+        <p className="text-[12px] leading-snug mt-0.5 text-muted-foreground" style={{ fontFamily: "Newsreader, serif", fontStyle: "italic" }}>
+          Symptom Tracker
+        </p>
+        {childName && (
+          <p className="text-[11px] mt-1.5 font-medium" style={{ color: "var(--terracotta)" }}>
+            Tracking for {childName}
           </p>
-          {childName ? (
-            <p className="text-[11px] text-primary font-medium leading-tight truncate">
-              Tracking for {childName}
-            </p>
-          ) : (
-            <p className="text-[11px] text-muted-foreground leading-tight">Symptom Journal</p>
-          )}
-        </div>
+        )}
       </Link>
 
       {/* Nav */}
@@ -280,14 +270,18 @@ export default function Sidebar() {
           <Link
             href="/"
             onClick={handleLogoClick}
-            className="flex items-center gap-2 min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
           >
-            <div className="w-7 h-7 rounded-md bg-primary flex items-center justify-center flex-shrink-0">
-              <Activity className="w-3.5 h-3.5 text-primary-foreground" />
+            <div className="min-w-0">
+              <span className="font-semibold text-[14px] text-foreground leading-tight block truncate" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.01em" }}>
+                PANS &amp; PANDAS
+              </span>
+              {childName && (
+                <span className="text-[11px] font-medium truncate block" style={{ color: "var(--terracotta)" }}>
+                  Tracking for {childName}
+                </span>
+              )}
             </div>
-            <span className="font-bold text-sm text-foreground truncate" style={{ fontFamily: "Outfit, sans-serif" }}>
-              {childName ? `Tracking for ${childName}` : "PANS & PANDAS Tracker"}
-            </span>
           </Link>
           <Button
             variant="ghost"

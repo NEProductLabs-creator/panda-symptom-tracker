@@ -279,7 +279,7 @@ export default function TriggerLog() {
       <div>
         <h1
           className="text-2xl font-bold text-foreground flex items-center gap-2"
-          style={{ fontFamily: "Outfit, sans-serif" }}
+          style={{ fontFamily: "Fraunces, serif" }}
         >
           <Zap className="w-5 h-5 text-primary" />
           Trigger Log
@@ -344,7 +344,7 @@ export default function TriggerLog() {
       {/* ── Log a Trigger ────────────────────────────────────────────────────── */}
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold" style={{ fontFamily: "Outfit, sans-serif" }}>
+          <CardTitle className="text-base font-semibold" style={{ fontFamily: "Fraunces, serif" }}>
             Log a Trigger
           </CardTitle>
         </CardHeader>
@@ -495,7 +495,7 @@ export default function TriggerLog() {
             <div>
               <CardTitle
                 className="text-base font-semibold flex items-center gap-2"
-                style={{ fontFamily: "Outfit, sans-serif" }}
+                style={{ fontFamily: "Fraunces, serif" }}
               >
                 <Users className="w-4 h-4 text-primary" />
                 Household Health Log
@@ -630,7 +630,7 @@ export default function TriggerLog() {
       {/* ── Trigger Timeline ─────────────────────────────────────────────────── */}
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-3">
-          <CardTitle className="text-base font-semibold" style={{ fontFamily: "Outfit, sans-serif" }}>
+          <CardTitle className="text-base font-semibold" style={{ fontFamily: "Fraunces, serif" }}>
             Trigger Timeline
           </CardTitle>
           <p className="text-xs text-muted-foreground">

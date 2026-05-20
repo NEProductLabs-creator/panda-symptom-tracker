@@ -110,7 +110,7 @@ export default function Baseline() {
           </div>
           <h1
             className="text-2xl font-bold"
-            style={{ fontFamily: "Outfit, sans-serif", color: "#78350f" }}
+            style={{ fontFamily: "Fraunces, serif", color: "#78350f" }}
           >
             {baseline?.childName
               ? `Who ${baseline.childName} Really Is`
@@ -150,7 +150,7 @@ export default function Baseline() {
               <p className="text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: "#92400e" }}>
                 Child
               </p>
-              <p className="text-lg font-bold" style={{ color: "#78350f", fontFamily: "Outfit, sans-serif" }}>
+              <p className="text-lg font-bold" style={{ color: "#78350f", fontFamily: "Fraunces, serif" }}>
                 {baseline.childName}
                 {baseline.childAge && (
                   <span className="text-sm font-normal ml-2" style={{ color: "#b45309" }}>
@@ -351,7 +351,7 @@ export default function Baseline() {
           }}>
             <h2
               className="text-base font-semibold"
-              style={{ fontFamily: "Outfit, sans-serif", color: "#14532d" }}
+              style={{ fontFamily: "Fraunces, serif", color: "#14532d" }}
             >
               Baseline vs. Today
             </h2>

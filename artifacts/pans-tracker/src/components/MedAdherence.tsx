@@ -31,7 +31,7 @@ export default function MedAdherence({ medLibrary, logs }: Props) {
       <CardHeader className="pb-3">
         <CardTitle
           className="text-base font-semibold flex items-center gap-2"
-          style={{ fontFamily: "Outfit, sans-serif" }}
+          style={{ fontFamily: "Fraunces, serif" }}
         >
           <CalendarDays className="w-4 h-4 text-primary" />
           Medication Adherence · Last 30 Days

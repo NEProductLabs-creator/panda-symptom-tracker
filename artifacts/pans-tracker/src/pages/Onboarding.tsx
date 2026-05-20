@@ -92,7 +92,7 @@ function EmotionalScreen({
           <div className="text-center space-y-3">
             <h1
               className="text-2xl font-bold text-foreground leading-tight"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               {headline}
             </h1>
@@ -259,7 +259,7 @@ export default function Onboarding() {
             <div className="text-center">
               <h1
                 className="text-2xl font-bold text-foreground leading-tight"
-                style={{ fontFamily: "Outfit, sans-serif" }}
+                style={{ fontFamily: "Fraunces, serif" }}
               >
                 Your data belongs to you.
               </h1>
@@ -340,7 +340,7 @@ export default function Onboarding() {
           <div className="text-center space-y-1.5">
             <h1
               className="text-2xl font-bold text-foreground leading-tight"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               Let's set up your child's profile.
             </h1>

@@ -103,7 +103,7 @@ function HowItWorksModal({ onClose }: { onClose: () => void }) {
           <div className="space-y-2">
             <h3
               className="text-lg font-bold text-foreground"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               {title}
             </h3>
@@ -153,11 +153,12 @@ function ScoreInput({
             type="button"
             onClick={() => onChange(n)}
             data-testid={`score-btn-${label.toLowerCase().replace(/\s|\//g, "-")}-${n}`}
-            className={`flex-1 sm:flex-none sm:w-10 h-10 rounded-lg text-sm font-bold transition-all touch-manipulation ${
+            className={`flex-1 sm:flex-none sm:w-10 h-10 rounded-full text-sm font-semibold transition-all touch-manipulation ${
               value === n
-                ? "bg-primary text-primary-foreground shadow-sm scale-105"
-                : "bg-muted text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                ? "shadow-sm scale-105 text-white"
+                : "bg-muted text-muted-foreground hover:bg-muted/70"
             }`}
+            style={value === n ? { backgroundColor: "var(--terracotta)" } : undefined}
           >
             {n}
           </button>
@@ -309,21 +310,35 @@ export default function Dashboard() {
       {/* How It Works modal */}
       {showHowItWorks && <HowItWorksModal onClose={() => setShowHowItWorks(false)} />}
 
-      {/* "How to use" link + affirmation card grouped together */}
-      <div className="space-y-1">
-        <div className="flex justify-end">
+      {/* Editorial page header */}
+      <div className="flex items-start justify-between gap-4 pt-1 pb-2">
+        <div>
+          <p className="text-sm italic font-normal mb-0.5" style={{ fontFamily: "Newsreader, serif", color: "var(--terracotta)" }}>
+            {format(new Date(), "EEEE")}
+          </p>
+          <h1 className="text-2xl font-medium text-foreground leading-tight" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.02em", fontWeight: 400 }}>
+            {childName ? `${childName}'s Dashboard` : "Today's Overview"}
+          </h1>
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
           <button
             type="button"
             onClick={() => setShowHowItWorks(true)}
-            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors px-1"
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
           >
             <HelpCircle className="w-3.5 h-3.5 flex-shrink-0" />
-            <span className="sm:inline hidden">How to use this app</span>
-            <span className="sm:hidden inline">How to use</span>
+            <span className="hidden sm:inline">How to use</span>
           </button>
+          <Link href="/log">
+            <Button size="sm" className="text-xs h-8 px-4" data-testid="button-log-today-header">
+              Log Today
+            </Button>
+          </Link>
         </div>
-        <DailyAffirmation />
       </div>
+
+      {/* Affirmation card */}
+      <DailyAffirmation />
 
       {/* Milestone celebrations */}
       <MilestoneCelebration />
@@ -496,9 +511,10 @@ export default function Dashboard() {
               onClick={() => setChartDays(d)}
               className={`px-3 py-1.5 text-xs font-medium transition-colors ${
                 chartDays === d
-                  ? "bg-primary text-primary-foreground"
+                  ? "text-white"
                   : "text-muted-foreground hover:bg-muted"
               }`}
+              style={chartDays === d ? { backgroundColor: "var(--terracotta)" } : undefined}
             >
               {d}d
             </button>
@@ -558,7 +574,7 @@ export default function Dashboard() {
         <CardHeader className="pb-2">
           <CardTitle
             className="flex items-center gap-2 text-base font-semibold"
-            style={{ fontFamily: "Outfit, sans-serif" }}
+            style={{ fontFamily: "Fraunces, serif" }}
           >
             <TrendingUp className="w-4 h-4 text-primary" />
             {chartDays}-Day Trend
@@ -566,10 +582,15 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent>
           {logs.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-40 text-center text-muted-foreground">
-              <TrendingUp className="w-8 h-8 mb-2 opacity-30" />
-              <p className="text-sm">No symptom data yet.</p>
-              <p className="text-xs mt-1">Use the Quick Entry below or the <Link href="/log"><span className="text-primary hover:underline cursor-pointer">Log page</span></Link> to get started.</p>
+            <div className="flex flex-col items-center justify-center h-44 text-center px-4">
+              <p className="text-base italic text-muted-foreground leading-relaxed" style={{ fontFamily: "Newsreader, serif" }}>
+                Nothing logged yet. When you're ready, we're here.
+              </p>
+              <Link href="/log">
+                <span className="mt-4 inline-block text-sm font-medium hover:underline cursor-pointer" style={{ color: "var(--terracotta)" }}>
+                  Start your first log →
+                </span>
+              </Link>
             </div>
           ) : (
             <SymptomChart
@@ -589,7 +610,7 @@ export default function Dashboard() {
           <div className="flex items-start justify-between gap-3">
             <CardTitle
               className="text-base font-semibold flex items-center gap-2"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               {existingToday && <CheckCircle2 className="w-4 h-4 text-primary" />}
               Quick Entry

@@ -209,7 +209,7 @@ export default function AuthPage() {
           <div>
             <h1
               className="text-2xl font-bold text-foreground tracking-tight"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               PANS &amp; PANDAS Tracker
             </h1>

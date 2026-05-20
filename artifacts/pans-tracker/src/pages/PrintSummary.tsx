@@ -41,7 +41,7 @@ export default function PrintSummary() {
   const logsWithNotes = recentLogs.filter((l) => l.notes && l.notes.trim());
 
   return (
-    <div className="min-h-screen bg-white text-gray-900">
+    <div className="min-h-screen bg-background text-foreground">
       {/* Print controls - hidden on actual print */}
       <div className="print:hidden bg-background border-b border-border px-6 py-4 flex items-center justify-between">
         <Link href="/">
@@ -51,8 +51,8 @@ export default function PrintSummary() {
           </Button>
         </Link>
         <div className="text-center">
-          <p className="text-sm font-semibold text-foreground">Print Summary</p>
-          <p className="text-xs text-muted-foreground">For doctor appointments</p>
+          <p className="text-sm font-semibold text-foreground" style={{ fontFamily: "Fraunces, serif" }}>Print Summary</p>
+          <p className="text-xs text-muted-foreground" style={{ fontFamily: "Newsreader, serif", fontStyle: "italic" }}>For doctor appointments</p>
         </div>
         <Button onClick={() => window.print()} className="gap-2" data-testid="button-print">
           <Printer className="w-4 h-4" />
@@ -63,7 +63,15 @@ export default function PrintSummary() {
       <style>{`
         @media print {
           @page { margin: 0.75in; size: letter portrait; }
-          body { font-size: 10pt; color: #111; }
+          body {
+            font-size: 10pt;
+            font-family: 'Newsreader', Georgia, serif;
+            color: hsl(155, 15%, 14%);
+            background: hsl(39, 47%, 93%);
+          }
+          h1, h2, h3, h4, h5, h6 {
+            font-family: 'Fraunces', serif;
+          }
           table { page-break-inside: auto; }
           tr { page-break-inside: avoid; page-break-after: auto; }
           thead { display: table-header-group; }
@@ -72,48 +80,51 @@ export default function PrintSummary() {
         }
       `}</style>
 
-      <div className="max-w-4xl mx-auto px-8 py-8">
+      <div className="max-w-4xl mx-auto px-8 py-10">
         {/* Header */}
-        <div className="border-b-2 border-gray-200 pb-6 mb-6">
-          <h1 className="text-2xl font-bold text-gray-900" style={{ fontFamily: "Outfit, sans-serif" }}>
+        <div className="border-b border-border pb-6 mb-8">
+          <p className="text-sm italic text-muted-foreground mb-1" style={{ fontFamily: "Newsreader, serif", color: "var(--terracotta)" }}>
+            Doctor Visit Summary
+          </p>
+          <h1 className="text-3xl font-semibold text-foreground" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.02em", fontWeight: 400 }}>
             PANS &amp; PANDAS Symptom Report
           </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Generated on {format(new Date(), "MMMM d, yyyy")} &bull; Last 30 days
+          <p className="text-sm text-muted-foreground mt-2" style={{ fontFamily: "Newsreader, serif" }}>
+            Generated {format(new Date(), "MMMM d, yyyy")} &bull; Covering the last 30 days
           </p>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Covering {format(new Date(thirtyDaysAgo + "T12:00:00"), "MMMM d")} – {format(new Date(), "MMMM d, yyyy")}
+          <p className="text-xs text-muted-foreground mt-0.5" style={{ fontFamily: "Newsreader, serif" }}>
+            {format(new Date(thirtyDaysAgo + "T12:00:00"), "MMMM d")} – {format(new Date(), "MMMM d, yyyy")}
           </p>
         </div>
 
         {/* Medications section */}
-        <div className="mb-8 print-section">
-          <h2 className="text-base font-bold text-gray-800 mb-3 uppercase tracking-wide text-xs border-b border-gray-100 pb-1">
+        <div className="mb-10 print-section">
+          <h2 className="text-[11px] font-semibold text-foreground uppercase tracking-widest border-b border-border pb-2 mb-4" style={{ fontFamily: "Newsreader, serif", letterSpacing: "0.12em" }}>
             Current Medications
           </h2>
           {activeMeds.length === 0 ? (
-            <p className="text-sm text-gray-500 italic">No active medications recorded.</p>
+            <p className="text-sm text-muted-foreground italic" style={{ fontFamily: "Newsreader, serif" }}>No active medications recorded.</p>
           ) : (
             <table className="w-full text-sm mb-2">
               <thead>
-                <tr className="border-b border-gray-200">
-                  <th className="text-left py-2 pr-4 text-xs font-semibold text-gray-500 uppercase">Name</th>
-                  <th className="text-left py-2 pr-4 text-xs font-semibold text-gray-500 uppercase">Dose</th>
-                  <th className="text-left py-2 pr-4 text-xs font-semibold text-gray-500 uppercase">Type</th>
-                  <th className="text-left py-2 pr-4 text-xs font-semibold text-gray-500 uppercase">Started</th>
-                  <th className="text-left py-2 text-xs font-semibold text-gray-500 uppercase">Notes</th>
+                <tr className="border-b border-border">
+                  <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Name</th>
+                  <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dose</th>
+                  <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Type</th>
+                  <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Started</th>
+                  <th className="text-left py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Notes</th>
                 </tr>
               </thead>
               <tbody>
                 {activeMeds.map((med) => (
-                  <tr key={med.id} className="border-b border-gray-100">
-                    <td className="py-2 pr-4 font-medium">{med.name}</td>
-                    <td className="py-2 pr-4 text-gray-600">{med.dose}</td>
-                    <td className="py-2 pr-4 text-gray-600">{MED_TYPE_LABELS[med.type]}</td>
-                    <td className="py-2 pr-4 text-gray-600 whitespace-nowrap">
+                  <tr key={med.id} className="border-b border-border/50">
+                    <td className="py-2.5 pr-4 font-medium text-foreground">{med.name}</td>
+                    <td className="py-2.5 pr-4 text-muted-foreground">{med.dose}</td>
+                    <td className="py-2.5 pr-4 text-muted-foreground">{MED_TYPE_LABELS[med.type]}</td>
+                    <td className="py-2.5 pr-4 text-muted-foreground whitespace-nowrap">
                       {format(new Date(med.startDate + "T12:00:00"), "MMM d, yyyy")}
                     </td>
-                    <td className="py-2 text-gray-500 text-xs">{med.notes || "—"}</td>
+                    <td className="py-2.5 text-muted-foreground text-xs">{med.notes || "—"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -122,31 +133,31 @@ export default function PrintSummary() {
 
           {pastMeds.length > 0 && (
             <>
-              <h2 className="text-base font-bold text-gray-800 mt-6 mb-3 uppercase tracking-wide text-xs border-b border-gray-100 pb-1">
+              <h2 className="text-[11px] font-semibold text-foreground uppercase tracking-widest border-b border-border pb-2 mb-4 mt-8" style={{ fontFamily: "Newsreader, serif", letterSpacing: "0.12em" }}>
                 Past Medications (last 30 days)
               </h2>
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 pr-4 text-xs font-semibold text-gray-500 uppercase">Name</th>
-                    <th className="text-left py-2 pr-4 text-xs font-semibold text-gray-500 uppercase">Dose</th>
-                    <th className="text-left py-2 pr-4 text-xs font-semibold text-gray-500 uppercase">Type</th>
-                    <th className="text-left py-2 pr-4 text-xs font-semibold text-gray-500 uppercase">Dates</th>
-                    <th className="text-left py-2 text-xs font-semibold text-gray-500 uppercase">Notes</th>
+                  <tr className="border-b border-border">
+                    <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Name</th>
+                    <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dose</th>
+                    <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Type</th>
+                    <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Dates</th>
+                    <th className="text-left py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Notes</th>
                   </tr>
                 </thead>
                 <tbody>
                   {pastMeds
                     .filter((m) => m.startDate >= thirtyDaysAgo || (m.endDate && m.endDate >= thirtyDaysAgo))
                     .map((med) => (
-                      <tr key={med.id} className="border-b border-gray-100 text-gray-500">
-                        <td className="py-2 pr-4">{med.name}</td>
-                        <td className="py-2 pr-4">{med.dose}</td>
-                        <td className="py-2 pr-4">{MED_TYPE_LABELS[med.type]}</td>
-                        <td className="py-2 pr-4 whitespace-nowrap text-xs">
+                      <tr key={med.id} className="border-b border-border/50 text-muted-foreground">
+                        <td className="py-2.5 pr-4">{med.name}</td>
+                        <td className="py-2.5 pr-4">{med.dose}</td>
+                        <td className="py-2.5 pr-4">{MED_TYPE_LABELS[med.type]}</td>
+                        <td className="py-2.5 pr-4 whitespace-nowrap text-xs">
                           {format(new Date(med.startDate + "T12:00:00"), "MMM d")} – {med.endDate ? format(new Date(med.endDate + "T12:00:00"), "MMM d, yyyy") : "ongoing"}
                         </td>
-                        <td className="py-2 text-xs">{med.notes || "—"}</td>
+                        <td className="py-2.5 text-xs">{med.notes || "—"}</td>
                       </tr>
                     ))}
                 </tbody>
@@ -156,43 +167,43 @@ export default function PrintSummary() {
         </div>
 
         {/* Symptom log table */}
-        <div className="mb-8">
-          <h2 className="text-base font-bold text-gray-800 mb-3 uppercase tracking-wide text-xs border-b border-gray-100 pb-1">
+        <div className="mb-10">
+          <h2 className="text-[11px] font-semibold text-foreground uppercase tracking-widest border-b border-border pb-2 mb-4" style={{ fontFamily: "Newsreader, serif", letterSpacing: "0.12em" }}>
             30-Day Symptom Log
           </h2>
-          <p className="text-xs text-gray-400 mb-3">
+          <p className="text-xs text-muted-foreground mb-4 italic" style={{ fontFamily: "Newsreader, serif" }}>
             OCD, Anxiety, Rage, Tics: 0 (none) – 5 (extreme) &nbsp;·&nbsp;
             Sleep &amp; Cognition: 0 (poor) – 5 (excellent)
           </p>
           {recentLogs.length === 0 ? (
-            <p className="text-sm text-gray-500 italic">No symptom data recorded for this period.</p>
+            <p className="text-sm text-muted-foreground italic" style={{ fontFamily: "Newsreader, serif" }}>No symptom data recorded for this period.</p>
           ) : (
             <table className="w-full text-sm border-collapse">
               <thead>
-                <tr className="border-b-2 border-gray-300">
-                  <th className="text-left py-2 pr-3 text-xs font-semibold text-gray-500 uppercase">Date</th>
-                  <th className="text-center py-2 px-2 text-xs font-semibold text-gray-500 uppercase">OCD</th>
-                  <th className="text-center py-2 px-2 text-xs font-semibold text-gray-500 uppercase">Anxiety</th>
-                  <th className="text-center py-2 px-2 text-xs font-semibold text-gray-500 uppercase">Rage</th>
-                  <th className="text-center py-2 px-2 text-xs font-semibold text-gray-500 uppercase">Tics</th>
-                  <th className="text-center py-2 px-2 text-xs font-semibold text-gray-500 uppercase">Sleep</th>
-                  <th className="text-center py-2 px-2 text-xs font-semibold text-gray-500 uppercase">Cognition</th>
-                  <th className="text-left py-2 pl-3 text-xs font-semibold text-gray-500 uppercase">Notes</th>
+                <tr className="border-b-2 border-border">
+                  <th className="text-left py-2 pr-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Date</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">OCD</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Anxiety</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Rage</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Tics</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Sleep</th>
+                  <th className="text-center py-2 px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Cognition</th>
+                  <th className="text-left py-2 pl-3 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Notes</th>
                 </tr>
               </thead>
               <tbody>
                 {recentLogs.map((log, i) => (
-                  <tr key={log.id} className={`border-b border-gray-100 ${i % 2 === 0 ? "bg-gray-50/50" : ""}`}>
-                    <td className="py-1.5 pr-3 font-medium text-xs whitespace-nowrap">
+                  <tr key={log.id} className={`border-b border-border/40 ${i % 2 === 0 ? "bg-muted/30" : ""}`}>
+                    <td className="py-1.5 pr-3 font-medium text-xs whitespace-nowrap text-foreground">
                       {format(new Date(log.date + "T12:00:00"), "MMM d, yyyy")}
                     </td>
-                    <td className="py-1.5 px-2 text-center font-semibold text-xs">{log.ocd}</td>
-                    <td className="py-1.5 px-2 text-center font-semibold text-xs">{log.anxiety}</td>
-                    <td className="py-1.5 px-2 text-center font-semibold text-xs">{log.rage}</td>
-                    <td className="py-1.5 px-2 text-center font-semibold text-xs">{log.tics}</td>
-                    <td className="py-1.5 px-2 text-center font-semibold text-xs">{log.sleep}</td>
-                    <td className="py-1.5 px-2 text-center font-semibold text-xs">{log.cognition}</td>
-                    <td className="py-1.5 pl-3 text-xs text-gray-500 max-w-xs">{log.notes || ""}</td>
+                    <td className="py-1.5 px-2 text-center font-semibold text-xs text-foreground">{log.ocd}</td>
+                    <td className="py-1.5 px-2 text-center font-semibold text-xs text-foreground">{log.anxiety}</td>
+                    <td className="py-1.5 px-2 text-center font-semibold text-xs text-foreground">{log.rage}</td>
+                    <td className="py-1.5 px-2 text-center font-semibold text-xs text-foreground">{log.tics}</td>
+                    <td className="py-1.5 px-2 text-center font-semibold text-xs text-foreground">{log.sleep}</td>
+                    <td className="py-1.5 px-2 text-center font-semibold text-xs text-foreground">{log.cognition}</td>
+                    <td className="py-1.5 pl-3 text-xs text-muted-foreground max-w-xs">{log.notes || ""}</td>
                   </tr>
                 ))}
               </tbody>
@@ -203,16 +214,16 @@ export default function PrintSummary() {
         {/* Notes section */}
         {logsWithNotes.length > 0 && (
           <div className="print-section">
-            <h2 className="text-base font-bold text-gray-800 mb-3 uppercase tracking-wide text-xs border-b border-gray-100 pb-1">
+            <h2 className="text-[11px] font-semibold text-foreground uppercase tracking-widest border-b border-border pb-2 mb-4" style={{ fontFamily: "Newsreader, serif", letterSpacing: "0.12em" }}>
               Daily Notes
             </h2>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {logsWithNotes.map((log) => (
-                <div key={log.id} className="flex gap-3">
-                  <span className="text-xs font-semibold text-gray-500 whitespace-nowrap pt-0.5 w-24 flex-shrink-0">
+                <div key={log.id} className="flex gap-4 border-b border-border/30 pb-3 last:border-0">
+                  <span className="text-xs font-semibold text-muted-foreground whitespace-nowrap pt-0.5 w-24 flex-shrink-0" style={{ fontFamily: "Fraunces, serif" }}>
                     {format(new Date(log.date + "T12:00:00"), "MMM d, yyyy")}
                   </span>
-                  <p className="text-xs text-gray-700 flex-1">{log.notes}</p>
+                  <p className="text-sm text-foreground flex-1 leading-relaxed">{log.notes}</p>
                 </div>
               ))}
             </div>
@@ -220,7 +231,7 @@ export default function PrintSummary() {
         )}
 
         {/* Footer */}
-        <div className="mt-12 pt-4 border-t border-gray-200 text-xs text-gray-400 text-center">
+        <div className="mt-12 pt-4 border-t border-border text-xs text-muted-foreground text-center" style={{ fontFamily: "Newsreader, serif", fontStyle: "italic" }}>
           <p>Printed from PANS &amp; PANDAS Tracker &bull; {format(new Date(), "MMMM d, yyyy")}</p>
           <p className="mt-0.5">All data is stored locally on this device and is not shared.</p>
         </div>

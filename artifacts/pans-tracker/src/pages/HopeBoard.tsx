@@ -79,7 +79,7 @@ export default function HopeBoard() {
           </div>
           <h1
             className="text-2xl font-bold text-amber-900"
-            style={{ fontFamily: "Outfit, sans-serif" }}
+            style={{ fontFamily: "Fraunces, serif" }}
           >
             Hope Board
           </h1>
@@ -95,7 +95,7 @@ export default function HopeBoard() {
         <div className="flex items-center justify-between mb-3">
           <h2
             className="text-base font-bold text-amber-900"
-            style={{ fontFamily: "Outfit, sans-serif" }}
+            style={{ fontFamily: "Fraunces, serif" }}
           >
             {savedIndices.length > 0 ? "Your Saved Affirmations" : "Affirmations"}
           </h2>
@@ -195,7 +195,7 @@ export default function HopeBoard() {
       <div>
         <h2
           className="text-base font-bold text-amber-900 mb-1"
-          style={{ fontFamily: "Outfit, sans-serif" }}
+          style={{ fontFamily: "Fraunces, serif" }}
         >
           Recovery Stories
         </h2>

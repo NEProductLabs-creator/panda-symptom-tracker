@@ -84,7 +84,7 @@ function DayDetail({ log, date, medLibrary, milestone, isFlareDay, onClose }: Da
             </p>
             <CardTitle
               className="text-lg font-bold leading-tight mt-0.5"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               {format(d, "MMMM d, yyyy")}
             </CardTitle>
@@ -243,7 +243,7 @@ function MonthGrid({
     <div className="select-none">
       <h3
         className="text-sm font-semibold text-foreground mb-2"
-        style={{ fontFamily: "Outfit, sans-serif" }}
+        style={{ fontFamily: "Fraunces, serif" }}
       >
         {format(firstDay, "MMMM yyyy")}
       </h3>
@@ -448,7 +448,7 @@ export default function Timeline() {
       <div>
         <h1
           className="text-2xl font-bold text-foreground flex items-center gap-2"
-          style={{ fontFamily: "Outfit, sans-serif" }}
+          style={{ fontFamily: "Fraunces, serif" }}
         >
           <CalendarRange className="w-5 h-5 text-primary" />
           {name ? `${name}'s Timeline` : "Symptom Timeline"}
@@ -580,7 +580,7 @@ export default function Timeline() {
         <CardHeader className="pb-3">
           <CardTitle
             className="text-base font-semibold flex items-center gap-2"
-            style={{ fontFamily: "Outfit, sans-serif" }}
+            style={{ fontFamily: "Fraunces, serif" }}
           >
             <ClipboardCheck className="w-4 h-4 text-amber-500" />
             Possible Flare Periods

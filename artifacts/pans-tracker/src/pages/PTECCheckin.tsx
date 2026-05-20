@@ -179,7 +179,7 @@ export default function PTECCheckin() {
       <div>
         <h1
           className="text-2xl font-bold text-foreground flex items-center gap-2"
-          style={{ fontFamily: "Outfit, sans-serif" }}
+          style={{ fontFamily: "Fraunces, serif" }}
         >
           <ClipboardCheck className="w-5 h-5 text-primary" />
           Weekly Check-in
@@ -349,7 +349,7 @@ export default function PTECCheckin() {
           <CardHeader className="pb-2">
             <CardTitle
               className="text-base font-semibold flex items-center gap-2"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               <TrendingUp className="w-4 h-4 text-primary" />
               Score History
@@ -382,7 +382,7 @@ export default function PTECCheckin() {
           <CardHeader className="pb-3">
             <CardTitle
               className="text-sm font-semibold text-foreground"
-              style={{ fontFamily: "Outfit, sans-serif" }}
+              style={{ fontFamily: "Fraunces, serif" }}
             >
               Past Entries
             </CardTitle>

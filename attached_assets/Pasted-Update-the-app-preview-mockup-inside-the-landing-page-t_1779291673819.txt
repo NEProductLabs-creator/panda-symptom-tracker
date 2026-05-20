@@ -1,0 +1,47 @@
+Update the app preview mockup inside the landing page (the visual screen mockup that appears in the "Why we built this tracker" section, opposite the feature list).
+
+Replace the existing mockup styling and content with the following.
+
+VISUAL CHANGES to the mockup:
+
+The .mockup-screen container should now use a pure white background (#ffffff) with a soft shadow (0 2px 12px rgba(58, 45, 34, 0.06)), so the inner "app screen" reads as a clean white surface floating on the surrounding warm cream of the .app-mockup container. This visually communicates that the landing page and the app have related but distinct aesthetics: the landing page is the warm editorial entry, the app is light and airy.
+
+Inside the mockup screen:
+
+1. Header row:
+   - Title "Lucas, Age 8" in Fraunces, weight 500, 18px, color #3a2d22
+   - Subtitle "This week" on the right in italic Newsreader, 12px, color #6b5d52
+   - 1px solid #ece2d0 rule beneath
+
+2. A small primary action button labeled "Log a symptom":
+   - Background #c4623d, white text
+   - Newsreader 11px, uppercase, letter-spacing 0.08em
+   - 9px 14px padding, 2px border radius
+   - A small "+" character before the label
+   - Sits beneath the header, left-aligned
+
+3. Four entry rows, each with a date stack on the left (day number in Fraunces 22px color #c4623d, month abbreviation in 9px uppercase letter-spaced #6b5d52 beneath) and a content block on the right (symptom name in Fraunces 13px weight 500 color #3a2d22, italic Newsreader 12px note in color #6b5d52, then a status indicator below).
+
+Entry content in order from top to bottom:
+
+  Entry 1 (Jan 14): "Calm day" with note "First in over a week. Hugged his sister this morning." Status indicator: a small calm-marker pill with text "nothing to report", styled with rgba(200, 212, 205, 0.35) background, color #4a6b5d, a 7px solid #8aa395 dot before the text, 4px 10px padding, 12px border radius, Fraunces italic 11px.
+
+  Entry 2 (Jan 13): "OCD, hand washing" with note "Twelve rounds before breakfast. Calmer after morning meds." Status indicator: a six-dot severity row representing the 0 through 5 scale. The dots use these colors:
+    Position 0 (mist tone for explicit zero): #c8d4cd
+    Position 1: #f5d9c7
+    Position 2: #e6b598
+    Position 3: #d68866
+    Position 4: #c4623d
+    Position 5: #a4502f
+    Unselected dot color: #ece2d0
+    For this entry, fill dots at positions 1 through 4 with their gradient colors, leave 0 and 5 in the unselected gray. Dots are 7px circles spaced 4px apart.
+
+  Entry 3 (Jan 12): "Anxiety, school dropoff" with note "Worried about touching desks. Settled by midday." Status indicator: same six-dot severity row, with positions 1 and 2 filled, the rest unselected.
+
+  Entry 4 (Jan 11): "Possible strep exposure" with note "Classmate sent home sick. Watching for new symptoms." Status indicator: a watch-marker pill with text "noted, watching", styled with rgba(212, 184, 134, 0.2) background, color #8a6f3d, a 7px solid #d4b886 dot before the text, same dimensions as the calm-marker.
+
+Each entry separated by a 1px dotted #ece2d0 rule with 12px vertical padding. The last entry has no border-bottom.
+
+The surrounding .app-mockup container (the warm cream "paper" the screen sits on) stays as it was, providing visual contrast with the white app screen inside.
+
+Do not change any other section of the landing page. Do not change copy outside the mockup. Do not change the surrounding feature list, headings, or buttons.

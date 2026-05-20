@@ -14,7 +14,7 @@ export default function Privacy() {
       <div className="lp-privacy-body lp-container">
         <div className="lp-privacy-content">
           <h1>Privacy Policy</h1>
-          <p className="lp-privacy-updated">Last updated: May 2025</p>
+          <p className="lp-privacy-updated">Last updated: May 20, 2026</p>
 
           <p>
             Hi. We're parents who built this app because we needed it ourselves. You're

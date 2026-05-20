@@ -743,7 +743,7 @@ export default function Medications() {
       {/* ── Add / Edit dialog ─────────────────────────────────────────────────── */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent
-          className="max-w-lg max-h-[90vh] overflow-y-auto"
+          className="max-w-lg max-h-[90vh] overflow-y-auto overflow-x-hidden"
           data-testid="dialog-medication"
         >
           <DialogHeader>

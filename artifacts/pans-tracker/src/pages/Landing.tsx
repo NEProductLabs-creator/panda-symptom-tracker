@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { Link } from "wouter";
 import { ClipboardList, ClipboardCheck, FileDown, ArrowRight } from "lucide-react";
+import { CalendarPulse } from "@/components/icons/CalendarPulse";
 import { useDemoContext } from "@/contexts/DemoContext";
 import { track, identifyAsDemo } from "@/lib/analytics";
 
@@ -74,27 +75,8 @@ export default function Landing() {
         >
           {/* Logo + wordmark */}
           <div className="lp-fade lp-d1 flex flex-col items-center gap-3 mb-9">
-            <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
-              <svg
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="w-14 h-14 text-primary"
-              >
-                {/* Top row — 3 calendar cells */}
-                <rect x="2.5" y="2.5" width="4" height="4" rx="0.75" />
-                <rect x="10" y="2.5" width="4" height="4" rx="0.75" />
-                <rect x="17.5" y="2.5" width="4" height="4" rx="0.75" />
-                {/* Middle row — waveform replaces cells */}
-                <path d="M 2.5 12 L 5.5 12 L 7.5 9 L 9.5 15 L 11.5 10.5 L 13 12 L 21.5 12" />
-                {/* Bottom row — 3 calendar cells */}
-                <rect x="2.5" y="17.5" width="4" height="4" rx="0.75" />
-                <rect x="10" y="17.5" width="4" height="4" rx="0.75" />
-                <rect x="17.5" y="17.5" width="4" height="4" rx="0.75" />
-              </svg>
+            <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center mb-6">
+              <CalendarPulse className="w-12 h-12 text-primary" />
             </div>
             <span
               className="text-[11px] font-semibold tracking-[0.2em] uppercase text-muted-foreground"

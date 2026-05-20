@@ -845,13 +845,15 @@
   .lp-root .lp-app-grid          { grid-template-columns: 1fr; gap: 60px; }
   .lp-root .lp-hero-decor        { display: none; }
   .lp-root .lp-nav-links         { display: none; }
-  .lp-root .lp-hero              { padding: 80px 0 60px; }
 
-  .lp-root .lp-letter,
+  /* Use padding-top/bottom only for sections that also carry .lp-container,
+     so the horizontal padding from .lp-container is not zeroed out. */
+  .lp-root .lp-hero              { padding-top: 80px; padding-bottom: 60px; }
   .lp-root .lp-perspectives,
-  .lp-root .lp-app-section,
+  .lp-root .lp-app-section       { padding-top: 70px; padding-bottom: 70px; }
+  .lp-root .lp-letter,
   .lp-root .lp-quiet,
-  .lp-root .lp-cta { padding: 70px 0; }
+  .lp-root .lp-cta               { padding: 70px 0; }
 }
 
 @media (max-width: 768px) {
@@ -869,12 +871,14 @@
   .lp-root .lp-cta-inner { padding-left: 20px; padding-right: 20px; }
 
   /* ── Section vertical rhythm ─────────────────────────────────────────────── */
-  .lp-root .lp-hero { padding: 56px 0 44px; }
-  .lp-root .lp-letter,
+  /* Use padding-top/bottom only for sections that also carry .lp-container —
+     shorthand padding would zero out the horizontal padding set above. */
+  .lp-root .lp-hero              { padding-top: 56px; padding-bottom: 44px; }
   .lp-root .lp-perspectives,
-  .lp-root .lp-app-section,
+  .lp-root .lp-app-section       { padding-top: 56px; padding-bottom: 56px; }
+  .lp-root .lp-letter,
   .lp-root .lp-quiet,
-  .lp-root .lp-cta { padding: 56px 0; }
+  .lp-root .lp-cta               { padding: 56px 0; }
   .lp-root .lp-section-header { margin-bottom: 48px; }
 
   /* ── Responsive typography ───────────────────────────────────────────────── */

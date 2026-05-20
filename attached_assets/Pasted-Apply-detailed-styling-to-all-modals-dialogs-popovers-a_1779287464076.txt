@@ -1,0 +1,108 @@
+Apply detailed styling to all modals, dialogs, popovers, and data visualizations across the app, using the tokens from /styles/design-system.css.
+
+MODAL AND DIALOG STYLING:
+
+Backdrop:
+- Color: rgba(58, 45, 34, 0.35), a warm dimming overlay
+- Subtle blur if performance allows (backdrop-filter: blur(4px))
+- Never pure black backdrop
+
+Modal container:
+- Background: var(--bg-card), pure white
+- Border: 1px solid var(--rule-soft)
+- Border radius: 6px
+- Shadow: 0 4px 24px rgba(58, 45, 34, 0.08), 0 16px 48px rgba(58, 45, 34, 0.06)
+- Max width: 520px for standard, 720px for forms with multiple fields
+- Padding: 40px (28px mobile)
+
+Modal header:
+- Small clay italic label at top (the section_label pattern), if applicable
+- Title in Fraunces, weight 400, 24-28px, color var(--ink)
+- A subtle 1px var(--rule-soft) rule beneath the header, with 24px space above and below
+- Close button in top right: var(--ink-soft) on default, var(--clay) on hover, no harsh X icon, prefer a slim 1px stroke
+
+Modal body:
+- Newsreader 16px, color var(--ink), line-height 1.65
+- Generous spacing between form fields (20px)
+- Any inline accent (an icon background, a single highlight) uses var(--clay-soft) or var(--clay-wash), never solid clay
+
+Modal footer:
+- Aligned right on desktop, full width on mobile
+- Secondary action on the left (btn-tertiary or btn-secondary)
+- Primary action on the right (btn-primary)
+- 24px space above the buttons, separated by a faint var(--rule-soft) rule
+
+Confirmation modals (especially for destructive actions):
+- Use a small clay-soft circular icon background at the top, with a clay icon
+- Never use red, even for delete confirmations. The warmth of clay is enough emphasis.
+
+CHART AND DATA VISUALIZATION STYLING:
+
+Overall canvas:
+- Background: var(--bg-card), white
+- Outer container can sit on var(--bg-app), so the chart feels like paper on a table
+- Generous padding around the plot area, never crowded to the edges
+- Border: 1px solid var(--rule-soft), 4px radius
+
+Axes and gridlines:
+- Axis lines: 1px solid var(--rule-soft), very subtle
+- Gridlines: 1px dotted var(--rule-soft), even more subtle, or omitted entirely
+- Axis labels: Fraunces italic, 12px, color var(--ink-soft), letter-spacing 0.05em
+- Tick labels: Newsreader, 12px, color var(--ink-muted)
+- No box around the chart, open on the top and right sides
+
+Symptom severity charts:
+- Plot severity as a smooth curve (monotone interpolation), not jagged bars or harsh lines
+- Line color: var(--clay), 2px stroke
+- Fill below the curve: a vertical gradient from var(--clay-soft) at the top to transparent at the bottom, opacity 0.4
+- Data points: 5px filled circles in var(--clay), with a 2px var(--bg-card) inner ring for separation
+- Hover state on a point: enlarges to 8px, shows a small tooltip card
+
+Severity intensity scale (when discrete levels needed):
+- Level 1: var(--clay-wash)
+- Level 2: var(--clay-soft)
+- Level 3: #d68866
+- Level 4: var(--clay)
+- Level 5: var(--clay-deep)
+- Use these consistently across dots, bars, heat maps
+
+Calm day markers and positive indicators:
+- Use var(--mist) as a small dot or background tint
+- A calm day on the timeline shows as a small mist circle, with a Fraunces italic label "calm" in var(--ink-soft) beneath
+- This is the only cool tone in the chart palette and should feel like visual relief
+
+Caution and watch indicators:
+- Use var(--gold-soft) for medium-attention items (potential exposure, mild uptick)
+- Never use red or yellow warning colors
+
+Tooltips:
+- Background: var(--ink), the deep warm brown (not black)
+- Text: var(--bg-app), warm ivory
+- Padding: 10px 14px
+- Border radius: 3px
+- Small clay accent: a 2px var(--clay) top border or a clay dot
+- Font: Newsreader 13px
+
+Multi-line or comparison charts (if used):
+- First series: var(--clay)
+- Second series: var(--cocoa)
+- Third series: var(--gold-soft)
+- Fourth series: var(--mist)
+- Never use more than four series at once. If more data is needed, encourage filtering instead.
+
+Chart legends:
+- Below or beside the chart, never floating over it
+- Small color swatches as circles, not squares
+- Labels in Newsreader italic, 13px, color var(--ink-soft)
+
+Empty chart states:
+- Centered Fraunces italic message in var(--ink-soft), example: "Nothing logged in this period."
+- A faint var(--rule-soft) dotted outline of where data would appear
+- Never show a fake or sample chart in an empty state
+
+Print and PDF export of charts:
+- Same palette, same typography
+- Ensure all colors render legibly in CMYK printing
+- White background on the page, never the warm ivory, so printed reports look clean on doctor's paper
+
+Do not change underlying chart data, calculations, or libraries. If the project uses a chart library (Chart.js, Recharts, D3, Plotly, etc.), theme it to match these specifications rather than replacing it.

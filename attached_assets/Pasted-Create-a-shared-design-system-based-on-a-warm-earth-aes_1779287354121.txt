@@ -1,0 +1,84 @@
+Create a shared design system based on a warm earth aesthetic. The goal is for the in-app experience to feel light, calm, and distinctly different from other PANS/PANDAS support tools that lead with sage green or clinical blues.
+
+Create a file at /styles/design-system.css (or the equivalent location for this project) containing:
+
+1. CSS custom properties (root variables):
+
+   Backgrounds and surfaces:
+   --bg-app: #fbf7ef
+   --bg-card: #ffffff
+   --bg-subtle: #f5efe2
+   --rule-soft: #ece2d0
+   --rule: #d4c8b0
+
+   Text:
+   --ink: #3a2d22
+   --ink-soft: #6b5d52
+   --ink-muted: #9a8a7c
+
+   Primary accent (terracotta, the signature color):
+   --clay: #c4623d
+   --clay-deep: #a4502f
+   --clay-soft: #e6b598
+   --clay-wash: #f5d9c7
+
+   Secondary accents:
+   --cocoa: #6b4a35
+   --cocoa-deep: #4a3221
+   --gold-soft: #d4b886
+   --mist: #c8d4cd
+
+   Landing page only (preserve these for the existing landing page):
+   --cream: #f5efe4
+   --cream-warm: #ede4d3
+   --forest: #2d4a3e
+   --forest-deep: #1a2f26
+
+2. Google Fonts imports for Fraunces (display) and Newsreader (body), with full optical sizing range.
+
+3. Base typography:
+   - Body: Newsreader, 16-17px, line-height 1.65, color var(--ink), background var(--bg-app)
+   - Headings: Fraunces, weight 350-500, letter-spacing -0.015em to -0.025em, color var(--ink)
+   - Italic accents in headings use color var(--clay)
+   - Small labels above headings: Fraunces italic, 13px, letter-spacing 0.15em, uppercase, color var(--clay)
+
+4. Button classes:
+   - .btn-primary: var(--clay) background, white text, 16px 32px padding, Newsreader 15px uppercase letter-spaced label, 2px border radius. Hover: var(--clay-deep), lifts 1px.
+   - .btn-secondary: transparent background, 1px solid var(--clay) border, var(--clay) text. Hover: fills var(--clay-soft) background.
+   - .btn-tertiary: transparent background, var(--ink-soft) text, no border. Hover: var(--clay) text.
+   - .btn-text: italic Newsreader, var(--cocoa) text with var(--rule) underline. Hover: var(--clay).
+   - .btn-quiet: small, 12px 18px padding, var(--bg-subtle) background, var(--ink) text. For low-emphasis actions.
+
+5. Form inputs:
+   - Background: var(--bg-card)
+   - Border: 1px solid var(--rule-soft)
+   - Padding: 14px 16px
+   - Font: Newsreader 16px, color var(--ink)
+   - Focus: 1px solid var(--clay), no harsh outline ring, subtle var(--clay-wash) background tint
+   - Disabled: var(--bg-subtle) background, var(--ink-muted) text
+   - Labels: Fraunces italic, 14px, color var(--ink-soft), letter-spacing 0.03em, margin-bottom 8px
+
+6. Card and panel patterns:
+   - .panel: var(--bg-card) background, 1px solid var(--rule-soft) border, 4px border radius, 32px padding (24px mobile), subtle shadow (0 1px 2px rgba(58, 45, 34, 0.04))
+   - .panel-warm: same but with var(--bg-subtle) background, for callouts or accent zones
+   - .panel-quiet: no border, just var(--bg-subtle) background, for low-emphasis groupings
+
+7. Section header component (label plus heading):
+   - Small clay italic label above a larger Fraunces heading
+   - Reusable across the app
+
+8. Status and severity tokens:
+   - Severity scale (low to high), used in charts and dots: var(--clay-wash), var(--clay-soft), #d68866, var(--clay), var(--clay-deep)
+   - Calm or good day marker: var(--mist)
+   - Caution or watch indicator: var(--gold-soft)
+
+Critical rules to enforce:
+- No bright clinical blues anywhere in the authenticated app
+- No sage or forest green as primary action color (reserved for landing page only)
+- No purple, no hot pink, no neon
+- Terracotta (--clay) is the signature accent and should appear on every screen at least once, but never overwhelm
+- White cards float on warm ivory backgrounds, never the other way around
+
+Import this design system globally so all authenticated routes inherit it. Override any conflicting defaults from existing CSS frameworks, component libraries, or browser styles. Do not modify the existing landing page styling, since that page uses the cream and forest tones intentionally as a distinct first impression.
+
+Do not change any app functionality. Only update styling.

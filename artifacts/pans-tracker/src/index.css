@@ -71,72 +71,89 @@
   --radius-xl: calc(var(--radius) + 4px);
 }
 
-/* LIGHT MODE — editorial palette */
+/* LIGHT MODE — warm earth palette */
 :root {
-  --button-outline: rgba(0,0,0, .08);
-  --badge-outline: rgba(0,0,0, .05);
+  --button-outline: rgba(58, 45, 34, 0.08);
+  --badge-outline: rgba(58, 45, 34, 0.05);
 
   --opaque-button-border-intensity: -8;
 
-  --elevate-1: rgba(31, 42, 38, 0.03);
-  --elevate-2: rgba(31, 42, 38, 0.08);
+  --elevate-1: rgba(58, 45, 34, 0.03);
+  --elevate-2: rgba(58, 45, 34, 0.07);
 
-  /* Semantic tokens mapped to cream/forest/terracotta editorial palette */
-  --background: 39 47% 93%;         /* cream        #f5efe4 */
-  --foreground: 155 15% 14%;        /* ink          #1f2a26 */
-  --border: 40 30% 76%;             /* rule         #d4c8b0 */
-  --card: 39 42% 88%;               /* cream-warm   #ede4d3 */
-  --card-foreground: 155 15% 14%;   /* ink */
-  --card-border: 40 30% 76%;        /* rule */
+  /* ── Semantic tokens — clay/earth palette ──────────────────────────────── */
 
-  --sidebar: 39 42% 88%;            /* cream-warm */
-  --sidebar-foreground: 157 10% 25%;/* ink-soft     #3a4742 */
-  --sidebar-border: 40 30% 76%;     /* rule */
-  --sidebar-primary: 155 21% 23%;   /* forest       #2d4a3e */
-  --sidebar-primary-foreground: 39 47% 93%; /* cream */
-  --sidebar-accent: 39 47% 93%;     /* cream */
-  --sidebar-accent-foreground: 157 10% 25%; /* ink-soft */
-  --sidebar-ring: 16 53% 50%;       /* terracotta   #c4623d */
+  /* App background: warm ivory #fbf7ef */
+  --background: 38 62% 97%;
+  /* Text: warm dark brown #3a2d22 */
+  --foreground: 27 26% 18%;
+  /* Border: soft warm rule #ece2d0 */
+  --border: 36 33% 87%;
 
-  --popover: 39 47% 93%;            /* cream */
-  --popover-foreground: 155 15% 14%;/* ink */
-  --popover-border: 40 30% 76%;     /* rule */
+  /* Cards: white floats on ivory */
+  --card: 0 0% 100%;
+  --card-foreground: 27 26% 18%;
+  --card-border: 36 33% 87%;
 
-  --primary: 155 21% 23%;           /* forest */
-  --primary-foreground: 39 47% 93%; /* cream */
-  --secondary: 39 42% 88%;          /* cream-warm */
-  --secondary-foreground: 157 10% 25%; /* ink-soft */
-  --muted: 39 42% 88%;              /* cream-warm */
-  --muted-foreground: 157 10% 43%;  /* ink-soft lightened */
-  --accent: 16 53% 50%;             /* terracotta */
-  --accent-foreground: 39 47% 93%;  /* cream */
-  --destructive: 0 40% 58%;
+  /* Sidebar: bg-subtle #f5efe2 */
+  --sidebar: 37 47% 92%;
+  --sidebar-foreground: 23 13% 37%;       /* ink-soft #6b5d52 */
+  --sidebar-border: 36 33% 87%;
+  --sidebar-primary: 16 52% 50%;          /* clay #c4623d */
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 38 62% 97%;           /* bg-app */
+  --sidebar-accent-foreground: 23 13% 37%;
+  --sidebar-ring: 16 52% 50%;             /* clay */
+
+  /* Popover: white */
+  --popover: 0 0% 100%;
+  --popover-foreground: 27 26% 18%;
+  --popover-border: 36 33% 87%;
+
+  /* Primary: clay #c4623d */
+  --primary: 16 52% 50%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Secondary: bg-subtle */
+  --secondary: 37 47% 92%;
+  --secondary-foreground: 27 26% 18%;
+
+  /* Muted: bg-subtle, ink-muted text */
+  --muted: 37 47% 92%;
+  --muted-foreground: 25 11% 55%;         /* ink-muted #9a8a7c */
+
+  /* Accent: clay (same as primary) */
+  --accent: 16 52% 50%;
+  --accent-foreground: 0 0% 100%;
+
+  --destructive: 0 40% 55%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 40 30% 76%;              /* rule */
-  --ring: 16 53% 50%;               /* terracotta */
+  /* Input border: rule-soft */
+  --input: 36 33% 87%;
+  --ring: 16 52% 50%;                     /* clay */
 
-  /* Chart — forest / terracotta / sage / gold palette */
-  --chart-1: 155 21% 40%;  /* forest mid */
-  --chart-2: 16 53% 50%;   /* terracotta */
-  --chart-3: 111 16% 52%;  /* sage */
-  --chart-4: 37 43% 47%;   /* gold */
-  --chart-5: 18 58% 62%;   /* terracotta-soft */
-  --chart-6: 40 30% 60%;   /* rule mid */
+  /* Chart: clay / cocoa / mist / gold / clay-soft palette */
+  --chart-1: 16 52% 50%;   /* clay */
+  --chart-2: 21 34% 32%;   /* cocoa */
+  --chart-3: 148 9% 81%;   /* mist */
+  --chart-4: 37 45% 68%;   /* gold-soft */
+  --chart-5: 21 60% 75%;   /* clay-soft */
+  --chart-6: 25 11% 55%;   /* ink-muted */
 
   --app-font-sans: 'Newsreader', Georgia, serif;
   --app-font-serif: 'Fraunces', serif;
   --app-font-mono: Menlo, monospace;
 
   --radius: 0.375rem;
-  --shadow-2xs: 0px 1px 2px rgba(31, 42, 38, 0.02);
-  --shadow-xs: 0px 1px 2px rgba(31, 42, 38, 0.03);
-  --shadow-sm: 0px 2px 4px rgba(31, 42, 38, 0.04);
-  --shadow: 0px 4px 12px rgba(31, 42, 38, 0.06);
-  --shadow-md: 0px 8px 24px rgba(31, 42, 38, 0.07);
-  --shadow-lg: 0px 12px 32px rgba(31, 42, 38, 0.08);
-  --shadow-xl: 0px 16px 40px rgba(31, 42, 38, 0.09);
-  --shadow-2xl: 0px 24px 48px rgba(31, 42, 38, 0.10);
+  --shadow-2xs: 0px 1px 2px rgba(58, 45, 34, 0.03);
+  --shadow-xs: 0px 1px 3px rgba(58, 45, 34, 0.04);
+  --shadow-sm: 0px 2px 4px rgba(58, 45, 34, 0.05);
+  --shadow: 0px 4px 12px rgba(58, 45, 34, 0.07);
+  --shadow-md: 0px 8px 24px rgba(58, 45, 34, 0.08);
+  --shadow-lg: 0px 12px 32px rgba(58, 45, 34, 0.09);
+  --shadow-xl: 0px 16px 40px rgba(58, 45, 34, 0.10);
+  --shadow-2xl: 0px 24px 48px rgba(58, 45, 34, 0.11);
   --tracking-normal: 0em;
   --spacing: 0.25rem;
 
@@ -156,47 +173,47 @@
   --elevate-1: rgba(255,255,255, .04);
   --elevate-2: rgba(255,255,255, .09);
 
-  /* Dark mode — deep forest tones */
-  --background: 155 28% 10%;        /* very dark forest */
-  --foreground: 39 42% 90%;         /* light cream */
-  --border: 155 15% 22%;            /* dark forest-gray */
-  --card: 155 20% 13%;
-  --card-foreground: 39 42% 90%;
-  --card-border: 155 15% 22%;
+  /* Dark mode — warm charcoal earth tones */
+  --background: 27 18% 11%;         /* very dark warm brown */
+  --foreground: 36 30% 88%;         /* warm off-white */
+  --border: 27 15% 22%;             /* dark warm border */
+  --card: 27 16% 15%;               /* slightly lighter surface */
+  --card-foreground: 36 30% 88%;
+  --card-border: 27 15% 22%;
 
-  --sidebar: 155 20% 12%;
-  --sidebar-foreground: 39 42% 85%;
-  --sidebar-border: 155 15% 22%;
-  --sidebar-primary: 155 21% 45%;   /* lighter forest */
-  --sidebar-primary-foreground: 39 47% 93%;
-  --sidebar-accent: 155 20% 18%;
-  --sidebar-accent-foreground: 39 42% 85%;
-  --sidebar-ring: 16 53% 55%;
+  --sidebar: 27 16% 13%;
+  --sidebar-foreground: 36 25% 80%;
+  --sidebar-border: 27 15% 22%;
+  --sidebar-primary: 16 52% 58%;    /* clay brightened */
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 27 16% 18%;
+  --sidebar-accent-foreground: 36 25% 80%;
+  --sidebar-ring: 16 52% 58%;
 
-  --popover: 155 20% 13%;
-  --popover-foreground: 39 42% 90%;
-  --popover-border: 155 15% 22%;
+  --popover: 27 16% 15%;
+  --popover-foreground: 36 30% 88%;
+  --popover-border: 27 15% 22%;
 
-  --primary: 155 21% 48%;           /* lighter forest */
-  --primary-foreground: 39 47% 93%;
-  --secondary: 155 15% 22%;
-  --secondary-foreground: 39 42% 85%;
-  --muted: 155 15% 18%;
-  --muted-foreground: 40 18% 65%;
-  --accent: 16 53% 55%;             /* terracotta brightened */
-  --accent-foreground: 39 47% 93%;
+  --primary: 16 52% 58%;            /* clay brightened */
+  --primary-foreground: 0 0% 100%;
+  --secondary: 27 15% 20%;
+  --secondary-foreground: 36 25% 80%;
+  --muted: 27 15% 18%;
+  --muted-foreground: 27 10% 60%;
+  --accent: 16 52% 60%;
+  --accent-foreground: 0 0% 100%;
   --destructive: 0 40% 55%;
   --destructive-foreground: 0 0% 100%;
 
-  --input: 155 15% 22%;
-  --ring: 16 53% 55%;
+  --input: 27 15% 22%;
+  --ring: 16 52% 58%;
 
-  --chart-1: 155 21% 50%;
-  --chart-2: 16 53% 58%;
-  --chart-3: 111 16% 55%;
-  --chart-4: 37 43% 52%;
-  --chart-5: 18 58% 65%;
-  --chart-6: 155 15% 45%;
+  --chart-1: 16 52% 58%;
+  --chart-2: 21 34% 45%;
+  --chart-3: 148 9% 60%;
+  --chart-4: 37 45% 55%;
+  --chart-5: 21 60% 65%;
+  --chart-6: 25 11% 50%;
 }
 
 @layer base {
@@ -212,8 +229,10 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
     font-family: 'Newsreader', Georgia, serif;
-    font-size: 18px;
+    font-size: 17px;
     line-height: 1.65;
+    color: hsl(var(--foreground));
+    background: hsl(var(--background));
     overflow-x: hidden;
     max-width: 100%;
   }

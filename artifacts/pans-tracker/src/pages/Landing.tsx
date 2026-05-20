@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "wouter";
-import { Activity, ClipboardList, ClipboardCheck, FileDown, ArrowRight } from "lucide-react";
+import { ClipboardList, ClipboardCheck, FileDown, ArrowRight } from "lucide-react";
 import { useDemoContext } from "@/contexts/DemoContext";
 import { track, identifyAsDemo } from "@/lib/analytics";
 
@@ -74,8 +74,27 @@ export default function Landing() {
         >
           {/* Logo + wordmark */}
           <div className="lp-fade lp-d1 flex flex-col items-center gap-3 mb-9">
-            <div className="w-16 h-16 rounded-[22px] bg-primary flex items-center justify-center shadow-lg">
-              <Activity className="w-8 h-8 text-white" />
+            <div className="w-20 h-20 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <svg
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="w-14 h-14 text-primary"
+              >
+                {/* Top row — 3 calendar cells */}
+                <rect x="2.5" y="2.5" width="4" height="4" rx="0.75" />
+                <rect x="10" y="2.5" width="4" height="4" rx="0.75" />
+                <rect x="17.5" y="2.5" width="4" height="4" rx="0.75" />
+                {/* Middle row — waveform replaces cells */}
+                <path d="M 2.5 12 L 5.5 12 L 7.5 9 L 9.5 15 L 11.5 10.5 L 13 12 L 21.5 12" />
+                {/* Bottom row — 3 calendar cells */}
+                <rect x="2.5" y="17.5" width="4" height="4" rx="0.75" />
+                <rect x="10" y="17.5" width="4" height="4" rx="0.75" />
+                <rect x="17.5" y="17.5" width="4" height="4" rx="0.75" />
+              </svg>
             </div>
             <span
               className="text-[11px] font-semibold tracking-[0.2em] uppercase text-muted-foreground"
@@ -103,38 +122,40 @@ export default function Landing() {
           </p>
 
           {/* CTAs */}
-          <div className="lp-fade lp-d4 flex flex-col sm:flex-row items-center gap-3">
-            {/* Primary */}
+          <div className="lp-fade lp-d4 flex flex-col items-center gap-4">
+            {/* Primary CTA */}
             <Link
               href="/sign-up"
               onClick={() => track("landing_cta_create_account")}
             >
               <button
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl bg-primary text-white text-sm font-semibold shadow-md hover:opacity-90 active:scale-[0.98] transition-all"
+                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-lg bg-primary text-white text-sm font-semibold shadow-md hover:opacity-90 active:scale-[0.98] transition-all"
                 style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
               >
-                Create Free Account
                 <ArrowRight className="w-4 h-4" />
+                Start Tracking Today
               </button>
             </Link>
 
-            {/* Secondary */}
-            <Link
-              href="/sign-in"
-              onClick={() => track("landing_cta_login")}
+            {/* Log in text link */}
+            <p
+              className="text-sm text-muted-foreground"
+              style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
             >
-              <button
-                className="inline-flex items-center gap-2 px-7 py-3.5 rounded-xl border border-primary/25 bg-primary/8 text-primary text-sm font-semibold hover:bg-primary/12 active:scale-[0.98] transition-all"
-                style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
+              Already have an account?{" "}
+              <Link
+                href="/sign-in"
+                onClick={() => track("landing_cta_login")}
+                className="text-primary font-medium underline-offset-4 hover:underline"
               >
-                Log In
-              </button>
-            </Link>
+                Log in →
+              </Link>
+            </p>
 
             {/* Tertiary / demo */}
             <button
               onClick={handleDemo}
-              className="text-sm font-medium text-primary hover:underline underline-offset-2 transition-colors px-2 py-1"
+              className="text-sm text-muted-foreground hover:text-primary hover:underline underline-offset-2 transition-colors"
               style={{ fontFamily: "Plus Jakarta Sans, sans-serif" }}
             >
               View Demo →

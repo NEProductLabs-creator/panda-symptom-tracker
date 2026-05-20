@@ -66,8 +66,8 @@ export default function PrintSummary() {
           body {
             font-size: 10pt;
             font-family: 'Newsreader', Georgia, serif;
-            color: hsl(155, 15%, 14%);
-            background: hsl(39, 47%, 93%);
+            color: hsl(27, 26%, 18%);
+            background: #ffffff;
           }
           h1, h2, h3, h4, h5, h6 {
             font-family: 'Fraunces', serif;

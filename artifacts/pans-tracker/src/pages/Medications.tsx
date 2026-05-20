@@ -108,7 +108,7 @@ function TreatmentProgress({ med }: { med: Medication }) {
   const pct = Math.min(100, (daysSinceStart / total) * 100);
 
   const barColor =
-    remaining === 0 ? "hsl(142 60% 70%)" : remaining <= 2 ? "hsl(16 53% 55%)" : "hsl(155 21% 40%)";
+    remaining === 0 ? "#c8d4cd" : remaining <= 2 ? "hsl(16 53% 55%)" : "hsl(37 45% 68%)";
 
   return (
     <div className="mt-2.5 space-y-1">

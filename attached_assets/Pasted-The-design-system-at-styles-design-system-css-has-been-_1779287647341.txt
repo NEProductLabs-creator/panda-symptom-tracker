@@ -1,0 +1,76 @@
+The design system at /styles/design-system.css has been updated with a new warm earth palette. The authenticated app screens (login, signup, dashboard, symptom log entry forms, timeline / history views, child profile pages, reports / export views, top navigation, empty states) were styled previously using the old tokens. They need to be retuned to use the new tokens, without changing any layout, structure, copy, or functionality.
+
+Apply these token replacements across all authenticated routes only. Do not touch the landing page, which intentionally retains the old palette.
+
+Background and surface replacements:
+- var(--cream) becomes var(--bg-app)
+- var(--cream-warm) becomes var(--bg-card) for cards, modals, and elevated surfaces
+- var(--cream-warm) becomes var(--bg-subtle) for low-emphasis accent zones
+- var(--rule) becomes var(--rule-soft) for most dividers, kept as var(--rule) only where a stronger separator is intentional
+
+Text replacements:
+- var(--ink) stays as var(--ink) but should now resolve to the new warmer brown
+- var(--ink-soft) stays as var(--ink-soft), now also warmer
+
+Primary action color shift (this is the most important change):
+- Anywhere forest green was used as the primary button background (var(--forest), var(--forest-deep)), replace with var(--clay) and var(--clay-deep) for hover
+- Forest green should no longer appear as a primary action color anywhere in the authenticated app
+- Active route indicators in the top nav: the 1px underline should now be var(--clay), not forest
+- Form input focus states: the border on focus should now be var(--clay), with a subtle var(--clay-wash) background tint
+
+Accent replacements:
+- The old var(--terracotta) accent role is now filled by var(--clay), which is the primary brand color rather than a secondary accent
+- Where a deep, grounded color is still needed (dark text emphasis, the user menu, deep chart series, header bars), use var(--cocoa) instead of var(--forest-deep)
+- Severity dots and intensity scales should now use the five-step clay gradient defined in the design system: var(--clay-wash), var(--clay-soft), #d68866, var(--clay), var(--clay-deep)
+- Calm day markers and positive indicators should use var(--mist)
+
+Specific component updates:
+
+Login and signup pages:
+- Card background changes from var(--cream-warm) to var(--bg-card), pure white
+- Page background remains warm, now var(--bg-app)
+- Primary buttons (Create Account, Log In) change to var(--clay)
+- Focus states on inputs use the new clay focus treatment
+
+Top navigation in authenticated views:
+- Background: var(--bg-card) or var(--bg-app), no longer a darker cream
+- Logo styling unchanged
+- Active route underline: var(--clay), 1px
+- User menu accent: var(--cocoa)
+
+Dashboard:
+- Page background: var(--bg-app)
+- Cards and entry lists sit on var(--bg-card)
+- Severity dots use the new clay gradient
+- Primary "Log a symptom" button: var(--clay)
+- Section labels above headings: small Fraunces italic in var(--clay), uppercase, letter-spacing 0.15em
+
+Symptom log entry form:
+- Form background: var(--bg-card)
+- Severity selector dots use the new five-step clay gradient
+- Save button: var(--clay)
+
+Timeline / history view:
+- Date numerals in Fraunces, now var(--clay) for the day number (replacing what was likely terracotta already, but verify the shade)
+- Month label in Fraunces italic, var(--ink-soft)
+- Vertical timeline rule: var(--rule-soft)
+
+Reports / export view (both on-screen and exported PDF):
+- White background, not warm ivory, for printed clarity
+- Headings in Fraunces, var(--ink)
+- Accent rules and emphasis in var(--clay)
+- Severity indicators use the new clay gradient
+
+Empty states:
+- Background: var(--bg-app) or var(--bg-subtle)
+- Italic Fraunces message in var(--ink-soft)
+- Any decorative dotted outline: var(--rule-soft)
+
+Critical rules to verify after the migration:
+- No forest green appears on any authenticated route (only on the landing page)
+- Terracotta or clay appears as the primary action color, not as a secondary accent
+- White cards float on warm ivory backgrounds, never the other way around
+- All severity scales use the same five-step clay gradient consistently
+- The mist tone appears only as the calm or positive day marker
+
+Do not change layout, spacing, copy, components, or routing. Only update colors and references to design tokens.

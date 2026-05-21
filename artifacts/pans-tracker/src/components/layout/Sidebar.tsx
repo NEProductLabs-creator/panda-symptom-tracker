@@ -20,10 +20,12 @@ import {
   Settings2,
   Menu,
   X,
+  MessageSquare,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
+import FeedbackDialog from "@/components/FeedbackDialog";
 
 // ─── Nav structure ────────────────────────────────────────────────────────────
 
@@ -199,6 +201,7 @@ function NavItem({
 export default function Sidebar() {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const { baseline } = useChildBaseline();
   const childName = baseline?.childName?.trim();
   const { user } = useUser();
@@ -274,7 +277,17 @@ export default function Sidebar() {
             </button>
           </div>
         )}
+        <button
+          type="button"
+          onClick={() => setFeedbackOpen(true)}
+          className="flex items-center gap-2 w-full text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-sidebar-accent"
+        >
+          <MessageSquare className="w-3.5 h-3.5 flex-shrink-0" />
+          Send Feedback
+        </button>
       </div>
+
+      <FeedbackDialog open={feedbackOpen} onOpenChange={setFeedbackOpen} />
     </>
   );
 

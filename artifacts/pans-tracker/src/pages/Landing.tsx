@@ -112,9 +112,10 @@ export default function Landing() {
               of, and everything came back normal. We started to wonder if this was just who our son was now.
             </p>
             <p>
-              In January, after hours of online research, we found PANDAS. His symptoms matched almost
-              exactly. His strep antibodies came back at nearly 2.5 times the normal level. A powerful
-              antibiotic was prescribed, and slowly, our boy came back to us.
+              In January, after hours of online research, we found PANDAS. His strep antibodies came back
+              at nearly 2.5 times the normal level. A powerful antibiotic was prescribed. Friends also
+              connected us with a truly amazing psychologist who helped him work through his symptoms,
+              especially the OCD. Slowly, our boy came back to us.
             </p>
             <p>He has had one flare since then. Because we knew what to watch for, we caught it early.</p>
 

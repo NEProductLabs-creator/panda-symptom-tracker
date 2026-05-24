@@ -344,11 +344,15 @@ function SignUpPage() {
   const [showClerkForm, setShowClerkForm] = useState(
     isOAuthCallback || alreadyAgreed
   );
+  // Latched true when the user arrives via a Clerk OAuth transfer (no account found on sign-in).
+  // Stored in state so it stays true after the form renders and the signal clears.
+  const [arrivedViaTransfer, setArrivedViaTransfer] = useState(false);
 
   // When Clerk has a pending OAuth transfer, skip the terms pre-step and go
   // straight to <SignUp> so Clerk can complete the account creation.
   useEffect(() => {
     if (hasClerkTransfer && !showClerkForm) {
+      setArrivedViaTransfer(true);
       setShowClerkForm(true);
     }
   }, [hasClerkTransfer]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -368,7 +372,16 @@ function SignUpPage() {
 
   if (showClerkForm) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-8 gap-4">
+        {arrivedViaTransfer && (
+          <div className="w-full max-w-[440px] rounded-xl border border-border bg-card px-4 py-3 flex items-start gap-3">
+            <span className="text-lg leading-none mt-0.5" aria-hidden>👋</span>
+            <p className="text-sm text-foreground leading-snug">
+              <span className="font-semibold">We didn't find an account for this Google address.</span>{" "}
+              Let's get you set up!
+            </p>
+          </div>
+        )}
         <SignUp
           routing="path"
           path={`${basePath}/sign-up`}

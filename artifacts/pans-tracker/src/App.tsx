@@ -184,23 +184,38 @@ function SignInPage() {
       />
 
       {demoStep === 0 && (
-        <div className="w-full max-w-[440px] space-y-2 text-center">
-          <div className="flex items-center gap-3">
-            <div className="h-px bg-border flex-1" />
-            <span className="text-xs text-muted-foreground">Just exploring?</span>
-            <div className="h-px bg-border flex-1" />
+        <>
+          {/* New user prompt — shown outside the Clerk card so it's always visible */}
+          <div className="w-full max-w-[440px] text-center -mt-2">
+            <p className="text-sm text-muted-foreground">
+              First time here?{" "}
+              <Link href="/sign-up" className="font-semibold text-primary hover:underline">
+                Create your account →
+              </Link>
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-1">
+              Google sign-in only works once you've signed up first.
+            </p>
           </div>
-          <button
-            type="button"
-            onClick={handleDemoClick}
-            className="text-sm font-semibold text-primary hover:underline transition-colors"
-          >
-            View Demo →
-          </button>
-          <p className="text-[11px] text-muted-foreground">
-            See 6 weeks of realistic PANDAS symptom data — no account needed
-          </p>
-        </div>
+
+          <div className="w-full max-w-[440px] space-y-2 text-center">
+            <div className="flex items-center gap-3">
+              <div className="h-px bg-border flex-1" />
+              <span className="text-xs text-muted-foreground">Just exploring?</span>
+              <div className="h-px bg-border flex-1" />
+            </div>
+            <button
+              type="button"
+              onClick={handleDemoClick}
+              className="text-sm font-semibold text-primary hover:underline transition-colors"
+            >
+              View Demo →
+            </button>
+            <p className="text-[11px] text-muted-foreground">
+              See 6 weeks of realistic PANDAS symptom data — no account needed
+            </p>
+          </div>
+        </>
       )}
 
       {demoStep === 1 && (
@@ -353,6 +368,9 @@ function SignUpPage() {
           </h1>
           <p className="text-sm text-muted-foreground">
             Before we get started, please review our terms.
+          </p>
+          <p className="text-[11px] text-muted-foreground pt-0.5">
+            Signing up with Google? Agree below, then choose Google on the next screen.
           </p>
         </div>
 

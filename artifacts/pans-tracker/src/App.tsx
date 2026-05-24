@@ -2,7 +2,7 @@ import { ReactNode, useEffect, useRef, useState } from "react";
 import { track, identifyUser, identifyAsDemo, enableSurveys } from "@/lib/analytics";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect, Link } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, useUser, useClerk, useAuth } from "@clerk/react";
+import { ClerkProvider, SignIn, SignUp, useUser, useClerk, useAuth, useSignUp } from "@clerk/react";
 import { publishableKeyFromHost } from "@clerk/react/internal";
 import { shadcn } from "@clerk/themes";
 import { Toaster } from "@/components/ui/toaster";
@@ -322,17 +322,36 @@ function SignInPage() {
 
 function SignUpPage() {
   const [location] = useLocation();
+  // In Clerk v6 the hook returns the resource directly (a signal value), not {signUp, isLoaded}
+  const signUpResource = useSignUp();
   const [agreed, setAgreed] = useState(false);
 
   // Skip the pre-step and go straight to the Clerk form when:
   // 1. We're on a sub-path like /sign-up/sso-callback (Google OAuth callback after redirect)
   // 2. The user already agreed before the OAuth redirect (flag survives in localStorage)
+  // 3. Clerk has a pending OAuth transfer from sign-in (no account found for Google user) —
+  //    signUp.status is set by Clerk when it transfers the Google session here automatically.
+  //    Terms are captured post-creation by the TermsGate in Router.
   const isOAuthCallback = location !== '/sign-up';
   const alreadyAgreed = !!(
     sessionStorage.getItem('pans_terms_pending') ||
     localStorage.getItem('pans_terms_pending')
   );
-  const [showClerkForm, setShowClerkForm] = useState(isOAuthCallback || alreadyAgreed);
+  // signUpResource is the SignUp object directly in Clerk v6; a non-null status means Clerk has
+  // a pending session (e.g., from an OAuth transfer when Google sign-in finds no account).
+  const hasClerkTransfer = signUpResource != null && (signUpResource as { status?: string | null }).status != null;
+
+  const [showClerkForm, setShowClerkForm] = useState(
+    isOAuthCallback || alreadyAgreed
+  );
+
+  // When Clerk has a pending OAuth transfer, skip the terms pre-step and go
+  // straight to <SignUp> so Clerk can complete the account creation.
+  useEffect(() => {
+    if (hasClerkTransfer && !showClerkForm) {
+      setShowClerkForm(true);
+    }
+  }, [hasClerkTransfer]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!showClerkForm) track('signup_started');
@@ -368,9 +387,6 @@ function SignUpPage() {
           </h1>
           <p className="text-sm text-muted-foreground">
             Before we get started, please review our terms.
-          </p>
-          <p className="text-[11px] text-muted-foreground pt-0.5">
-            Signing up with Google? Agree below, then choose Google on the next screen.
           </p>
         </div>
 

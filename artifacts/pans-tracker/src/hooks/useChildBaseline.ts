@@ -4,6 +4,7 @@ import { ChildBaseline } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { createApiClient } from '@/lib/api';
 import { mergeSingleton } from '@/lib/syncUtils';
+import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { DEMO_BASELINE } from '@/lib/demoData';
 import { DEMO_KEY } from '@/contexts/DemoContext';
@@ -29,9 +30,7 @@ export function useChildBaseline() {
           setBaseline(winner);
         }
         if (pushToServer && winner) {
-          api.baseline.save(winner).catch(() => {
-            toast({ title: 'Saved offline', description: 'Your baseline is saved locally and will sync when connection is restored.' });
-          });
+          queueMutation('PUT', '/baseline', winner, getToken, toast);
         }
       })
       .catch(() => {});
@@ -42,11 +41,9 @@ export function useChildBaseline() {
       if (isDemoMode) return;
       storage.saveChildBaseline(data);
       setBaseline(data);
-      api.baseline.save(data).catch(() => {
-        toast({ title: 'Saved offline', description: 'Your baseline is saved locally and will sync later.' });
-      });
+      queueMutation('PUT', '/baseline', data, getToken, toast);
     },
-    [isDemoMode, api, toast],
+    [isDemoMode, getToken, toast],
   );
 
   const clearBaseline = useCallback(() => {

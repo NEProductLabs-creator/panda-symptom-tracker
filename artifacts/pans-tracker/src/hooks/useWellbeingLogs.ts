@@ -3,6 +3,7 @@ import { useAuth } from '@clerk/react';
 import { WellbeingLog } from '@/lib/types';
 import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
+import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { DEMO_WELLBEING_LOGS } from '@/lib/demoData';
 import { DEMO_KEY } from '@/contexts/DemoContext';
@@ -41,15 +42,9 @@ export function useWellbeingLogs() {
         const { merged, localOnly } = mergeById(local, serverLogs);
         persistLogs(merged);
         setLogs(merged);
-        let syncToastShown = false;
-        localOnly.forEach((l) =>
-          api.wellbeing.save(l).catch(() => {
-            if (!syncToastShown) {
-              syncToastShown = true;
-              toast({ title: 'Saved offline', description: 'Some wellbeing logs are saved locally and will sync when connection is restored.' });
-            }
-          }),
-        );
+        localOnly.forEach((l) => {
+          queueMutation('POST', '/wellbeing', l, getToken, toast);
+        });
       })
       .catch(() => {});
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -60,23 +55,26 @@ export function useWellbeingLogs() {
       setLogs((prev) => {
         const existing = prev.find((l) => l.date === entry.date);
         let next: WellbeingLog[];
-        let saved: WellbeingLog;
         if (existing) {
-          saved = { ...existing, ...entry, id: existing.id, updatedAt: now() };
-          next = prev.map((l) => (l.date === entry.date ? saved : l));
+          next = prev.map((l) =>
+            l.date === entry.date
+              ? { ...existing, ...entry, id: existing.id, updatedAt: now() }
+              : l,
+          );
         } else {
           const id = entry.id ?? `wlog_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-          saved = { ...entry, id, updatedAt: now() };
-          next = [...prev, saved];
+          next = [...prev, { ...entry, id, updatedAt: now() }];
         }
         persistLogs(next);
-        api.wellbeing.save(saved).catch(() => {
-          toast({ title: 'Saved offline', description: 'Your wellbeing log is saved locally and will sync later.' });
-        });
         return next;
       });
+      // Read saved item from storage (written synchronously above)
+      const saved = loadLogs().find((l) => l.date === entry.date);
+      if (saved) {
+        queueMutation('POST', '/wellbeing', saved, getToken, toast);
+      }
     },
-    [isDemoMode, api, toast],
+    [isDemoMode, getToken, toast],
   );
 
   const deleteLog = useCallback(
@@ -87,11 +85,9 @@ export function useWellbeingLogs() {
         persistLogs(next);
         return next;
       });
-      api.wellbeing.delete(id).catch(() => {
-        toast({ title: 'Delete may not have synced', description: 'The deletion was applied locally but could not reach the server.' });
-      });
+      queueMutation('DELETE', `/wellbeing/${id}`, undefined, getToken, toast);
     },
-    [isDemoMode, api, toast],
+    [isDemoMode, getToken, toast],
   );
 
   return { logs, upsertLog, deleteLog };

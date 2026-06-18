@@ -4,6 +4,7 @@ import { HouseholdIllness } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
+import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 
 export function useHouseholdHealth() {
@@ -24,15 +25,9 @@ export function useHouseholdHealth() {
         const sorted = [...merged].sort((a, b) => b.startDate.localeCompare(a.startDate));
         storage.saveHouseholdHealth(sorted);
         setIllnesses(sorted);
-        let syncToastShown = false;
-        localOnly.forEach((item) =>
-          api.household.save(item).catch(() => {
-            if (!syncToastShown) {
-              syncToastShown = true;
-              toast({ title: 'Saved offline', description: 'Some household health entries are saved locally and will sync when connection is restored.' });
-            }
-          }),
-        );
+        localOnly.forEach((item) => {
+          queueMutation('POST', '/household', item, getToken, toast);
+        });
       })
       .catch(() => {});
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -42,22 +37,18 @@ export function useHouseholdHealth() {
       const stamped: HouseholdIllness = { ...illness, updatedAt: now() };
       storage.addHouseholdIllness(stamped);
       setIllnesses(storage.getHouseholdHealth().sort((a, b) => b.startDate.localeCompare(a.startDate)));
-      api.household.save(stamped).catch(() => {
-        toast({ title: 'Saved offline', description: 'Your household health entry is saved locally and will sync later.' });
-      });
+      queueMutation('POST', '/household', stamped, getToken, toast);
     },
-    [api, toast],
+    [getToken, toast],
   );
 
   const deleteIllness = useCallback(
     (id: string) => {
       storage.deleteHouseholdIllness(id);
       setIllnesses(storage.getHouseholdHealth().sort((a, b) => b.startDate.localeCompare(a.startDate)));
-      api.household.delete(id).catch(() => {
-        toast({ title: 'Delete may not have synced', description: 'The deletion was applied locally but could not reach the server.' });
-      });
+      queueMutation('DELETE', `/household/${id}`, undefined, getToken, toast);
     },
-    [api, toast],
+    [getToken, toast],
   );
 
   return { illnesses, addIllness, deleteIllness };

@@ -4,6 +4,7 @@ import { Medication, MissedDose } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
+import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { DEMO_MEDICATIONS } from '@/lib/demoData';
 import { DEMO_KEY } from '@/contexts/DemoContext';
@@ -28,15 +29,9 @@ export function useMedications() {
         const { merged, localOnly } = mergeById(local, serverMeds);
         storage.saveMedications(merged);
         setMedications(merged);
-        let syncToastShown = false;
-        localOnly.forEach((m) =>
-          api.medications.save(m).catch(() => {
-            if (!syncToastShown) {
-              syncToastShown = true;
-              toast({ title: 'Saved offline', description: 'Some medications are saved locally and will sync when connection is restored.' });
-            }
-          }),
-        );
+        localOnly.forEach((m) => {
+          queueMutation('POST', '/medications', m, getToken, toast);
+        });
       })
       .catch(() => {});
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -54,11 +49,9 @@ export function useMedications() {
         storage.saveMedications(next);
         return next;
       });
-      api.medications.save(stamped).catch(() => {
-        toast({ title: 'Saved offline', description: 'Your medication change is saved locally and will sync later.' });
-      });
+      queueMutation('POST', '/medications', stamped, getToken, toast);
     },
-    [isDemoMode, api, toast],
+    [isDemoMode, getToken, toast],
   );
 
   const deleteMedication = useCallback(
@@ -69,11 +62,9 @@ export function useMedications() {
         storage.saveMedications(next);
         return next;
       });
-      api.medications.delete(id).catch(() => {
-        toast({ title: 'Delete may not have synced', description: 'The deletion was applied locally but could not reach the server.' });
-      });
+      queueMutation('DELETE', `/medications/${id}`, undefined, getToken, toast);
     },
-    [isDemoMode, api, toast],
+    [isDemoMode, getToken, toast],
   );
 
   const addMissedDose = useCallback(
@@ -86,16 +77,15 @@ export function useMedications() {
             : m,
         );
         storage.saveMedications(next);
-        const updated = next.find((m) => m.id === medId);
-        if (updated) {
-          api.medications.save(updated).catch(() => {
-            toast({ title: 'Saved offline', description: 'Missed dose is saved locally and will sync later.' });
-          });
-        }
         return next;
       });
+      // Read fresh from storage (written synchronously above)
+      const updated = storage.getMedications().find((m) => m.id === medId);
+      if (updated) {
+        queueMutation('POST', '/medications', updated, getToken, toast);
+      }
     },
-    [isDemoMode, api, toast],
+    [isDemoMode, getToken, toast],
   );
 
   const deleteMissedDose = useCallback(
@@ -108,16 +98,15 @@ export function useMedications() {
             : m,
         );
         storage.saveMedications(next);
-        const updated = next.find((m) => m.id === medId);
-        if (updated) {
-          api.medications.save(updated).catch(() => {
-            toast({ title: 'Saved offline', description: 'Missed dose removal is saved locally and will sync later.' });
-          });
-        }
         return next;
       });
+      // Read fresh from storage (written synchronously above)
+      const updated = storage.getMedications().find((m) => m.id === medId);
+      if (updated) {
+        queueMutation('POST', '/medications', updated, getToken, toast);
+      }
     },
-    [isDemoMode, api, toast],
+    [isDemoMode, getToken, toast],
   );
 
   return { medications, addMedication, deleteMedication, addMissedDose, deleteMissedDose };

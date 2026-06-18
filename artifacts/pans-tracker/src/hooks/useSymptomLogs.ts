@@ -4,6 +4,7 @@ import { SymptomLog } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
+import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { DEMO_LOGS } from '@/lib/demoData';
 import { DEMO_KEY } from '@/contexts/DemoContext';
@@ -30,15 +31,9 @@ export function useSymptomLogs() {
         const { merged, localOnly } = mergeById(local, serverLogs);
         storage.saveLogs(merged);
         setLogs(merged);
-        let syncToastShown = false;
-        localOnly.forEach((l) =>
-          api.logs.save(l).catch(() => {
-            if (!syncToastShown) {
-              syncToastShown = true;
-              toast({ title: 'Saved offline', description: 'Some entries are saved locally and will sync when connection is restored.' });
-            }
-          }),
-        );
+        localOnly.forEach((l) => {
+          queueMutation('POST', '/logs', l, getToken, toast);
+        });
       })
       .catch(() => {});
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -56,11 +51,9 @@ export function useSymptomLogs() {
         if (isNew) track('symptom_log_created');
         return next;
       });
-      api.logs.save(stamped).catch(() => {
-        toast({ title: 'Saved offline', description: 'Your log entry is saved locally and will sync later.' });
-      });
+      queueMutation('POST', '/logs', stamped, getToken, toast);
     },
-    [isDemoMode, api, toast],
+    [isDemoMode, getToken, toast],
   );
 
   const deleteLog = useCallback(
@@ -71,11 +64,9 @@ export function useSymptomLogs() {
         storage.saveLogs(next);
         return next;
       });
-      api.logs.delete(id).catch(() => {
-        toast({ title: 'Delete may not have synced', description: 'The deletion was applied locally but could not reach the server.' });
-      });
+      queueMutation('DELETE', `/logs/${id}`, undefined, getToken, toast);
     },
-    [isDemoMode, api, toast],
+    [isDemoMode, getToken, toast],
   );
 
   return { logs, loading, addLog, deleteLog };

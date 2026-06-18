@@ -4,6 +4,7 @@ import { Milestone } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
+import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 
 export function useMilestones() {
@@ -21,15 +22,9 @@ export function useMilestones() {
         const { merged, localOnly } = mergeById(local, serverItems);
         storage.saveMilestones(merged);
         setMilestones(merged);
-        let syncToastShown = false;
-        localOnly.forEach((item) =>
-          api.milestones.save(item).catch(() => {
-            if (!syncToastShown) {
-              syncToastShown = true;
-              toast({ title: 'Saved offline', description: 'Some milestones are saved locally and will sync when connection is restored.' });
-            }
-          }),
-        );
+        localOnly.forEach((item) => {
+          queueMutation('POST', '/milestones', item, getToken, toast);
+        });
       })
       .catch(() => {});
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -42,12 +37,10 @@ export function useMilestones() {
         storage.saveMilestones(updated);
         return updated;
       });
-      api.milestones.save(item).catch(() => {
-        toast({ title: 'Saved offline', description: 'Your milestone is saved locally and will sync later.' });
-      });
+      queueMutation('POST', '/milestones', item, getToken, toast);
       return item;
     },
-    [api, toast],
+    [getToken, toast],
   );
 
   const updateMilestone = useCallback(
@@ -58,11 +51,9 @@ export function useMilestones() {
         storage.saveMilestones(updated);
         return updated;
       });
-      api.milestones.save(item).catch(() => {
-        toast({ title: 'Saved offline', description: 'Your milestone update is saved locally and will sync later.' });
-      });
+      queueMutation('POST', '/milestones', item, getToken, toast);
     },
-    [api, toast],
+    [getToken, toast],
   );
 
   const deleteMilestone = useCallback(
@@ -72,11 +63,9 @@ export function useMilestones() {
         storage.saveMilestones(updated);
         return updated;
       });
-      api.milestones.delete(id).catch(() => {
-        toast({ title: 'Delete may not have synced', description: 'The deletion was applied locally but could not reach the server.' });
-      });
+      queueMutation('DELETE', `/milestones/${id}`, undefined, getToken, toast);
     },
-    [api, toast],
+    [getToken, toast],
   );
 
   return { milestones, addMilestone, updateMilestone, deleteMilestone };

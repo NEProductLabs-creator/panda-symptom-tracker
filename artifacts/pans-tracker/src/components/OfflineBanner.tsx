@@ -1,8 +1,25 @@
+import { useEffect } from "react";
 import { WifiOff } from "lucide-react";
+import { useAuth } from "@clerk/react";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { drainQueue } from "@/lib/apiQueue";
 
 export default function OfflineBanner() {
   const isOnline = useOnlineStatus();
+  const { getToken } = useAuth();
+
+  // Drain persisted failed queue on mount (picks up from previous sessions)
+  useEffect(() => {
+    drainQueue(getToken);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Drain again whenever the browser comes back online
+  useEffect(() => {
+    if (isOnline) {
+      drainQueue(getToken);
+    }
+  }, [isOnline, getToken]);
+
   if (isOnline) return null;
 
   return (

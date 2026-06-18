@@ -4,6 +4,7 @@ import { TriggerEntry } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
+import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 
 export function useTriggerLog() {
@@ -24,15 +25,9 @@ export function useTriggerLog() {
         const sorted = [...merged].sort((a, b) => b.date.localeCompare(a.date));
         storage.saveTriggerLog(sorted);
         setEntries(sorted);
-        let syncToastShown = false;
-        localOnly.forEach((e) =>
-          api.triggers.save(e).catch(() => {
-            if (!syncToastShown) {
-              syncToastShown = true;
-              toast({ title: 'Saved offline', description: 'Some trigger entries are saved locally and will sync when connection is restored.' });
-            }
-          }),
-        );
+        localOnly.forEach((e) => {
+          queueMutation('POST', '/triggers', e, getToken, toast);
+        });
       })
       .catch(() => {});
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -42,22 +37,18 @@ export function useTriggerLog() {
       const stamped: TriggerEntry = { ...entry, updatedAt: now() };
       storage.addTriggerEntry(stamped);
       setEntries(storage.getTriggerLog().sort((a, b) => b.date.localeCompare(a.date)));
-      api.triggers.save(stamped).catch(() => {
-        toast({ title: 'Saved offline', description: 'Your trigger entry is saved locally and will sync later.' });
-      });
+      queueMutation('POST', '/triggers', stamped, getToken, toast);
     },
-    [api, toast],
+    [getToken, toast],
   );
 
   const deleteEntry = useCallback(
     (id: string) => {
       storage.deleteTriggerEntry(id);
       setEntries(storage.getTriggerLog().sort((a, b) => b.date.localeCompare(a.date)));
-      api.triggers.delete(id).catch(() => {
-        toast({ title: 'Delete may not have synced', description: 'The deletion was applied locally but could not reach the server.' });
-      });
+      queueMutation('DELETE', `/triggers/${id}`, undefined, getToken, toast);
     },
-    [api, toast],
+    [getToken, toast],
   );
 
   return { entries, addEntry, deleteEntry };

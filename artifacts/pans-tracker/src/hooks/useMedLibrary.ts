@@ -4,6 +4,7 @@ import { MedLibraryItem } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
+import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { DEMO_MED_LIBRARY } from '@/lib/demoData';
 import { DEMO_KEY } from '@/contexts/DemoContext';
@@ -28,15 +29,9 @@ export function useMedLibrary() {
         const { merged, localOnly } = mergeById(local, serverItems);
         storage.saveMedLibrary(merged);
         setMedLibrary(merged);
-        let syncToastShown = false;
-        localOnly.forEach((item) =>
-          api.medLibrary.save(item).catch(() => {
-            if (!syncToastShown) {
-              syncToastShown = true;
-              toast({ title: 'Saved offline', description: 'Some library items are saved locally and will sync when connection is restored.' });
-            }
-          }),
-        );
+        localOnly.forEach((item) => {
+          queueMutation('POST', '/medlibrary', item, getToken, toast);
+        });
       })
       .catch(() => {});
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -54,11 +49,9 @@ export function useMedLibrary() {
         storage.saveMedLibrary(next);
         return next;
       });
-      api.medLibrary.save(stamped).catch(() => {
-        toast({ title: 'Saved offline', description: 'Your library change is saved locally and will sync later.' });
-      });
+      queueMutation('POST', '/medlibrary', stamped, getToken, toast);
     },
-    [isDemoMode, api, toast],
+    [isDemoMode, getToken, toast],
   );
 
   const deleteMedLibraryItem = useCallback(
@@ -69,11 +62,9 @@ export function useMedLibrary() {
         storage.saveMedLibrary(next);
         return next;
       });
-      api.medLibrary.delete(id).catch(() => {
-        toast({ title: 'Delete may not have synced', description: 'The deletion was applied locally but could not reach the server.' });
-      });
+      queueMutation('DELETE', `/medlibrary/${id}`, undefined, getToken, toast);
     },
-    [isDemoMode, api, toast],
+    [isDemoMode, getToken, toast],
   );
 
   return { medLibrary, saveMedLibraryItem, deleteMedLibraryItem };

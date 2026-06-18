@@ -21,10 +21,15 @@ import {
   Menu,
   X,
   MessageSquare,
+  Cloud,
+  CloudOff,
+  Loader2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
+import { useQueueStatus } from "@/lib/apiQueue";
 import FeedbackDialog from "@/components/FeedbackDialog";
 
 // ─── Nav structure ────────────────────────────────────────────────────────────
@@ -113,6 +118,39 @@ function getSectionForPath(path: string): string {
     if (s.children?.some((c) => c.href === path)) return s.href;
   }
   return path;
+}
+
+// ─── Sync status indicator ────────────────────────────────────────────────────
+
+function SyncStatus() {
+  const isOnline = useOnlineStatus();
+  const { pending, failed } = useQueueStatus();
+  const total = pending + failed;
+
+  if (!isOnline) {
+    return (
+      <div className="flex items-center gap-1.5 text-[10px] text-amber-600 mt-0.5">
+        <CloudOff className="w-3 h-3 flex-shrink-0" />
+        <span>Offline</span>
+      </div>
+    );
+  }
+
+  if (total > 0) {
+    return (
+      <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground mt-0.5">
+        <Loader2 className="w-3 h-3 flex-shrink-0 animate-spin" />
+        <span>Syncing {total} item{total !== 1 ? "s" : ""}</span>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5 text-[10px] text-green-600 mt-0.5">
+      <Cloud className="w-3 h-3 flex-shrink-0" />
+      <span>Synced</span>
+    </div>
+  );
 }
 
 // ─── Nav item ─────────────────────────────────────────────────────────────────
@@ -267,6 +305,7 @@ export default function Sidebar() {
                   {displayEmail}
                 </p>
               )}
+              <SyncStatus />
             </div>
             <button
               type="button"

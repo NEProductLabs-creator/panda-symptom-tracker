@@ -3,6 +3,8 @@ import { useAuth } from '@clerk/react';
 import { PTECLog, FlareEvent } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { createApiClient } from '@/lib/api';
+import { mergeById, now } from '@/lib/syncUtils';
+import { useToast } from '@/hooks/use-toast';
 import { detectPTECFlare } from '@/lib/ptec';
 import { DEMO_PTEC_LOGS } from '@/lib/demoData';
 import { DEMO_KEY } from '@/contexts/DemoContext';
@@ -15,6 +17,7 @@ export function usePTECLogs() {
   const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
+  const { toast } = useToast();
 
   const [ptecLogs, setPTECLogs] = useState<PTECLog[]>(() => {
     if (isDemoMode) return DEMO_PTEC_LOGS;
@@ -25,15 +28,20 @@ export function usePTECLogs() {
     if (!userId || isDemoMode) return;
     api.ptec.getAll()
       .then((serverLogs) => {
-        if (serverLogs.length > 0) {
-          storage.savePTECLogs(serverLogs);
-          setPTECLogs([...serverLogs].sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate)));
-        } else {
-          const local = storage.getPTECLogs();
-          if (local.length > 0) {
-            local.forEach((l) => api.ptec.save(l).catch(() => {}));
-          }
-        }
+        const local = storage.getPTECLogs();
+        const { merged, localOnly } = mergeById(local, serverLogs);
+        const sorted = [...merged].sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
+        storage.savePTECLogs(sorted);
+        setPTECLogs(sorted);
+        let syncToastShown = false;
+        localOnly.forEach((l) =>
+          api.ptec.save(l).catch(() => {
+            if (!syncToastShown) {
+              syncToastShown = true;
+              toast({ title: 'Saved offline', description: 'Some PTEC check-ins are saved locally and will sync when connection is restored.' });
+            }
+          }),
+        );
       })
       .catch(() => {});
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -41,11 +49,14 @@ export function usePTECLogs() {
   const addOrUpdateLog = useCallback(
     (log: PTECLog) => {
       if (isDemoMode) { dispatchDemo(); return; }
-      storage.addOrUpdatePTECLog(log);
+      const stamped: PTECLog = { ...log, updatedAt: now() };
+      storage.addOrUpdatePTECLog(stamped);
       const updated = storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
       setPTECLogs(updated);
       track('ptec_checkin_completed');
-      api.ptec.save(log).catch(() => {});
+      api.ptec.save(stamped).catch(() => {
+        toast({ title: 'Saved offline', description: 'Your PTEC check-in is saved locally and will sync later.' });
+      });
 
       const flare = detectPTECFlare(updated);
       if (flare.isActive && flare.latestWeekStart) {
@@ -61,7 +72,7 @@ export function usePTECLogs() {
         api.flares.save(event).catch(() => {});
       }
     },
-    [isDemoMode, api],
+    [isDemoMode, api, toast],
   );
 
   const deleteLog = useCallback(
@@ -71,9 +82,11 @@ export function usePTECLogs() {
       setPTECLogs(
         storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate)),
       );
-      api.ptec.delete(id).catch(() => {});
+      api.ptec.delete(id).catch(() => {
+        toast({ title: 'Delete may not have synced', description: 'The deletion was applied locally but could not reach the server.' });
+      });
     },
-    [isDemoMode, api],
+    [isDemoMode, api, toast],
   );
 
   const getLogForWeek = useCallback(

@@ -10,6 +10,7 @@ export type SymptomLog = {
   notes?: string;
   medicationsTaken?: string[]; // array of MedLibraryItem IDs
   calmDay?: boolean;
+  updatedAt?: string; // ISO timestamp — used for last-write-wins sync merge
 };
 
 export type MedicationType = 'antibiotic' | 'ssri' | 'supplement' | 'ivig' | 'steroid' | 'other';
@@ -36,6 +37,7 @@ export type Medication = {
   supplyDays?: number; // days of supply on hand (user-updated)
   notes?: string;
   missedDoses?: MissedDose[];
+  updatedAt?: string; // ISO timestamp — used for last-write-wins sync merge
 };
 
 export type FrequencyOption = 'once' | 'twice' | 'three_times' | 'as_needed';
@@ -52,6 +54,7 @@ export type MedLibraryItem = {
   name: string;
   dosage: string;
   frequency: FrequencyOption;
+  updatedAt?: string; // ISO timestamp — used for last-write-wins sync merge
 };
 
 export type MilestoneType = 'appointment' | 'lab_results' | 'medication_change' | 'other';
@@ -69,6 +72,7 @@ export type Milestone = {
   title: string;
   type: MilestoneType;
   notes?: string;
+  updatedAt?: string; // ISO timestamp — used for last-write-wins sync merge
 };
 
 export type PTECLog = {
@@ -91,6 +95,7 @@ export type PTECLog = {
   };
   totalScore: number; // 0–72
   notes?: string;
+  updatedAt?: string; // ISO timestamp — used for last-write-wins sync merge
 };
 
 export type PTECScores = PTECLog['scores'];
@@ -118,6 +123,7 @@ export type TriggerEntry = {
   severity: TriggerSeverity;
   householdMemberName?: string; // for household_illness category
   customCategory?: string; // for 'other' category
+  updatedAt?: string; // ISO timestamp — used for last-write-wins sync merge
 };
 
 export type HouseholdIllness = {
@@ -127,6 +133,7 @@ export type HouseholdIllness = {
   startDate: string; // YYYY-MM-DD
   endDate?: string; // YYYY-MM-DD
   notes?: string;
+  updatedAt?: string; // ISO timestamp — used for last-write-wins sync merge
 };
 
 export type FlareEvent = {
@@ -167,4 +174,5 @@ export type WellbeingLog = {
   connected: number; // 1–5: how connected they feel to support (5 = well-supported)
   notes?: string;    // private caregiver-only notes
   hardDay: boolean;  // flags this date as a particularly hard day
+  updatedAt?: string; // ISO timestamp — used for last-write-wins sync merge
 };

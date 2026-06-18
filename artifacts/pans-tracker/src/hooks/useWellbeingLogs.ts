@@ -2,6 +2,8 @@ import { useState, useCallback, useEffect, useMemo } from 'react';
 import { useAuth } from '@clerk/react';
 import { WellbeingLog } from '@/lib/types';
 import { createApiClient } from '@/lib/api';
+import { mergeById, now } from '@/lib/syncUtils';
+import { useToast } from '@/hooks/use-toast';
 import { DEMO_WELLBEING_LOGS } from '@/lib/demoData';
 import { DEMO_KEY } from '@/contexts/DemoContext';
 
@@ -25,6 +27,7 @@ export function useWellbeingLogs() {
   const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
+  const { toast } = useToast();
 
   const [logs, setLogs] = useState<WellbeingLog[]>(() =>
     isDemoMode ? DEMO_WELLBEING_LOGS : loadLogs(),
@@ -34,15 +37,19 @@ export function useWellbeingLogs() {
     if (!userId || isDemoMode) return;
     api.wellbeing.getAll()
       .then((serverLogs) => {
-        if (serverLogs.length > 0) {
-          persistLogs(serverLogs);
-          setLogs(serverLogs);
-        } else {
-          const local = loadLogs();
-          if (local.length > 0) {
-            local.forEach((l) => api.wellbeing.save(l).catch(() => {}));
-          }
-        }
+        const local = loadLogs();
+        const { merged, localOnly } = mergeById(local, serverLogs);
+        persistLogs(merged);
+        setLogs(merged);
+        let syncToastShown = false;
+        localOnly.forEach((l) =>
+          api.wellbeing.save(l).catch(() => {
+            if (!syncToastShown) {
+              syncToastShown = true;
+              toast({ title: 'Saved offline', description: 'Some wellbeing logs are saved locally and will sync when connection is restored.' });
+            }
+          }),
+        );
       })
       .catch(() => {});
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -53,19 +60,23 @@ export function useWellbeingLogs() {
       setLogs((prev) => {
         const existing = prev.find((l) => l.date === entry.date);
         let next: WellbeingLog[];
+        let saved: WellbeingLog;
         if (existing) {
-          next = prev.map((l) => (l.date === entry.date ? { ...l, ...entry, id: l.id } : l));
+          saved = { ...existing, ...entry, id: existing.id, updatedAt: now() };
+          next = prev.map((l) => (l.date === entry.date ? saved : l));
         } else {
           const id = entry.id ?? `wlog_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-          next = [...prev, { ...entry, id }];
+          saved = { ...entry, id, updatedAt: now() };
+          next = [...prev, saved];
         }
         persistLogs(next);
-        const saved = next.find((l) => l.date === entry.date);
-        if (saved) api.wellbeing.save(saved).catch(() => {});
+        api.wellbeing.save(saved).catch(() => {
+          toast({ title: 'Saved offline', description: 'Your wellbeing log is saved locally and will sync later.' });
+        });
         return next;
       });
     },
-    [isDemoMode, api],
+    [isDemoMode, api, toast],
   );
 
   const deleteLog = useCallback(
@@ -76,9 +87,11 @@ export function useWellbeingLogs() {
         persistLogs(next);
         return next;
       });
-      api.wellbeing.delete(id).catch(() => {});
+      api.wellbeing.delete(id).catch(() => {
+        toast({ title: 'Delete may not have synced', description: 'The deletion was applied locally but could not reach the server.' });
+      });
     },
-    [isDemoMode, api],
+    [isDemoMode, api, toast],
   );
 
   return { logs, upsertLog, deleteLog };

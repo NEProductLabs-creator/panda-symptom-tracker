@@ -3,6 +3,8 @@ import { useAuth } from '@clerk/react';
 import { ChildBaseline } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { createApiClient } from '@/lib/api';
+import { mergeSingleton } from '@/lib/syncUtils';
+import { useToast } from '@/hooks/use-toast';
 import { DEMO_BASELINE } from '@/lib/demoData';
 import { DEMO_KEY } from '@/contexts/DemoContext';
 
@@ -10,6 +12,7 @@ export function useChildBaseline() {
   const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
+  const { toast } = useToast();
 
   const [baseline, setBaseline] = useState<ChildBaseline | null>(() =>
     isDemoMode ? DEMO_BASELINE : storage.getChildBaseline(),
@@ -19,12 +22,16 @@ export function useChildBaseline() {
     if (!userId || isDemoMode) return;
     api.baseline.get()
       .then((serverBaseline) => {
-        if (serverBaseline) {
-          storage.saveChildBaseline(serverBaseline);
-          setBaseline(serverBaseline);
-        } else {
-          const local = storage.getChildBaseline();
-          if (local) api.baseline.save(local).catch(() => {});
+        const local = storage.getChildBaseline();
+        const { winner, pushToServer } = mergeSingleton(local, serverBaseline, 'lastUpdated');
+        if (winner) {
+          storage.saveChildBaseline(winner);
+          setBaseline(winner);
+        }
+        if (pushToServer && winner) {
+          api.baseline.save(winner).catch(() => {
+            toast({ title: 'Saved offline', description: 'Your baseline is saved locally and will sync when connection is restored.' });
+          });
         }
       })
       .catch(() => {});
@@ -35,9 +42,11 @@ export function useChildBaseline() {
       if (isDemoMode) return;
       storage.saveChildBaseline(data);
       setBaseline(data);
-      api.baseline.save(data).catch(() => {});
+      api.baseline.save(data).catch(() => {
+        toast({ title: 'Saved offline', description: 'Your baseline is saved locally and will sync later.' });
+      });
     },
-    [isDemoMode, api],
+    [isDemoMode, api, toast],
   );
 
   const clearBaseline = useCallback(() => {

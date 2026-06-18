@@ -72,7 +72,9 @@ export type AnalyticsEvent =
   | 'share_link_created'
   | 'pwa_install_prompt_shown'
   | 'pwa_install_accepted'
-  | 'pwa_install_dismissed';
+  | 'pwa_install_dismissed'
+  | 'push_reminder_enabled_from_nudge'
+  | 'push_reminder_nudge_dismissed';
 
 export function track(event: AnalyticsEvent): void {
   if (!analyticsReady) return;

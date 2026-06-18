@@ -155,7 +155,7 @@ router.get("/:token", async (req, res) => {
 // POST /api/shares/:token/revoke — revoke a share (auth required, must own it)
 router.post("/:token/revoke", requireAuth(), async (req, res) => {
   const db = requireSupabase();
-  const { token } = req.params;
+  const token = req.params["token"] as string;
 
   if (!TOKEN_RE.test(token)) {
     res.status(400).json({ error: "Invalid token" });

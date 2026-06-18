@@ -242,8 +242,8 @@ export default function SharedView() {
             <div className="divide-y divide-border/60">
               {recentLogs.map((log) => {
                 const scores = [
-                  log.ocd, log.anxiety, log.mood, log.sensory,
-                  log.cognitive, log.physical,
+                  log.ocd, log.anxiety, log.rage, log.tics,
+                  log.sleep, log.cognition,
                 ].filter((v) => v !== null && v !== undefined) as number[];
                 const avg =
                   scores.length > 0
@@ -265,10 +265,10 @@ export default function SharedView() {
                           [
                             ["OCD", log.ocd],
                             ["Anxiety", log.anxiety],
-                            ["Mood", log.mood],
-                            ["Sensory", log.sensory],
-                            ["Cognitive", log.cognitive],
-                            ["Physical", log.physical],
+                            ["Rage", log.rage],
+                            ["Tics", log.tics],
+                            ["Sleep", log.sleep],
+                            ["Cognition", log.cognition],
                           ] as [string, number | null | undefined][]
                         )
                           .filter(([, v]) => v !== null && v !== undefined)
@@ -359,7 +359,7 @@ export default function SharedView() {
                     <div className="flex-shrink-0 text-xs text-muted-foreground pt-0.5 w-16">
                       {format(parseISO(m.date), "MMM d")}
                     </div>
-                    <p className="text-sm text-foreground leading-snug">{m.text}</p>
+                    <p className="text-sm text-foreground leading-snug">{m.notes}</p>
                   </div>
                 ))}
             </div>

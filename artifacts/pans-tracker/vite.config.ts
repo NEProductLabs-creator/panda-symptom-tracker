@@ -36,6 +36,9 @@ export default defineConfig({
     tailwindcss({ optimize: false }),
     runtimeErrorOverlay(),
     VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "sw.ts",
       registerType: "autoUpdate",
       injectRegister: "auto",
       includeAssets: ["favicon.svg", "logo.svg", "icons/*.png"],
@@ -95,43 +98,8 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
+      injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
-        runtimeCaching: [
-          {
-            urlPattern: /.*supabase\.co.*/i,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "supabase-api",
-              networkTimeoutSeconds: 10,
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /\.(js|css|woff2?|ttf|eot)(\?.*)?$/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "static-assets",
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 30 * 24 * 60 * 60,
-              },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-          {
-            urlPattern: /\.(png|jpg|jpeg|svg|gif|ico|webp)(\?.*)?$/i,
-            handler: "CacheFirst",
-            options: {
-              cacheName: "image-assets",
-              expiration: {
-                maxEntries: 60,
-                maxAgeSeconds: 30 * 24 * 60 * 60,
-              },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
       },
       devOptions: {
         enabled: false,

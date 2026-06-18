@@ -5,10 +5,19 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
+    "sendDailyReminders": "tsx ./src/sendDailyReminders.ts",
+    "sendInactivityReminders": "tsx ./src/sendInactivityReminders.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@types/web-push": "^3.6.4",
     "tsx": "catalog:"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.105.4",
+    "date-fns": "^3.6.0",
+    "date-fns-tz": "^3.2.0",
+    "web-push": "^3.6.7"
   }
 }

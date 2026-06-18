@@ -96,6 +96,11 @@ export function createApiClient(getToken: () => Promise<string | null>) {
       delete: (id: string) => req<void>('DELETE', `/wellbeing/${id}`),
     },
 
+    // ── Account deletion ─────────────────────────────────────────────────────
+    account: {
+      deleteAll: () => req<void>('DELETE', '/all'),
+    },
+
     // ── Bulk sync (localStorage → server migration) ──────────────────────────
     sync: (payload: {
       logs?: SymptomLog[];

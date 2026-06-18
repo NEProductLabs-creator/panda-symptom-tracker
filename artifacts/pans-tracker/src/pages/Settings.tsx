@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Settings2, User, Home, School, Plus, X, Save, CheckCircle2, Trash2, LogOut } from "lucide-react";
+import { useAuth as useClerkAuth } from "@clerk/react";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
 import { Input } from "@/components/ui/input";
@@ -7,6 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { createApiClient } from "@/lib/api";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogFooter,
+} from "@/components/ui/alert-dialog";
 
 type DiagnosisStatus = "confirmed" | "suspected" | "exploring" | "";
 
@@ -14,6 +24,24 @@ const DIAGNOSIS_OPTIONS: { value: DiagnosisStatus; label: string }[] = [
   { value: "confirmed", label: "Confirmed PANS or PANDAS" },
   { value: "suspected", label: "Suspected" },
   { value: "exploring", label: "Still exploring" },
+];
+
+const LOCAL_STORAGE_KEYS = [
+  "pans_tracker_symptom_logs",
+  "pans_tracker_sb_migrated_v1",
+  "pans_tracker_medications",
+  "pans_tracker_med_library",
+  "pans_tracker_milestones",
+  "childBaseline",
+  "ptecLog",
+  "flareHistory",
+  "triggerLog",
+  "householdHealthLog",
+  "pans_tracker_school_hub",
+  "pans_tracker_wellbeing",
+  "pans_tracker_hopeboard",
+  "pans_tracker_settings",
+  "pans_tracker_visited",
 ];
 
 function SectionCard({
@@ -59,9 +87,16 @@ export default function Settings() {
   const { baseline, saveBaseline } = useChildBaseline();
   const { toast } = useToast();
   const { signOut } = useAuth();
+  const { getToken } = useClerkAuth();
+  const api = useMemo(() => createApiClient(getToken), [getToken]);
 
   const [savedChild, setSavedChild] = useState(false);
   const [savedSchool, setSavedSchool] = useState(false);
+
+  // Delete-account dialog
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmText, setConfirmText] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   // Child section
   const [childName, setChildName] = useState(baseline?.childName ?? "");
@@ -130,28 +165,28 @@ export default function Settings() {
     }
   }
 
-  function clearAllData() {
-    if (!window.confirm("This will permanently delete all app data on this device. Are you sure?")) return;
+  function openDeleteDialog() {
+    setConfirmText("");
+    setDeleteOpen(true);
+  }
 
-    const keys = [
-      "pans_tracker_symptom_logs",
-      "pans_tracker_sb_migrated_v1",
-      "pans_tracker_medications",
-      "pans_tracker_med_library",
-      "pans_tracker_milestones",
-      "childBaseline",
-      "ptecLog",
-      "flareHistory",
-      "triggerLog",
-      "householdHealthLog",
-      "pans_tracker_school_hub",
-      "pans_tracker_wellbeing",
-      "pans_tracker_hopeboard",
-      "pans_tracker_settings",
-      "pans_tracker_visited",
-    ];
-    keys.forEach((k) => localStorage.removeItem(k));
-    window.location.href = "/";
+  async function handleDeleteAccount() {
+    if (confirmText !== "DELETE" || deleting) return;
+    setDeleting(true);
+    try {
+      await api.account.deleteAll();
+    } catch {
+      toast({
+        title: "Deletion failed",
+        description: "Could not delete your data from the server. Nothing has been removed — please try again.",
+        variant: "destructive",
+      });
+      setDeleting(false);
+      return;
+    }
+    LOCAL_STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
+    setDeleteOpen(false);
+    await signOut();
   }
 
   return (
@@ -319,14 +354,7 @@ export default function Settings() {
           Logs, medications, and notes are saved to your account and sync across devices automatically.
           Your data is tied to your login — both parents can sign in and see the same records.
         </p>
-        <button
-          type="button"
-          onClick={clearAllData}
-          className="flex items-center gap-2 text-xs text-destructive hover:text-destructive/80 font-medium transition-colors"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-          Clear all app data
-        </button>
+
         <button
           type="button"
           onClick={() => signOut()}
@@ -334,9 +362,68 @@ export default function Settings() {
           data-testid="settings-sign-out"
         >
           <LogOut className="w-3.5 h-3.5" />
-          Sign out
+          Sign out on this device
+        </button>
+
+        <button
+          type="button"
+          onClick={openDeleteDialog}
+          className="flex items-center gap-2 text-xs text-destructive hover:text-destructive/80 font-medium transition-colors"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+          Delete my account and all data
         </button>
       </div>
+
+      {/* Delete-account confirmation dialog */}
+      <AlertDialog
+        open={deleteOpen}
+        onOpenChange={(o) => { if (!deleting) setDeleteOpen(o); }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-destructive">
+              Delete all account data?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3 text-sm text-muted-foreground">
+                <p>
+                  This will permanently delete every log, medication, milestone, and note
+                  stored in your account. <strong className="text-foreground">This cannot be undone.</strong>
+                </p>
+                <p>
+                  Type <span className="font-mono font-bold text-destructive">DELETE</span> below to confirm.
+                </p>
+                <Input
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  placeholder="Type DELETE to confirm"
+                  autoComplete="off"
+                  autoCorrect="off"
+                  spellCheck={false}
+                  className="font-mono"
+                />
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDeleteOpen(false)}
+              disabled={deleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDeleteAccount}
+              disabled={confirmText !== "DELETE" || deleting}
+            >
+              {deleting ? "Deleting…" : "Delete everything"}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

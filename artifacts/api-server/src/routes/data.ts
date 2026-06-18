@@ -342,4 +342,44 @@ router.post('/sync', async (req, res) => {
   }
 });
 
+// ── Delete all data for user (account deletion) ───────────────────────────────
+//
+// Deletes every row belonging to userId across all application tables in
+// parallel. If any table DELETE fails the entire request returns 500 so the
+// frontend can abort before clearing localStorage or signing out.
+
+router.delete('/all', async (req, res) => {
+  const db = requireSupabase();
+  const userId = uid(req);
+
+  const tables = [
+    'symptom_logs',
+    'medications',
+    'med_library',
+    'milestones',
+    'child_baseline',
+    'ptec_logs',
+    'flare_history',
+    'trigger_log',
+    'household_health',
+    'wellbeing_logs',
+    'terms_agreements',
+    'user_terms',
+  ];
+
+  const errors = (
+    await Promise.all(
+      tables.map((table) =>
+        db.from(table).delete().eq('user_id', userId).then(({ error }) => error ?? null),
+      ),
+    )
+  ).filter(Boolean);
+
+  if (errors.length > 0) {
+    return err(res, errors[0], 'DELETE /all');
+  }
+
+  res.status(204).send();
+});
+
 export default router;

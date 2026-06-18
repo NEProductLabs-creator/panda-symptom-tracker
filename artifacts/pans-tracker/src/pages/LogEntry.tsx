@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { format, subDays, addDays, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
@@ -41,7 +41,7 @@ function ScoreBubble({ value, active, onClick, label }: { value: number; active:
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 h-10 w-10 rounded-full text-sm font-semibold transition-all flex flex-col items-center justify-center border-2 ${
+      className={`flex-1 h-11 w-11 rounded-full text-sm font-semibold transition-all flex flex-col items-center justify-center border-2 ${
         active
           ? "border-transparent shadow-sm scale-105 text-white"
           : "border-border bg-transparent text-muted-foreground hover:border-muted-foreground/40"
@@ -76,6 +76,7 @@ export default function LogEntry() {
   const existing = logs.find((l) => l.date === selectedDate);
 
   const canGoForward = selectedDate < today;
+  const touchStartX = useRef<number | null>(null);
 
   function goBack() {
     setSelectedDate(format(subDays(parseISO(selectedDate), 1), "yyyy-MM-dd"));
@@ -156,12 +157,22 @@ export default function LogEntry() {
       </div>
 
       {/* Date navigator */}
-      <div className="flex items-center gap-3 bg-card border border-border rounded-xl px-3 py-3 shadow-sm">
+      <div
+        className="flex items-center gap-3 bg-card border border-border rounded-xl px-3 py-3 shadow-sm"
+        onTouchStart={(e) => { touchStartX.current = e.touches[0].clientX; }}
+        onTouchEnd={(e) => {
+          if (touchStartX.current === null) return;
+          const delta = touchStartX.current - e.changedTouches[0].clientX;
+          touchStartX.current = null;
+          if (delta > 50) goForward();
+          else if (delta < -50) goBack();
+        }}
+      >
         <Button
           variant="ghost"
           size="icon"
           onClick={goBack}
-          className="w-9 h-9 text-muted-foreground hover:text-foreground flex-shrink-0"
+          className="w-11 h-11 text-muted-foreground hover:text-foreground flex-shrink-0"
           data-testid="button-date-back"
           aria-label="Previous day"
         >
@@ -180,7 +191,7 @@ export default function LogEntry() {
           size="icon"
           onClick={goForward}
           disabled={!canGoForward}
-          className="w-9 h-9 text-muted-foreground hover:text-foreground flex-shrink-0 disabled:opacity-30"
+          className="w-11 h-11 text-muted-foreground hover:text-foreground flex-shrink-0 disabled:opacity-30"
           data-testid="button-date-forward"
           aria-label="Next day"
         >

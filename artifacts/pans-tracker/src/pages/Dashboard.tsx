@@ -193,8 +193,8 @@ function ScoreInput({
                 data-testid={`score-btn-${label.toLowerCase().replace(/\s|\//g, '-')}-${n}`}
                 className="touch-manipulation"
                 style={{
-                  width: '38px',
-                  height: '38px',
+                  width: '44px',
+                  height: '44px',
                   borderRadius: '50%',
                   fontSize: '14px',
                   fontFamily: 'Newsreader, serif',
@@ -799,13 +799,17 @@ export default function Dashboard() {
         </CardHeader>
         <CardContent className="space-y-0 p-5 pt-0">
           <div style={{ maxWidth: '720px' }}>
-            <button
+            <Button
               type="button"
-              className="btn-secondary mb-4"
+              variant="outline"
+              size="lg"
+              className="w-full mb-5 touch-manipulation font-medium text-base border-2 hover:bg-primary/5"
+              style={{ borderColor: '#8aa395', color: '#3d6659' }}
               onClick={() => { setScores(CALM_SCORES); setCalmDay(true); }}
+              data-testid="button-calm-day"
             >
-              Calm day, nothing to report
-            </button>
+              Calm day — nothing to report
+            </Button>
             <div>
               {CATEGORIES.map((cat, idx) => (
                 <ScoreInput
@@ -889,7 +893,10 @@ export default function Dashboard() {
       </Card>
 
       {/* Sticky save button */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 px-5 py-3 bg-background/95 backdrop-blur-sm border-t border-border md:static md:bg-transparent md:border-0 md:backdrop-blur-none md:p-0 md:pb-2">
+      <div
+        className="fixed bottom-0 left-0 right-0 z-50 px-5 pt-3 bg-background/95 backdrop-blur-sm border-t border-border md:static md:bg-transparent md:border-0 md:backdrop-blur-none md:p-0 md:pb-2"
+        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}
+      >
         <div className="max-w-5xl mx-auto">
           <Button
             onClick={handleSave}

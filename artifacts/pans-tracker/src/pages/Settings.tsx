@@ -214,6 +214,7 @@ export default function Settings() {
             value={childName}
             onChange={(e) => setChildName(e.target.value)}
             placeholder="e.g. Emma"
+            autoComplete="given-name"
             data-testid="settings-child-name"
           />
         </Field>

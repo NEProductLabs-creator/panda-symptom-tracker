@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import cors from "cors";
+import helmet from "helmet";
 import pinoHttp from "pino-http";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
@@ -11,7 +12,44 @@ import {
 import router from "./routes";
 import { logger } from "./lib/logger";
 
+// ── CORS allowlist ────────────────────────────────────────────────────────────
+// Priority: ALLOWED_ORIGINS env var → sensible defaults per environment.
+// In production, the two known domains are always included.
+
+function buildAllowedOrigins(): string[] {
+  if (process.env.ALLOWED_ORIGINS) {
+    return process.env.ALLOWED_ORIGINS.split(",")
+      .map((o) => o.trim())
+      .filter(Boolean);
+  }
+
+  const origins: string[] = ["http://localhost:5173"];
+
+  // In Replit dev, the preview is served from the Replit proxy domain(s)
+  if (process.env.REPLIT_DOMAINS) {
+    for (const d of process.env.REPLIT_DOMAINS.split(",")) {
+      const trimmed = d.trim();
+      if (trimmed) origins.push(`https://${trimmed}`);
+    }
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    origins.push(
+      "https://panssymptomtracker.com",
+      "https://www.panssymptomtracker.com",
+      "https://pans-tracker.replit.app",
+    );
+  }
+
+  return origins;
+}
+
+const allowedOrigins = buildAllowedOrigins();
+logger.info({ allowedOrigins }, "CORS allowlist");
+
 const app: Express = express();
+
+// ── Request logging ───────────────────────────────────────────────────────────
 
 app.use(
   pinoHttp({
@@ -33,11 +71,63 @@ app.use(
   }),
 );
 
+// ── Clerk proxy (must be before other middleware that reads the body) ─────────
+
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
-app.use(cors({ credentials: true, origin: true }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+// ── Security headers (helmet) ─────────────────────────────────────────────────
+// crossOriginEmbedderPolicy is disabled: it blocks cross-origin subresources
+// that don't opt in, which can interfere with Clerk and Supabase.
+
+app.use(
+  helmet({
+    crossOriginEmbedderPolicy: false,
+    contentSecurityPolicy: {
+      directives: {
+        defaultSrc: ["'self'"],
+        scriptSrc: ["'self'"],
+        // 'unsafe-inline' required for shadcn/ui component styles
+        styleSrc: ["'self'", "'unsafe-inline'"],
+        imgSrc: ["'self'", "data:", "https:"],
+        fontSrc: ["'self'", "data:"],
+        // Clerk proxy is same-origin; PostHog and Supabase are external
+        connectSrc: [
+          "'self'",
+          "https://*.supabase.co",
+          "https://us.i.posthog.com",
+          "https://clerk.panssymptomtracker.com",
+        ],
+        objectSrc: ["'none'"],
+        frameAncestors: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
+      },
+    },
+  }),
+);
+
+// ── CORS ──────────────────────────────────────────────────────────────────────
+
+app.use(
+  cors({
+    credentials: true,
+    origin(origin, callback) {
+      // No origin = server-to-server / curl / same-origin proxy — allow through
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error(`CORS: origin '${origin}' not in allowlist`));
+      }
+    },
+  }),
+);
+
+// ── Body parsing (64 KB hard cap) ─────────────────────────────────────────────
+
+app.use(express.json({ limit: "64kb" }));
+app.use(express.urlencoded({ extended: true, limit: "64kb" }));
+
+// ── Clerk auth middleware ─────────────────────────────────────────────────────
 
 app.use(
   clerkMiddleware((req) => ({
@@ -47,6 +137,8 @@ app.use(
     ),
   })),
 );
+
+// ── Routes ────────────────────────────────────────────────────────────────────
 
 app.use("/api", router);
 

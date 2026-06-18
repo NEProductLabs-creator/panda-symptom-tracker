@@ -1,7 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { requireAuth } from '@clerk/express';
 import { requireSupabase } from '../lib/supabase';
-import { logger } from '../lib/logger';
+import { logger, errCode } from '../lib/logger';
 
 const router = Router();
 
@@ -12,8 +12,10 @@ function uid(req: Request): string {
   return (req as any).auth.userId as string;
 }
 
+// Log a stable error code string instead of a full Supabase error object,
+// which may contain schema details or partial PII.
 function err(res: Response, e: unknown, ctx: string): void {
-  logger.error({ err: e }, ctx);
+  logger.error({ errCode: errCode(e) }, ctx);
   res.status(500).json({ error: 'Internal server error' });
 }
 
@@ -343,10 +345,6 @@ router.post('/sync', async (req, res) => {
 });
 
 // ── Delete all data for user (account deletion) ───────────────────────────────
-//
-// Deletes every row belonging to userId across all application tables in
-// parallel. If any table DELETE fails the entire request returns 500 so the
-// frontend can abort before clearing localStorage or signing out.
 
 router.delete('/all', async (req, res) => {
   const db = requireSupabase();

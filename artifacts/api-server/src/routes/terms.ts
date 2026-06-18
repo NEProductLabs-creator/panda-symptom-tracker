@@ -1,14 +1,27 @@
 import { Router, Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
 import { requireSupabase } from '../lib/supabase';
-import { logger } from '../lib/logger';
+import { logger, errCode } from '../lib/logger';
+import { ALLOWED_VERSIONS } from '../lib/termsVersion';
 
 const router = Router();
+
+// ── Rate limiter: 10 POSTs per IP per hour ────────────────────────────────────
+// Applied only to the unauthenticated POST /agree endpoint.
+
+const agreeLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  standardHeaders: true,  // Return rate-limit info in RateLimit-* headers
+  legacyHeaders: false,   // Disable X-RateLimit-* headers
+  message: { error: 'Too many requests. Please try again later.' },
+});
 
 // POST /api/terms/agree
 // Auth-optional: works for demo users (no token) and signed-in users (token present).
 // Clerk middleware is already applied globally so req.auth is populated when a valid
 // token is sent; we just don't *require* it here.
-router.post('/agree', async (req: Request, res: Response) => {
+router.post('/agree', agreeLimiter, async (req: Request, res: Response) => {
   try {
     const db = requireSupabase();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -21,6 +34,12 @@ router.post('/agree', async (req: Request, res: Response) => {
 
     if (!terms_version || !context) {
       res.status(400).json({ error: 'terms_version and context are required' });
+      return;
+    }
+
+    // Validate terms_version against the server-side allowlist
+    if (!(ALLOWED_VERSIONS as readonly string[]).includes(terms_version)) {
+      res.status(400).json({ error: `Unrecognised terms_version: ${terms_version}` });
       return;
     }
 
@@ -48,7 +67,7 @@ router.post('/agree', async (req: Request, res: Response) => {
 
     res.json({ ok: true });
   } catch (e) {
-    logger.error({ err: e }, 'POST /terms/agree');
+    logger.error({ errCode: errCode(e) }, 'POST /terms/agree');
     res.status(500).json({ error: 'Internal server error' });
   }
 });
@@ -72,7 +91,7 @@ router.get('/status', async (req: Request, res: Response) => {
     if (error) throw error;
     res.json(data ?? { terms_version_agreed: null, terms_agreed_at: null });
   } catch (e) {
-    logger.error({ err: e }, 'GET /terms/status');
+    logger.error({ errCode: errCode(e) }, 'GET /terms/status');
     res.status(500).json({ error: 'Internal server error' });
   }
 });

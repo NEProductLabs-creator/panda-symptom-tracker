@@ -51,13 +51,13 @@ A daily symptom and medication tracking app for parents managing children with P
 - User IDs are Clerk format (TEXT `user_2xyz...`) — not Supabase auth UUIDs
 - ReferenceArea from Recharts used for medication period overlays on the line chart
 - Print summary uses `@media print` CSS and `window.print()` — no server-side rendering
-- Score buttons (1–5) as toggle groups rather than sliders for quick finger-friendly entry
+- Score buttons (0–5) as toggle groups rather than sliders for quick finger-friendly entry; 0 = none/poor, 5 = extreme/excellent; null = not entered
 - Print page bypasses the sidebar layout via route-based check in App.tsx
 
 ## Product
 
 - Dashboard: 30-day symptom trend line chart with medication overlays + quick daily log form
-- Daily Log: log or edit any date's symptoms (6 categories, 1–5 scale) with free-text notes
+- Daily Log: log or edit any date's symptoms (6 categories, 0–5 scale) with free-text notes
 - Medications: add/edit/delete medications with name, dose, type, date range, and notes
 - Print Summary: formatted doctor-visit report with medication table, 30-day score grid, and notes
 - PTEC Check-in: weekly parent stress / executive function tracker

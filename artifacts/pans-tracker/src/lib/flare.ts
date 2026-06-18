@@ -2,9 +2,11 @@ import { SymptomLog } from './types';
 import { format, subDays, parseISO } from 'date-fns';
 
 export function computeDailyScore(log: SymptomLog): number {
+  // Canonical score scale: 0 (none/poor) to 5 (extreme/excellent).
   // sleep and cognition use an inverted scale (higher = better),
   // so we invert them before summing to get a proper severity contribution.
-  // Null means "not tracked" — treat as 0 for scoring purposes.
+  // Null means "not entered" — treated as 0 (best-case) for scoring so that
+  // partial logs don't inflate the severity score unfairly.
   const ocd = log.ocd ?? 0;
   const anxiety = log.anxiety ?? 0;
   const rage = log.rage ?? 0;

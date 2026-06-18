@@ -99,7 +99,11 @@ export default function LogEntry() {
       ? format(parseISO(selectedDate), "EEEE, MMMM d, yyyy")
       : null;
 
-  const [scores, setScores] = useState({ ocd: 0, anxiety: 0, rage: 0, tics: 0, sleep: 0, cognition: 0 });
+  const [scores, setScores] = useState<{
+    ocd: number | null; anxiety: number | null; rage: number | null;
+    tics: number | null; sleep: number | null; cognition: number | null;
+  }>({ ocd: null, anxiety: null, rage: null, tics: null, sleep: null, cognition: null });
+  const [calmDay, setCalmDay] = useState(false);
   const [notes, setNotes] = useState("");
   const [medicationsTaken, setMedicationsTaken] = useState<string[]>([]);
   const [saved, setSaved] = useState(false);
@@ -109,9 +113,10 @@ export default function LogEntry() {
     const entry = logs.find((l) => l.date === selectedDate);
     setScores(
       entry
-        ? { ocd: entry.ocd ?? 0, anxiety: entry.anxiety ?? 0, rage: entry.rage ?? 0, tics: entry.tics ?? 0, sleep: entry.sleep ?? 0, cognition: entry.cognition ?? 0 }
-        : { ocd: 0, anxiety: 0, rage: 0, tics: 0, sleep: 0, cognition: 0 }
+        ? { ocd: entry.ocd ?? null, anxiety: entry.anxiety ?? null, rage: entry.rage ?? null, tics: entry.tics ?? null, sleep: entry.sleep ?? null, cognition: entry.cognition ?? null }
+        : { ocd: null, anxiety: null, rage: null, tics: null, sleep: null, cognition: null }
     );
+    setCalmDay(entry?.calmDay ?? false);
     setNotes(entry?.notes ?? "");
     setMedicationsTaken(entry?.medicationsTaken ?? []);
   }, [selectedDate, logs]);
@@ -122,14 +127,25 @@ export default function LogEntry() {
     );
   }
 
+  // Enable save only when there's something meaningful to record.
+  const canSave = calmDay || Object.values(scores).some((v) => v !== null);
+
   function handleSave() {
     try {
       const log: SymptomLog = {
         id: existing?.id ?? `log-${Date.now()}`,
         date: selectedDate,
-        ...scores,
+        // If calmDay, write explicit 0s so the log is distinguishable from "no data".
+        // Otherwise preserve null for any category the user didn't score.
+        ocd: calmDay ? 0 : scores.ocd,
+        anxiety: calmDay ? 0 : scores.anxiety,
+        rage: calmDay ? 0 : scores.rage,
+        tics: calmDay ? 0 : scores.tics,
+        sleep: calmDay ? 0 : scores.sleep,
+        cognition: calmDay ? 0 : scores.cognition,
         notes,
         medicationsTaken,
+        calmDay,
       };
       addLog(log);
       setSaved(true);
@@ -231,6 +247,21 @@ export default function LogEntry() {
             </p>
           </div>
 
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="w-full touch-manipulation font-medium text-base border-2 hover:bg-primary/5"
+            style={{ borderColor: '#8aa395', color: '#3d6659' }}
+            onClick={() => {
+              setScores({ ocd: 0, anxiety: 0, rage: 0, tics: 0, sleep: 0, cognition: 0 });
+              setCalmDay(true);
+            }}
+            data-testid="button-calm-day"
+          >
+            Calm day — nothing to report
+          </Button>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {CATEGORIES.map((cat) => (
               <div key={cat.key} className="space-y-2">
@@ -248,7 +279,7 @@ export default function LogEntry() {
                       key={n}
                       value={n}
                       active={scores[cat.key] === n}
-                      onClick={() => setScores((s) => ({ ...s, [cat.key]: n }))}
+                      onClick={() => { setScores((s) => ({ ...s, [cat.key]: n })); setCalmDay(false); }}
                       label={
                         cat.inverted
                           ? (n === 0 ? "Poor" : n === 5 ? "Excel" : undefined)
@@ -325,7 +356,7 @@ export default function LogEntry() {
             />
           </div>
 
-          <Button onClick={handleSave} data-testid="button-save-entry">
+          <Button onClick={handleSave} disabled={!canSave} data-testid="button-save-entry">
             {saved ? "Saved ✓" : existing ? "Update Entry" : "Save Entry"}
           </Button>
         </CardContent>

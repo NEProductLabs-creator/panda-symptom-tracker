@@ -29,6 +29,7 @@ import Onboarding from "@/pages/Onboarding";
 import Settings from "@/pages/Settings";
 import Privacy from "@/pages/Privacy";
 import Terms from "@/pages/Terms";
+import SharedView from "@/pages/SharedView";
 import TermsGate from "@/pages/TermsGate";
 import { useTermsStatus } from "@/hooks/useTermsStatus";
 import { CURRENT_TERMS_VERSION } from "@/lib/termsVersion";
@@ -687,6 +688,7 @@ function AppProviders() {
               {/* Public pages — no auth required */}
               <Route path="/privacy" component={Privacy} />
               <Route path="/terms" component={Terms} />
+              <Route path="/shared/:token" component={SharedView} />
               {/* All other routes go through auth-guarded Router */}
               <Route component={Router} />
             </Switch>

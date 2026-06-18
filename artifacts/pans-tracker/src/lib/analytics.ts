@@ -69,6 +69,7 @@ export type AnalyticsEvent =
   | 'symptom_log_created'
   | 'ptec_checkin_completed'
   | 'export_triggered'
+  | 'share_link_created'
   | 'pwa_install_prompt_shown'
   | 'pwa_install_accepted'
   | 'pwa_install_dismissed';

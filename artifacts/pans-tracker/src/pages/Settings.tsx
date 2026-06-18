@@ -1,14 +1,20 @@
-import { useState, useMemo } from "react";
-import { Settings2, User, Home, School, Plus, X, Save, CheckCircle2, Trash2, LogOut } from "lucide-react";
+import { useState, useMemo, useCallback, useEffect } from "react";
+import { format, parseISO } from "date-fns";
+import {
+  Settings2, User, Home, School, Plus, X, Save, CheckCircle2,
+  Trash2, LogOut, Share2, Copy, Check, Link2,
+} from "lucide-react";
 import { useAuth as useClerkAuth } from "@clerk/react";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { createApiClient } from "@/lib/api";
+import { track } from "@/lib/analytics";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -17,6 +23,13 @@ import {
   AlertDialogDescription,
   AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 
 type DiagnosisStatus = "confirmed" | "suspected" | "exploring" | "";
 
@@ -43,6 +56,14 @@ const LOCAL_STORAGE_KEYS = [
   "pans_tracker_settings",
   "pans_tracker_visited",
 ];
+
+type ShareRecord = {
+  token: string;
+  expires_at: string;
+  include_notes: boolean;
+  revoked: boolean;
+  created_at: string;
+};
 
 function SectionCard({
   icon: Icon,
@@ -111,6 +132,41 @@ export default function Settings() {
   // School section
   const [teacherName, setTeacherName] = useState(settings.teacherName);
   const [schoolName, setSchoolName] = useState(settings.schoolName);
+
+  // Care Team Sharing
+  const [shares, setShares] = useState<ShareRecord[]>([]);
+  const [sharesLoading, setSharesLoading] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [newShareExpiry, setNewShareExpiry] = useState<7 | 30 | 90>(30);
+  const [newShareNotes, setNewShareNotes] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [createdUrl, setCreatedUrl] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const loadShares = useCallback(async () => {
+    setSharesLoading(true);
+    try {
+      const token = await getToken();
+      const res = await fetch("/api/shares", {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setShares(Array.isArray(data) ? data : []);
+      }
+    } catch {
+    } finally {
+      setSharesLoading(false);
+    }
+  }, [getToken]);
+
+  useEffect(() => {
+    void loadShares();
+  }, [loadShares]);
+
+  const activeShares = shares.filter(
+    (s) => !s.revoked && new Date(s.expires_at) > new Date(),
+  );
 
   function saveChild() {
     try {
@@ -187,6 +243,52 @@ export default function Settings() {
     LOCAL_STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
     setDeleteOpen(false);
     await signOut();
+  }
+
+  async function handleCreateShare() {
+    setCreating(true);
+    try {
+      const token = await getToken();
+      const res = await fetch("/api/shares", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ expiresInDays: newShareExpiry, includeNotes: newShareNotes }),
+      });
+      if (!res.ok) throw new Error("failed");
+      const { url } = (await res.json()) as { url: string };
+      setCreatedUrl(url);
+      track("share_link_created");
+      await loadShares();
+    } catch {
+      toast({ title: "Couldn't create link — please try again", variant: "destructive" });
+    } finally {
+      setCreating(false);
+    }
+  }
+
+  async function handleRevoke(shareToken: string) {
+    try {
+      const token = await getToken();
+      await fetch(`/api/shares/${shareToken}/revoke`, {
+        method: "POST",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+      await loadShares();
+      toast({ title: "Share link revoked", variant: "success" });
+    } catch {
+      toast({ title: "Couldn't revoke link — please try again", variant: "destructive" });
+    }
+  }
+
+  function copyShareUrl(shareToken: string) {
+    const url = `${window.location.origin}/shared/${shareToken}`;
+    navigator.clipboard
+      .writeText(url)
+      .then(() => toast({ title: "Link copied to clipboard", variant: "success" }))
+      .catch(() => {});
   }
 
   return (
@@ -345,6 +447,71 @@ export default function Settings() {
         </Button>
       </SectionCard>
 
+      {/* Care Team Sharing */}
+      <SectionCard icon={Share2} title="Care Team Sharing">
+        <p className="text-xs text-muted-foreground leading-relaxed">
+          Create a read-only link for clinicians, therapists, or care team members.
+          Links expire automatically and can be revoked at any time.
+        </p>
+
+        {sharesLoading ? (
+          <p className="text-xs text-muted-foreground">Loading…</p>
+        ) : activeShares.length > 0 ? (
+          <div className="space-y-2">
+            {activeShares.map((share) => (
+              <div
+                key={share.token}
+                className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border border-border bg-muted/30"
+              >
+                <div className="min-w-0">
+                  <p className="text-xs font-medium text-foreground">
+                    Expires {format(parseISO(share.expires_at), "MMM d, yyyy")}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground">
+                    {share.include_notes ? "Includes notes" : "No notes"} · Created{" "}
+                    {format(parseISO(share.created_at), "MMM d")}
+                  </p>
+                </div>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => copyShareUrl(share.token)}
+                    className="flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                  >
+                    <Copy className="w-3 h-3" />
+                    Copy
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRevoke(share.token)}
+                    className="flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 font-medium"
+                  >
+                    <X className="w-3 h-3" />
+                    Revoke
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground italic">No active share links.</p>
+        )}
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full gap-2"
+          onClick={() => {
+            setCreatedUrl(null);
+            setCopied(false);
+            setShareDialogOpen(true);
+          }}
+        >
+          <Plus className="w-4 h-4" />
+          Create new share link
+        </Button>
+      </SectionCard>
+
       {/* Data + privacy */}
       <div className="rounded-2xl border border-border/60 bg-muted/30 px-5 py-4 space-y-3">
         <div className="flex items-center gap-2">
@@ -375,6 +542,103 @@ export default function Settings() {
           Delete my account and all data
         </button>
       </div>
+
+      {/* Share creation dialog */}
+      <Dialog
+        open={shareDialogOpen}
+        onOpenChange={(o) => {
+          if (!creating) setShareDialogOpen(o);
+        }}
+      >
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle style={{ fontFamily: "Fraunces, serif" }}>
+              Create share link
+            </DialogTitle>
+            <DialogDescription>
+              Send this link to a clinician or care team member. They can view the tracker without
+              creating an account.
+            </DialogDescription>
+          </DialogHeader>
+
+          {createdUrl ? (
+            <div className="space-y-3">
+              <div className="rounded-lg border border-border bg-muted/50 px-3 py-2.5">
+                <p className="text-xs font-mono text-foreground break-all leading-relaxed">
+                  {createdUrl}
+                </p>
+              </div>
+              <Button
+                className="w-full gap-2"
+                onClick={() => {
+                  navigator.clipboard.writeText(createdUrl).catch(() => {});
+                  setCopied(true);
+                  setTimeout(() => setCopied(false), 2000);
+                }}
+              >
+                {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                {copied ? "Copied!" : "Copy link"}
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => setShareDialogOpen(false)}
+              >
+                Done
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Expires after
+                </p>
+                <div className="grid grid-cols-3 gap-2">
+                  {([7, 30, 90] as const).map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => setNewShareExpiry(d)}
+                      className={`py-2 rounded-xl border-2 text-sm font-medium transition-all ${
+                        newShareExpiry === d
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-border hover:border-primary/40 text-foreground"
+                      }`}
+                    >
+                      {d} days
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <label className="flex items-start gap-3 cursor-pointer select-none">
+                <Checkbox
+                  checked={newShareNotes}
+                  onCheckedChange={(v) => setNewShareNotes(Boolean(v))}
+                  className="mt-0.5"
+                />
+                <div>
+                  <p className="text-sm font-medium text-foreground leading-snug">
+                    Include free-text notes
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Symptom notes and observations will be visible to the viewer
+                  </p>
+                </div>
+              </label>
+
+              <Button
+                className="w-full gap-2"
+                onClick={handleCreateShare}
+                disabled={creating}
+              >
+                <Link2 className="w-4 h-4" />
+                {creating ? "Creating…" : "Create share link"}
+              </Button>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Delete-account confirmation dialog */}
       <AlertDialog

@@ -1,0 +1,37 @@
+Build a care-team share feature so parents can give a clinician a 
+time-limited read-only view of the dashboard without making an account.
+
+Backend (artifacts/api-server/src/routes/):
+1. Create a new file shares.ts. Mount at /api/shares.
+2. POST /api/shares (auth required) creates a share. Body: 
+   { expiresInDays: number, includeNotes: boolean }. Generates a 32-byte 
+   random token (crypto.randomBytes). Stores in a new shares Supabase 
+   table with columns: token (text pk), user_id (text), expires_at 
+   (timestamptz), include_notes (bool), revoked (bool, default false), 
+   created_at. Returns { url: "https://...../shared/<token>" }.
+3. GET /api/shares/:token (no auth) returns the underlying user's symptom 
+   logs, PTEC logs, medications, baseline, and milestones if the token 
+   exists, is not revoked, and is not expired. If include_notes is false, 
+   strip notes from logs.
+4. POST /api/shares/:token/revoke (auth required) sets revoked=true if 
+   the token belongs to the caller.
+5. GET /api/shares (auth required) lists the caller's shares.
+
+Database (supabase/migrations/005_shares.sql):
+6. Create the shares table per the columns above.
+7. Enable RLS with deny-all (the API uses service role).
+8. Index on token.
+
+Frontend (artifacts/pans-tracker/src/):
+9. New page pages/SharedView.tsx, mounted at /shared/:token in App.tsx 
+   AppProviders, public (no auth required). Renders a stripped-down 
+   read-only Dashboard with data from GET /api/shares/:token. Header 
+   shows "Shared by {parent first name} for {child name}. Read-only. 
+   Expires {date}." If the token is expired or revoked, show a 
+   "This share link is no longer active" message.
+10. In pages/Settings.tsx, add a new SectionCard titled "Care Team Sharing". 
+    Lists active shares with revoke buttons. Has a "Create new share link" 
+    button that opens a dialog with: expiresInDays selector (7, 30, 90 
+    days), includeNotes checkbox, Create button. On create, show the URL 
+    with a copy-to-clipboard button.
+11. Track the share creation in PostHog as 'share_link_created'.

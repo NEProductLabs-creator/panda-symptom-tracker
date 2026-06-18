@@ -1,0 +1,43 @@
+Add PWA push notifications for daily logging reminders and re-engagement.
+
+Backend (artifacts/api-server/src/):
+1. Install web-push package. Generate VAPID keys (give me the command to 
+   run, then save them as Replit secrets VAPID_PUBLIC_KEY and 
+   VAPID_PRIVATE_KEY).
+2. New routes file routes/notifications.ts:
+   - POST /api/notifications/subscribe (auth required): stores a push 
+     subscription (endpoint, keys.p256dh, keys.auth) plus reminderTime 
+     (string, e.g. "20:00") and timezone (string) in a new 
+     push_subscriptions table keyed by user_id.
+   - POST /api/notifications/unsubscribe (auth required): removes the 
+     row for the caller.
+   - POST /api/notifications/test (auth required, dev only): sends a 
+     test push to the caller.
+3. New scripts/sendDailyReminders.ts: a cron-style script that runs 
+   every 15 minutes, finds users whose local time matches their 
+   reminderTime within the last 15 min, and have not logged today, 
+   and sends them a push reminder. Use date-fns-tz for timezone math.
+4. New scripts/sendInactivityReminders.ts: weekly script that finds 
+   users with no log in the last 5 days and sends "We're here when 
+   you're ready" push.
+
+Database (supabase/migrations/006_notifications.sql):
+5. Create push_subscriptions table.
+
+Frontend (artifacts/pans-tracker/src/):
+6. New hook hooks/usePushNotifications.ts that calls 
+   navigator.serviceWorker.ready, subscribes via PushManager.subscribe 
+   with the public VAPID key, and POSTs to /api/notifications/subscribe. 
+   Exposes isEnabled, enable(), disable(), reminderTime, setReminderTime.
+7. In pages/Settings.tsx, add a "Reminders" SectionCard with a toggle 
+   for daily logging reminder, a time picker for when, and a toggle 
+   for inactivity nudges.
+8. In components/InstallPrompt.tsx (or a new file), after the user has 
+   installed the PWA and logged at least 3 entries, show a one-time 
+   "Want a daily reminder to log?" prompt.
+9. Service worker registration is already handled by vite-plugin-pwa. 
+   Add a push event handler to the SW (use VitePWA's includeAssets and 
+   workbox.swDest config) that displays the notification.
+
+Note: iOS requires the PWA to be installed to home screen for push to 
+work (iOS 16.4+).

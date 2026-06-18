@@ -13,7 +13,7 @@ import Dashboard from "@/pages/Dashboard";
 import LogEntry from "@/pages/LogEntry";
 import MedLibrary from "@/pages/MedLibrary";
 import PrintSummary from "@/pages/PrintSummary";
-import ExportPDF from "@/pages/ExportPDF";
+import ExportData from "@/pages/ExportData";
 import Intro from "@/pages/Intro";
 import MilestonesPage from "@/pages/Milestones";
 import Sidebar from "@/components/layout/Sidebar";
@@ -621,7 +621,7 @@ function Router() {
         <Route path="/log" component={LogEntry} />
         <Route path="/library" component={MedLibrary} />
         <Route path="/print" component={PrintSummary} />
-        <Route path="/export" component={ExportPDF} />
+        <Route path="/export" component={ExportData} />
         <Route path="/milestones" component={MilestonesPage} />
         <Route path="/ptec" component={PTECCheckin} />
         <Route path="/timeline" component={Timeline} />

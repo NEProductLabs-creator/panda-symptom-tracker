@@ -74,9 +74,10 @@ export type AnalyticsEvent =
   | 'pwa_install_accepted'
   | 'pwa_install_dismissed'
   | 'push_reminder_enabled_from_nudge'
-  | 'push_reminder_nudge_dismissed';
+  | 'push_reminder_nudge_dismissed'
+  | 'csv_exported';
 
-export function track(event: AnalyticsEvent): void {
+export function track(event: AnalyticsEvent, properties?: Record<string, unknown>): void {
   if (!analyticsReady) return;
-  posthog.capture(event);
+  posthog.capture(event, properties);
 }

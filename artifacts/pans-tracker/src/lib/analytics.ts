@@ -83,7 +83,10 @@ export type AnalyticsEvent =
   | 'learn_self_check_pdf_downloaded'
   | 'right_now_section_viewed'
   | 'right_now_today_action_completed'
-  | 'right_now_er_guide_viewed';
+  | 'right_now_er_guide_viewed'
+  | 'advocate_section_viewed'
+  | 'advocate_report_generated'
+  | 'advocate_script_copied';
 
 export function track(event: AnalyticsEvent, properties?: Record<string, unknown>): void {
   if (!analyticsReady) return;

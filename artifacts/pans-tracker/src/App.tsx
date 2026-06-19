@@ -29,6 +29,10 @@ import RightNowToday from "@/pages/right-now/Today";
 import RightNowDeEscalation from "@/pages/right-now/DeEscalation";
 import RightNowERGuide from "@/pages/right-now/ERGuide";
 import Advocate from "@/pages/Advocate";
+import AdvocateReports from "@/pages/advocate/Reports";
+import AdvocateScripts from "@/pages/advocate/Scripts";
+import AdvocateSchool from "@/pages/advocate/School";
+import AdvocateProviders from "@/pages/advocate/Providers";
 import Reports from "@/pages/Reports";
 import Intro from "@/pages/Intro";
 import MilestonesPage from "@/pages/Milestones";
@@ -690,6 +694,10 @@ function Router() {
         <Route path="/right-now/de-escalation" component={RightNowDeEscalation} />
         <Route path="/right-now/er-guide" component={RightNowERGuide} />
         <Route path="/advocate" component={Advocate} />
+        <Route path="/advocate/reports" component={AdvocateReports} />
+        <Route path="/advocate/scripts" component={AdvocateScripts} />
+        <Route path="/advocate/school" component={AdvocateSchool} />
+        <Route path="/advocate/providers" component={AdvocateProviders} />
         <Route path="/reports" component={Reports} />
         <Route path="/onboarding" component={Onboarding} />
         <Route path="/onboarding/start" component={OnboardingStart} />

@@ -51,18 +51,32 @@ async function deleteItem(table: string, userId: string, id: string): Promise<vo
 
 router.get('/logs', async (req, res) => {
   try {
-    res.json(await getAll('symptom_logs', uid(req)));
+    const db = requireSupabase();
+    const userId = uid(req);
+    const childId = req.query.child_id as string | undefined;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query: any = db.from('symptom_logs').select('data').eq('user_id', userId);
+    if (childId) query = query.eq('child_id', childId);
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json((data ?? []).map((r: { data: unknown }) => r.data));
   } catch (e) { err(res, e, 'GET /logs'); }
 });
 
 router.post('/logs', async (req, res) => {
   try {
     const db = requireSupabase();
-    const log = req.body as { id: string; date: string };
-    const { error } = await db.from('symptom_logs').upsert(
-      { id: log.id, user_id: uid(req), date: log.date, data: log, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id,date' },
-    );
+    const log = req.body as { id: string; date: string; child_id?: string };
+    const row: Record<string, unknown> = {
+      id: log.id,
+      user_id: uid(req),
+      date: log.date,
+      data: log,
+      updated_at: new Date().toISOString(),
+    };
+    if (log.child_id) row.child_id = log.child_id;
+    // Upsert by id (primary key) so different children can each have a log on the same date
+    const { error } = await db.from('symptom_logs').upsert(row, { onConflict: 'id' });
     if (error) throw error;
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /logs'); }
@@ -482,12 +496,16 @@ router.get('/right-now-checklist', async (req, res) => {
   const db = requireSupabase();
   const userId = uid(req);
   const date = (req.query.date as string) ?? new Date().toISOString().split('T')[0];
+  const childId = req.query.child_id as string | undefined;
   try {
-    const { data, error } = await db
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let query: any = db
       .from('right_now_checklist_state')
       .select('action_key, completed')
       .eq('user_id', userId)
       .eq('date', date);
+    if (childId) query = query.eq('child_id', childId);
+    const { data, error } = await query;
     if (error) throw error;
     res.json(data ?? []);
   } catch (e) { err(res, e, 'GET /right-now-checklist'); }
@@ -497,18 +515,20 @@ router.post('/right-now-checklist', async (req, res) => {
   const db = requireSupabase();
   const userId = uid(req);
   try {
-    const { date, action_key, completed } = req.body as {
+    const { date, action_key, completed, child_id } = req.body as {
       date: string;
       action_key: string;
       completed: boolean;
+      child_id?: string;
     };
-    const id = `${userId}_${date}_${action_key}`;
+    const id = child_id
+      ? `${userId}_${child_id}_${date}_${action_key}`
+      : `${userId}_${date}_${action_key}`;
+    const row: Record<string, unknown> = { id, user_id: userId, date, action_key, completed };
+    if (child_id) row.child_id = child_id;
     const { error } = await db
       .from('right_now_checklist_state')
-      .upsert(
-        { id, user_id: userId, date, action_key, completed },
-        { onConflict: 'user_id,date,action_key' },
-      );
+      .upsert(row, { onConflict: 'user_id,date,action_key' });
     if (error) throw error;
     res.status(200).json({ ok: true });
   } catch (e) { err(res, e, 'POST /right-now-checklist'); }
@@ -520,10 +540,14 @@ router.post('/parent-observation', async (req, res) => {
   const db = requireSupabase();
   const userId = uid(req);
   try {
-    const { id, responses } = req.body as { id: string; responses: Record<string, string> };
-    const { error } = await db
-      .from('parent_observation_summaries')
-      .insert({ id, user_id: userId, responses });
+    const { id, responses, child_id } = req.body as {
+      id: string;
+      responses: Record<string, string>;
+      child_id?: string;
+    };
+    const row: Record<string, unknown> = { id, user_id: userId, responses };
+    if (child_id) row.child_id = child_id;
+    const { error } = await db.from('parent_observation_summaries').insert(row);
     if (error) throw error;
     res.status(201).json({ ok: true });
   } catch (e) { err(res, e, 'POST /parent-observation'); }

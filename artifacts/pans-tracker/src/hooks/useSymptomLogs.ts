@@ -9,17 +9,26 @@ import { useToast } from '@/hooks/use-toast';
 import { DEMO_LOGS, DEMO_EXPLORING_LOGS, DEMO_IN_CRISIS_LOGS } from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 import { track } from '@/lib/analytics';
+import { useActiveChild } from '@/hooks/useActiveChild';
 
 const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'));
+
+function filterByChild(logs: SymptomLog[], childId: string | null): SymptomLog[] {
+  if (!childId) return logs;
+  // Show logs that match the active child, or legacy logs with no child_id (pre-migration)
+  return logs.filter(l => !l.child_id || l.child_id === childId);
+}
 
 export function useSymptomLogs() {
   const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
   const { toast } = useToast();
+  const activeChild = useActiveChild();
+  const activeChildId = activeChild?.id ?? null;
 
   const [logs, setLogs] = useState<SymptomLog[]>(() => {
-    if (!isDemoMode) return storage.getLogs();
+    if (!isDemoMode) return filterByChild(storage.getLogs(), activeChildId);
     const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
     if (scenario === 'exploring') return DEMO_EXPLORING_LOGS;
     if (scenario === 'in_crisis') return DEMO_IN_CRISIS_LOGS;
@@ -27,6 +36,7 @@ export function useSymptomLogs() {
   });
   const loading = false;
 
+  // Sync from server when userId first resolves
   useEffect(() => {
     if (!userId || isDemoMode) return;
     api.logs.getAll()
@@ -34,7 +44,7 @@ export function useSymptomLogs() {
         const local = storage.getLogs();
         const { merged, localOnly } = mergeById(local, serverLogs);
         storage.saveLogs(merged);
-        setLogs(merged);
+        setLogs(filterByChild(merged, activeChildId));
         localOnly.forEach((l) => {
           queueMutation('POST', '/logs', l, getToken, toast);
         });
@@ -42,35 +52,56 @@ export function useSymptomLogs() {
       .catch(() => {});
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // Re-filter from localStorage whenever the active child changes
+  useEffect(() => {
+    if (isDemoMode) return;
+    setLogs(filterByChild(storage.getLogs(), activeChildId));
+  }, [activeChildId, isDemoMode]);
+
   const addLog = useCallback(
     (log: SymptomLog) => {
       if (isDemoMode) { dispatchDemo(); return; }
-      const stamped: SymptomLog = { ...log, updatedAt: now() };
+      const stamped: SymptomLog = {
+        ...log,
+        child_id: activeChildId ?? undefined,
+        updatedAt: now(),
+      };
       setLogs((prev) => {
         const isNew = prev.findIndex((l) => l.date === stamped.date) < 0;
-        const next = isNew
+        const nextFiltered = isNew
           ? [...prev, stamped]
           : prev.map((l) => (l.date === stamped.date ? stamped : l));
-        storage.saveLogs(next);
-        if (isNew) track('symptom_log_created');
-        return next;
+
+        // Preserve other children's logs when writing back to localStorage
+        const allLogs = storage.getLogs();
+        const otherLogs = activeChildId
+          ? allLogs.filter(l => l.child_id && l.child_id !== activeChildId)
+          : [];
+        storage.saveLogs([...otherLogs, ...nextFiltered]);
+
+        if (isNew) track('symptom_log_created', { child_id: activeChildId });
+        return nextFiltered;
       });
       queueMutation('POST', '/logs', stamped, getToken, toast);
     },
-    [isDemoMode, getToken, toast],
+    [isDemoMode, activeChildId, getToken, toast],
   );
 
   const deleteLog = useCallback(
     (id: string) => {
       if (isDemoMode) return;
       setLogs((prev) => {
-        const next = prev.filter((l) => l.id !== id);
-        storage.saveLogs(next);
-        return next;
+        const nextFiltered = prev.filter((l) => l.id !== id);
+        const allLogs = storage.getLogs();
+        const otherLogs = activeChildId
+          ? allLogs.filter(l => l.child_id && l.child_id !== activeChildId)
+          : [];
+        storage.saveLogs([...otherLogs, ...nextFiltered]);
+        return nextFiltered;
       });
       queueMutation('DELETE', `/logs/${id}`, undefined, getToken, toast);
     },
-    [isDemoMode, getToken, toast],
+    [isDemoMode, activeChildId, getToken, toast],
   );
 
   return { logs, loading, addLog, deleteLog };

@@ -33,6 +33,7 @@ import RightNowERGuide from "@/pages/right-now/ERGuide";
 import Advocate from "@/pages/Advocate";
 import AdvocateReports from "@/pages/advocate/Reports";
 import AdvocateScripts from "@/pages/advocate/Scripts";
+import ChildSwitcher from "@/components/ChildSwitcher";
 import AdvocateSchool from "@/pages/advocate/School";
 import AdvocateProviders from "@/pages/advocate/Providers";
 import Reports from "@/pages/Reports";
@@ -536,6 +537,10 @@ function Layout({ children }: { children: ReactNode }) {
   );
   if (isNoSidebar) return <>{children}</>;
 
+  const isLearnRoute = location.startsWith("/learn");
+  const isSettingsChildren = location === "/settings/children";
+  const showViewingPill = !isLearnRoute && !isSettingsChildren;
+
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
@@ -545,6 +550,11 @@ function Layout({ children }: { children: ReactNode }) {
           style={{ height: "calc(env(safe-area-inset-top) + 3.5rem)" }}
         />
         {isDemoMode && <DemoBanner />}
+        {showViewingPill && (
+          <div className="flex justify-end px-5 pt-3 pb-0">
+            <ChildSwitcher variant="pill" />
+          </div>
+        )}
         {children}
       </main>
     </div>

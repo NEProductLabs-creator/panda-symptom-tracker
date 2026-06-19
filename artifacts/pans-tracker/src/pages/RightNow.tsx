@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import { LifeBuoy, RefreshCw, ClipboardCheck, Wind, AlertTriangle, ChevronRight } from "lucide-react";
+import { useActiveChild } from "@/hooks/useActiveChild";
 
 // ─── Sub-section definitions ──────────────────────────────────────────────────
 
@@ -37,6 +38,9 @@ const SECTIONS = [
 // ─── Landing page ─────────────────────────────────────────────────────────────
 
 export default function RightNow() {
+  const activeChild = useActiveChild();
+  const childName = activeChild?.name?.trim();
+
   return (
     <div className="min-h-screen bg-background">
       <div className="max-w-xl mx-auto px-5 py-12">
@@ -54,7 +58,7 @@ export default function RightNow() {
           className="text-[32px] font-bold text-foreground leading-snug mb-4"
           style={{ fontFamily: "Newsreader, serif" }}
         >
-          We are right here with you.
+          We are right here with you{childName ? ` and ${childName}` : ""}.
         </h1>
 
         <p className="text-[17px] text-muted-foreground leading-[1.75] mb-10 max-w-md">

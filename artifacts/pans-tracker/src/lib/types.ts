@@ -1,6 +1,7 @@
 export type SymptomLog = {
   id: string;
   date: string; // YYYY-MM-DD
+  child_id?: string; // Clerk child ID — set on all new logs; legacy logs may be undefined
   ocd: number | null;
   anxiety: number | null;
   rage: number | null;

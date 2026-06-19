@@ -17,6 +17,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { JourneyStage } from "@/lib/types";
 import AdvocateLayout from "./AdvocateLayout";
 import { getReportHistory, addReportToHistory, VARIANT_LABELS } from "@/lib/reportHistory";
+import { useActiveChild } from "@/hooks/useActiveChild";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -234,8 +235,8 @@ function generateFirstAppointmentPDF(
   }
 
   pageFooters(doc, margin);
-  const name = childName ? `${childName.replace(/\s+/g, "_")}_` : "";
-  doc.save(`PANS_First_Appointment_${name}${format(parseISO(visitDate + "T00:00:00"), "yyyyMMdd")}.pdf`);
+  const slug = childName ? childName.replace(/\s+/g, "-").toLowerCase() : "child";
+  doc.save(`pans-first-appt-${slug}-${format(parseISO(visitDate + "T00:00:00"), "yyyyMMdd")}.pdf`);
 }
 
 // ─── Variant 2: ER visit ──────────────────────────────────────────────────────
@@ -375,8 +376,8 @@ function generateERVisitPDF(
   }
 
   pageFooters(doc, margin);
-  const name = childName ? `${childName.replace(/\s+/g, "_")}_` : "";
-  doc.save(`PANS_ER_Visit_${name}${format(parseISO(visitDate + "T00:00:00"), "yyyyMMdd")}.pdf`);
+  const slug = childName ? childName.replace(/\s+/g, "-").toLowerCase() : "child";
+  doc.save(`pans-er-visit-${slug}-${format(parseISO(visitDate + "T00:00:00"), "yyyyMMdd")}.pdf`);
 }
 
 // ─── Variant 3: Follow-up with PANS provider ──────────────────────────────────
@@ -504,8 +505,8 @@ function generateFollowUpPDF(
   }
 
   pageFooters(doc, margin);
-  const name = childName ? `${childName.replace(/\s+/g, "_")}_` : "";
-  doc.save(`PANS_Follow_Up_${name}${format(parseISO(visitDate + "T00:00:00"), "yyyyMMdd")}.pdf`);
+  const slug = childName ? childName.replace(/\s+/g, "-").toLowerCase() : "child";
+  doc.save(`pans-follow-up-${slug}-${format(parseISO(visitDate + "T00:00:00"), "yyyyMMdd")}.pdf`);
 }
 
 // ─── Variant metadata ─────────────────────────────────────────────────────────
@@ -546,6 +547,7 @@ export default function AdvocateReports() {
   const { entries: triggers } = useTriggerLog();
   const { journeyState } = useJourneyState();
   const { toast } = useToast();
+  const activeChild = useActiveChild();
 
   const thirtyDaysAgo = format(subDays(new Date(), 30), "yyyy-MM-dd");
   const logs30 = useMemo(() => logs.filter((l) => l.date >= thirtyDaysAgo), [logs]);
@@ -572,8 +574,7 @@ export default function AdvocateReports() {
   function handleGenerate() {
     setGenerating(true);
     try {
-      // childId is set up for future multi-child support; currently one child per user.
-      const childId = "primary";
+      const childId = activeChild?.id ?? "primary";
       const args: GenerateArgs = {
         childId,
         childName: baseline?.childName?.trim() ?? "",
@@ -593,6 +594,7 @@ export default function AdvocateReports() {
       track("advocate_report_generated", {
         variant,
         journey_stage: journeyState?.journey_stage ?? null,
+        child_id: activeChild?.id ?? null,
       });
 
       addReportToHistory({

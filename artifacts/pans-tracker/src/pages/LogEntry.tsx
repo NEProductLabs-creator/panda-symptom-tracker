@@ -3,6 +3,7 @@ import { format, subDays, addDays, parseISO } from "date-fns";
 import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedLibrary } from "@/hooks/useMedLibrary";
+import { useActiveChild } from "@/hooks/useActiveChild";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -71,6 +72,8 @@ export default function LogEntry() {
   const { logs, addLog, deleteLog } = useSymptomLogs();
   const { medLibrary } = useMedLibrary();
   const { toast } = useToast();
+  const activeChild = useActiveChild();
+  const childName = activeChild?.name?.trim();
 
   const [selectedDate, setSelectedDate] = useState(today);
   const existing = logs.find((l) => l.date === selectedDate);
@@ -150,7 +153,7 @@ export default function LogEntry() {
       addLog(log);
       setSaved(true);
       toast({
-        title: existing ? "Entry updated" : "Entry saved",
+        title: existing ? "Entry updated" : `Saved for ${childName ?? "your child"}.`,
         variant: "success",
       });
       setTimeout(() => setSaved(false), 1500);

@@ -69,7 +69,10 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-- Data hooks (all 9) call `useAuth()` from `@clerk/react` — must be rendered inside ClerkProvider
+- Data hooks (all 9+) call `useAuth()` from `@clerk/react` — must be rendered inside ClerkProvider
+- useSymptomLogs is now child-scoped: filters by activeChildId on init + API sync; preserves other children's localStorage data on every write by reading storage.getLogs() and filtering out the active child's entries before merging
+- ChildSwitcher has 3 variants: "sidebar" (full nav block), "mobile" (header pill), "pill" (page-level "Viewing: {name}" indicator rendered globally in Layout)
+- ViewingPill (ChildSwitcher variant="pill") is hidden on /learn/* and /settings/children; visible on all other child-scoped pages
 - HMR hook-order errors are transient; a full page reload after hook changes resolves them
 - `SUPABASE_SERVICE_ROLE_KEY` must be set as a Replit secret; without it, `/api/data/*` routes return 500
 - Print page has its own layout (no sidebar) — enforced by route check in App.tsx Layout component
@@ -78,7 +81,11 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Supabase schema setup
 
-Run `supabase/migrations/002_all_tables.sql` in the Supabase SQL editor once.
+Run migrations in order in the Supabase SQL editor:
+1. `supabase/migrations/002_all_tables.sql` — base schema
+2. `supabase/migrations/010_children.sql` — adds children table + child_id to symptom_logs, right_now_checklist_state, parent_observation_summaries
+3. `supabase/migrations/011_symptom_logs_child_key.sql` — changes unique constraints to (user_id, child_id, date) so two children can have logs on the same date
+
 Tables use TEXT `user_id` (Clerk format) — NOT Supabase auth UUIDs.
 
 ## Pointers

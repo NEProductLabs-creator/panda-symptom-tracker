@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@clerk/react";
+import { useActiveChild } from "@/hooks/useActiveChild";
 import jsPDF from "jspdf";
 import { track } from "@/lib/analytics";
 import LearnLayout from "./LearnLayout";
@@ -255,6 +256,7 @@ function generatePDF(answers: Record<string, string>): void {
 async function saveObservation(
   getToken: () => Promise<string | null>,
   responses: Record<string, string>,
+  childId: string | null,
 ): Promise<void> {
   try {
     const token = await getToken();
@@ -266,7 +268,7 @@ async function saveObservation(
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ id, responses }),
+      body: JSON.stringify({ id, responses, ...(childId ? { child_id: childId } : {}) }),
     });
   } catch {
     // Best-effort — don't surface errors to the user
@@ -277,6 +279,7 @@ async function saveObservation(
 
 export default function LearnSelfCheck() {
   const { getToken } = useAuth();
+  const activeChild = useActiveChild();
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
@@ -313,7 +316,7 @@ export default function LearnSelfCheck() {
     track("learn_self_check_pdf_downloaded");
 
     // Save to Supabase (best-effort, non-blocking)
-    void saveObservation(getToken, answers);
+    void saveObservation(getToken, answers, activeChild?.id ?? null);
 
     setCompleted(true);
     setSubmitting(false);

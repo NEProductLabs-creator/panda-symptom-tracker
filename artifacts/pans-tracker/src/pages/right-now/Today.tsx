@@ -5,6 +5,7 @@ import { track } from "@/lib/analytics";
 import RightNowLayout from "./RightNowLayout";
 import { cn } from "@/lib/utils";
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from "@/contexts/DemoContext";
+import { useActiveChild } from "@/hooks/useActiveChild";
 
 // ─── Checklist action definitions ────────────────────────────────────────────
 
@@ -56,11 +57,14 @@ function todayDate(): string {
 async function fetchChecklist(
   getToken: () => Promise<string | null>,
   date: string,
+  childId: string | null,
 ): Promise<Set<string>> {
   try {
     const token = await getToken();
     if (!token) return new Set();
-    const res = await fetch(`/api/data/right-now-checklist?date=${date}`, {
+    const params = new URLSearchParams({ date });
+    if (childId) params.set("child_id", childId);
+    const res = await fetch(`/api/data/right-now-checklist?${params}`, {
       headers: { Authorization: `Bearer ${token}` },
     });
     if (!res.ok) return new Set();
@@ -76,6 +80,7 @@ async function saveAction(
   date: string,
   action_key: string,
   completed: boolean,
+  childId: string | null,
 ): Promise<void> {
   try {
     const token = await getToken();
@@ -86,7 +91,7 @@ async function saveAction(
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ date, action_key, completed }),
+      body: JSON.stringify({ date, action_key, completed, ...(childId ? { child_id: childId } : {}) }),
     });
   } catch {
     // best-effort
@@ -98,6 +103,8 @@ async function saveAction(
 export default function RightNowToday() {
   const { getToken } = useAuth();
   const today = todayDate();
+  const activeChild = useActiveChild();
+  const activeChildId = activeChild?.id ?? null;
 
   const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const demoScenario = isDemoMode ? localStorage.getItem(DEMO_SCENARIO_KEY) : null;
@@ -113,7 +120,7 @@ export default function RightNowToday() {
   useEffect(() => {
     track("right_now_section_viewed", { section: "today" });
     if (isDemoMode) return;
-    fetchChecklist(getToken, today).then((set) => {
+    fetchChecklist(getToken, today, activeChildId).then((set) => {
       setCompleted(set);
       setLoading(false);
     });
@@ -127,10 +134,10 @@ export default function RightNowToday() {
         next.delete(key);
       } else {
         next.add(key);
-        track("right_now_today_action_completed", { action: key });
+        track("right_now_today_action_completed", { action: key, child_id: activeChildId });
       }
       setCompleted(next);
-      void saveAction(getToken, today, key, !wasCompleted);
+      void saveAction(getToken, today, key, !wasCompleted, activeChildId);
     },
     [completed, getToken, today],
   );

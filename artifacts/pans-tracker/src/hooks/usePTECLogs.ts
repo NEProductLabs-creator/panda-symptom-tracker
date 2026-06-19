@@ -11,6 +11,7 @@ import { DEMO_PTEC_LOGS } from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 import { track } from '@/lib/analytics';
 import { format } from 'date-fns';
+import { useActiveChild } from '@/hooks/useActiveChild';
 
 const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'));
 
@@ -18,6 +19,7 @@ export function usePTECLogs() {
   const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
+  const activeChild = useActiveChild();
   const { toast } = useToast();
 
   const [ptecLogs, setPTECLogs] = useState<PTECLog[]>(() => {
@@ -52,7 +54,7 @@ export function usePTECLogs() {
       storage.addOrUpdatePTECLog(stamped);
       const updated = storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
       setPTECLogs(updated);
-      track('ptec_checkin_completed');
+      track('ptec_checkin_completed', { child_id: activeChild?.id ?? null });
       queueMutation('POST', '/ptec', stamped, getToken, toast);
 
       const flare = detectPTECFlare(updated);

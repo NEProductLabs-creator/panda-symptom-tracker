@@ -416,7 +416,7 @@ export default function Dashboard() {
             {format(new Date(), "EEEE")}
           </p>
           <h1 className="text-2xl font-medium text-foreground leading-tight" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.02em", fontWeight: 400 }}>
-            {childName ? `${childName}'s Dashboard` : "Today's Overview"}
+            {childName ? `How is ${childName} doing?` : "How are they doing?"}
           </h1>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -464,7 +464,7 @@ export default function Dashboard() {
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1 min-w-0">
               <p className="text-xs text-muted-foreground uppercase tracking-wide font-medium mb-1">
-                {childName ? `${childName}'s Snapshot` : "Today's Snapshot"}
+                {childName ? `${childName}'s snapshot today` : "Today's snapshot"}
               </p>
               <p className="text-sm font-medium text-foreground">{todayDisplay}</p>
 
@@ -527,6 +527,15 @@ export default function Dashboard() {
                 30-day daily severity (0–30)
               </p>
               <Sparkline data={sparklineData} height={40} gradientId="dailySparkGradient" />
+            </div>
+          )}
+
+          {!hasAnyLog && (
+            <div className="mt-3 pt-3 border-t border-border/50">
+              <p className="text-sm text-muted-foreground italic">
+                {childName ? `No entries yet for ${childName}.` : "No entries yet."}{" "}
+                Start logging to see patterns here.
+              </p>
             </div>
           )}
 

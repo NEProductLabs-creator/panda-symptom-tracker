@@ -119,6 +119,17 @@ export function createApiClient(getToken: () => Promise<string | null>) {
       delete: (id: string) => req<void>('DELETE', `/labs/${id}`),
     },
 
+    // ── Right Now Checklist ──────────────────────────────────────────────────
+    rightNowChecklist: {
+      // child_id is required — server returns 400 without it
+      save: (params: {
+        date: string;
+        action_key: string;
+        completed: boolean;
+        child_id: string;
+      }) => req<{ ok: boolean }>('POST', '/right-now-checklist', params),
+    },
+
     // ── Account deletion ─────────────────────────────────────────────────────
     account: {
       deleteAll: () => req<void>('DELETE', '/all'),

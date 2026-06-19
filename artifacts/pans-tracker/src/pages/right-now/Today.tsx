@@ -80,7 +80,7 @@ async function saveAction(
   date: string,
   action_key: string,
   completed: boolean,
-  childId: string | null,
+  childId: string,
 ): Promise<void> {
   try {
     const token = await getToken();
@@ -91,7 +91,7 @@ async function saveAction(
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ date, action_key, completed, ...(childId ? { child_id: childId } : {}) }),
+      body: JSON.stringify({ date, action_key, completed, child_id: childId }),
     });
   } catch {
     // best-effort
@@ -137,7 +137,7 @@ export default function RightNowToday() {
         track("right_now_today_action_completed", { action: key, child_id: activeChildId });
       }
       setCompleted(next);
-      void saveAction(getToken, today, key, !wasCompleted, activeChildId);
+      if (activeChildId) void saveAction(getToken, today, key, !wasCompleted, activeChildId);
     },
     [completed, getToken, today],
   );

@@ -284,12 +284,12 @@ router.post('/sync', async (req, res) => {
     baseline = null, ptecLogs = [], flares = [], triggers = [],
     household = [], wellbeing = [],
   } = req.body as {
-    logs?: Array<{ id: string; date: string }>;
+    logs?: Array<{ id: string; date: string; child_id?: string }>;
     medications?: Array<{ id: string }>;
     medLibrary?: Array<{ id: string }>;
     milestones?: Array<{ id: string }>;
     baseline?: Record<string, unknown> | null;
-    ptecLogs?: Array<{ id: string; weekStartDate: string }>;
+    ptecLogs?: Array<{ id: string; weekStartDate: string; child_id?: string }>;
     flares?: Array<{ id: string }>;
     triggers?: Array<{ id: string }>;
     household?: Array<{ id: string }>;
@@ -314,11 +314,39 @@ router.post('/sync', async (req, res) => {
   }
 
   try {
+    // ── Resolve symptom_logs: each row must have a child_id ───────────────────
+    // For any log that lacks child_id, fall back to the user's first non-archived
+    // child. Logs with no resolvable child_id are skipped with an error entry.
+    const logsWithChild: Array<Record<string, unknown>> = [];
+    if (logs.length > 0) {
+      let defaultChildId: string | null = null;
+      if (logs.some((l) => !l.child_id)) {
+        const { data: dc } = await db
+          .from('children')
+          .select('id')
+          .eq('user_id', userId)
+          .eq('is_archived', false)
+          .order('sort_order', { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        defaultChildId = (dc as { id: string } | null)?.id ?? null;
+      }
+      for (const l of logs) {
+        const childId = l.child_id ?? defaultChildId ?? null;
+        if (!childId) {
+          errors.push(`symptom_logs: skipped log ${l.id} — no child_id and user has no children`);
+          continue;
+        }
+        logsWithChild.push({ id: l.id, user_id: userId, child_id: childId, date: l.date, data: l });
+      }
+    }
+
     await Promise.all([
-      bulkUpsert('symptom_logs',
-        logs as Array<Record<string, unknown>>,
-        (l) => ({ id: l.id, user_id: userId, date: l.date, data: l }),
-        'user_id,date'),
+      ...(logsWithChild.length > 0
+        ? [db.from('symptom_logs')
+            .upsert(logsWithChild, { onConflict: 'user_id,child_id,date' })
+            .then(({ error }) => { if (error) errors.push(`symptom_logs: ${error.message}`); })]
+        : []),
       bulkUpsert('medications',
         medications as Array<Record<string, unknown>>,
         (m) => ({ id: m.id, user_id: userId, data: m })),
@@ -521,14 +549,12 @@ router.post('/right-now-checklist', async (req, res) => {
       completed: boolean;
       child_id?: string;
     };
-    const id = child_id
-      ? `${userId}_${child_id}_${date}_${action_key}`
-      : `${userId}_${date}_${action_key}`;
-    const row: Record<string, unknown> = { id, user_id: userId, date, action_key, completed };
-    if (child_id) row.child_id = child_id;
+    if (!child_id) { res.status(400).json({ error: 'child_id is required' }); return; }
+    const id = `${userId}_${child_id}_${date}_${action_key}`;
+    const row = { id, user_id: userId, child_id, date, action_key, completed };
     const { error } = await db
       .from('right_now_checklist_state')
-      .upsert(row, { onConflict: 'user_id,date,action_key' });
+      .upsert(row, { onConflict: 'user_id,child_id,date,action_key' });
     if (error) throw error;
     res.status(200).json({ ok: true });
   } catch (e) { err(res, e, 'POST /right-now-checklist'); }

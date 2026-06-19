@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "sCwI7NJUNt0eznC7pxAkR"
+uri = "file://full-codebase.txt"
+type = "text"
+title = "Full Codebase — PANS/PANDAS Tracker"

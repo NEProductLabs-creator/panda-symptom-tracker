@@ -8,6 +8,8 @@ import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
 import { useActiveChild } from '@/hooks/useActiveChild';
+import { DEMO_MULTI_CHILD_MILESTONES } from '@/lib/demoData';
+import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
 function filterByChild(items: Milestone[], childId: string | null): Milestone[] {
   if (!childId) return items;
@@ -15,18 +17,24 @@ function filterByChild(items: Milestone[], childId: string | null): Milestone[] 
 }
 
 export function useMilestones() {
+  const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
   const { toast } = useToast();
   const activeChildId = useActiveChild()?.id ?? null;
 
-  const [milestones, setMilestones] = useState<Milestone[]>(() =>
-    filterByChild(storage.getMilestones(), activeChildId),
-  );
+  const [milestones, setMilestones] = useState<Milestone[]>(() => {
+    if (isDemoMode) {
+      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
+      if (scenario === 'multi_child') return filterByChild(DEMO_MULTI_CHILD_MILESTONES, activeChildId);
+      return [];
+    }
+    return filterByChild(storage.getMilestones(), activeChildId);
+  });
   const [loading, setLoading] = useState(false);
 
   const refetch = useCallback(() => {
-    if (!userId) return;
+    if (!userId || isDemoMode) return;
     setLoading(true);
     api.milestones.getAll()
       .then((serverItems) => {
@@ -55,13 +63,21 @@ export function useMilestones() {
     return () => document.removeEventListener('pans:foreground', handler);
   }, [refetch]);
 
-  // Re-filter from localStorage immediately when the active child changes.
+  // Re-filter when the active child changes.
   useEffect(() => {
+    if (isDemoMode) {
+      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
+      if (scenario === 'multi_child') {
+        setMilestones(filterByChild(DEMO_MULTI_CHILD_MILESTONES, activeChildId));
+      }
+      return;
+    }
     setMilestones(filterByChild(storage.getMilestones(), activeChildId));
-  }, [activeChildId]);
+  }, [activeChildId, isDemoMode]);
 
   const addMilestone = useCallback(
     (data: Omit<Milestone, 'id'>) => {
+      if (isDemoMode) return {} as Milestone;
       if (!activeChildId) {
         console.warn('[useMilestones] addMilestone called with no active child; queuing without optimistic update');
         const item: Milestone = { ...data, id: crypto.randomUUID(), updatedAt: now() };
@@ -79,11 +95,12 @@ export function useMilestones() {
       queueMutation('POST', '/milestones', item, getToken, toast);
       return item;
     },
-    [activeChildId, getToken, toast],
+    [isDemoMode, activeChildId, getToken, toast],
   );
 
   const updateMilestone = useCallback(
     (id: string, data: Omit<Milestone, 'id'>) => {
+      if (isDemoMode) return;
       if (!activeChildId) {
         console.warn('[useMilestones] updateMilestone called with no active child; queuing without optimistic update');
         const item: Milestone = { ...data, id, updatedAt: now() };
@@ -100,11 +117,12 @@ export function useMilestones() {
       });
       queueMutation('POST', '/milestones', item, getToken, toast);
     },
-    [activeChildId, getToken, toast],
+    [isDemoMode, activeChildId, getToken, toast],
   );
 
   const deleteMilestone = useCallback(
     (id: string) => {
+      if (isDemoMode) return;
       setMilestones((prev) => {
         const nextFiltered = prev.filter((m) => m.id !== id);
         const all = storage.getMilestones();
@@ -116,7 +134,7 @@ export function useMilestones() {
       });
       queueMutation('DELETE', `/milestones/${id}`, undefined, getToken, toast);
     },
-    [activeChildId, getToken, toast],
+    [isDemoMode, activeChildId, getToken, toast],
   );
 
   return { milestones, loading, addMilestone, updateMilestone, deleteMilestone, refetch };

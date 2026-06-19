@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { format, parseISO, isToday, isFuture, isPast } from "date-fns";
 import { useMilestones } from "@/hooks/useMilestones";
 import { Milestone, MilestoneType, MILESTONE_TYPE_LABELS } from "@/lib/types";
@@ -8,6 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
+import { useActiveChild } from "@/hooks/useActiveChild";
+import { useChildren } from "@/hooks/useChildren";
+import ChildSwitcher from "@/components/ChildSwitcher";
 import {
   Calendar,
   FileText,
@@ -19,7 +22,6 @@ import {
   Flag,
   Clock,
   History,
-  Users,
 } from "lucide-react";
 import {
   AlertDialog,
@@ -164,6 +166,8 @@ export default function Milestones() {
   const { milestones, addMilestone, updateMilestone, deleteMilestone } =
     useMilestones();
   const { toast } = useToast();
+  const activeChildId = useActiveChild()?.id ?? null;
+  const { data: children = [] } = useChildren();
 
   const [showForm, setShowForm] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
@@ -171,6 +175,9 @@ export default function Milestones() {
   const [formTitle, setFormTitle] = useState("");
   const [formType, setFormType] = useState<MilestoneType>("appointment");
   const [formNotes, setFormNotes] = useState("");
+
+  // Reset form when the active child changes.
+  useEffect(() => { setShowForm(false); setEditId(null); }, [activeChildId]);
 
   const upcoming = [...milestones]
     .filter((m) => m.date >= today)
@@ -248,15 +255,7 @@ export default function Milestones() {
         </Button>
       </div>
 
-      {/* ── Shared-across-children notice ─────────────────────────────────────── */}
-
-      <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl border border-border/50 bg-muted/40 text-sm text-muted-foreground">
-        <Users className="w-4 h-4 mt-0.5 flex-shrink-0" />
-        <p>
-          Milestones are <span className="font-medium text-foreground">shared across all children</span> in your account —
-          they capture the whole family's PANS journey. If you track multiple children, include each child's name in the milestone title.
-        </p>
-      </div>
+      {children.length > 1 && <ChildSwitcher variant="pill" />}
 
       {/* Add / Edit form */}
       {showForm && (

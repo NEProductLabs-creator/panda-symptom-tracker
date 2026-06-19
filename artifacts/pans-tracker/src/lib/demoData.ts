@@ -1,6 +1,6 @@
 // DEMO_DATA: update this dataset to reflect latest app features before sharing portfolio
 
-import type { SymptomLog, ChildBaseline, Medication, MedLibraryItem, PTECLog, WellbeingLog, JourneyState, Child, LabResult } from "@/lib/types";
+import type { SymptomLog, ChildBaseline, Medication, MedLibraryItem, Milestone, TriggerEntry, PTECLog, WellbeingLog, JourneyState, Child, LabResult } from "@/lib/types";
 import { computePTECTotal } from "@/lib/ptec";
 import type { ReportHistoryItem } from "@/lib/reportHistory";
 
@@ -671,6 +671,169 @@ export const DEMO_MULTI_CHILD_LOGS: SymptomLog[] = [
 ];
 
 // Theo has no symptom logs (still in exploring/suspected stage)
+
+// ── Multi-child scenario: distinct medications, med library, milestones, triggers
+
+export const DEMO_MULTI_CHILD_MEDICATIONS: Medication[] = [
+  // Mia — diagnosed 18 months ago, currently on prophylactic antibiotic
+  {
+    id: "dmc-med-1",
+    child_id: "demo-child-mia",
+    name: "Augmentin",
+    dose: "500mg",
+    frequency: "twice",
+    type: "antibiotic",
+    startDate: daysAgo(180),
+    endDate: null,
+    prescribingDoctor: "Dr. Chen",
+    courseType: "prophylactic",
+    notes: "Prophylactic — Mia has been on this since her PANDAS diagnosis 18 months ago.",
+  },
+  {
+    id: "dmc-med-2",
+    child_id: "demo-child-mia",
+    name: "Ibuprofen",
+    dose: "200mg",
+    frequency: "as_needed",
+    type: "other",
+    startDate: daysAgo(180),
+    endDate: null,
+    notes: "As-needed during flares — helps reduce inflammation.",
+  },
+  {
+    id: "dmc-med-3",
+    child_id: "demo-child-mia",
+    name: "Culturelle Probiotic",
+    dose: "1 capsule",
+    frequency: "once",
+    type: "supplement",
+    startDate: daysAgo(180),
+    endDate: null,
+    notes: "Gut support during long-term antibiotic therapy.",
+  },
+  // Theo — completed 10-day amoxicillin course; motor tics appeared 2–3 weeks after strep
+  {
+    id: "dmc-med-4",
+    child_id: "demo-child-theo",
+    name: "Amoxicillin",
+    dose: "250mg",
+    frequency: "twice",
+    type: "antibiotic",
+    startDate: daysAgo(51),
+    endDate: daysAgo(41),
+    prescribingDoctor: "Dr. Patel",
+    courseType: "treatment",
+    courseDays: 10,
+    notes: "10-day course for confirmed strep throat. Completed. Motor tics appeared 2–3 weeks after infection.",
+  },
+];
+
+export const DEMO_MULTI_CHILD_MED_LIBRARY: MedLibraryItem[] = [
+  { id: "dmc-lib-1", child_id: "demo-child-mia", name: "Augmentin", dosage: "500mg", frequency: "twice" },
+  { id: "dmc-lib-2", child_id: "demo-child-mia", name: "Ibuprofen", dosage: "200mg", frequency: "as_needed" },
+  { id: "dmc-lib-3", child_id: "demo-child-mia", name: "Culturelle Probiotic", dosage: "1 capsule", frequency: "once" },
+  { id: "dmc-lib-4", child_id: "demo-child-theo", name: "Amoxicillin", dosage: "250mg", frequency: "twice" },
+];
+
+export const DEMO_MULTI_CHILD_MILESTONES: Milestone[] = [
+  // Mia
+  {
+    id: "dmc-ms-1",
+    child_id: "demo-child-mia",
+    date: daysAgo(-7),
+    title: "Mia — PANDAS Immunologist Follow-up",
+    type: "appointment",
+    notes: "Follow-up with Dr. Chen to review current flare severity and discuss IVIG as a next step.",
+    updatedAt: daysAgo(5),
+  },
+  {
+    id: "dmc-ms-2",
+    child_id: "demo-child-mia",
+    date: daysAgo(14),
+    title: "Mia — Strep Exposure Confirmed at School",
+    type: "other",
+    notes: "Teacher confirmed strep circulating in Mia's class. Flare symptoms began within 48 hours.",
+    updatedAt: daysAgo(14),
+  },
+  {
+    id: "dmc-ms-3",
+    child_id: "demo-child-mia",
+    date: daysAgo(180),
+    title: "Mia — PANDAS Diagnosis",
+    type: "appointment",
+    notes: "Dr. Chen confirmed PANDAS. Started prophylactic Augmentin; referred to pediatric immunologist.",
+    updatedAt: daysAgo(180),
+  },
+  // Theo
+  {
+    id: "dmc-ms-4",
+    child_id: "demo-child-theo",
+    date: daysAgo(-5),
+    title: "Theo — Pediatrician (PANS Evaluation)",
+    type: "appointment",
+    notes: "First appointment to discuss new motor tics and separation anxiety. Will request ASO and anti-DNase B titers.",
+    updatedAt: daysAgo(4),
+  },
+  {
+    id: "dmc-ms-5",
+    child_id: "demo-child-theo",
+    date: daysAgo(20),
+    title: "Theo — First Motor Tics Noticed",
+    type: "other",
+    notes: "Eye blinking and shoulder shrug tics appeared suddenly. New separation anxiety at school drop-off.",
+    updatedAt: daysAgo(20),
+  },
+  {
+    id: "dmc-ms-6",
+    child_id: "demo-child-theo",
+    date: daysAgo(41),
+    title: "Theo — Strep Throat, Amoxicillin Started",
+    type: "medication_change",
+    notes: "Rapid strep positive. Dr. Patel prescribed 10-day amoxicillin. Tics began 2–3 weeks later.",
+    updatedAt: daysAgo(41),
+  },
+];
+
+export const DEMO_MULTI_CHILD_TRIGGERS: TriggerEntry[] = [
+  // Mia
+  {
+    id: "dmc-tr-1",
+    child_id: "demo-child-mia",
+    category: "strep_exposure",
+    date: daysAgo(14),
+    notes: "Strep confirmed in Mia's classroom. Flare symptoms started within 2 days. Augmentin dose temporarily increased.",
+    severity: "high",
+    updatedAt: daysAgo(14),
+  },
+  {
+    id: "dmc-tr-2",
+    child_id: "demo-child-mia",
+    category: "poor_sleep",
+    date: daysAgo(5),
+    notes: "Three nights of broken sleep during the flare — waking at 2–3am with anxiety.",
+    severity: "medium",
+    updatedAt: daysAgo(5),
+  },
+  // Theo
+  {
+    id: "dmc-tr-3",
+    child_id: "demo-child-theo",
+    category: "child_illness",
+    date: daysAgo(42),
+    notes: "Confirmed strep throat — rapid test positive. Treated with 10-day amoxicillin. New tics appeared 2–3 weeks after.",
+    severity: "high",
+    updatedAt: daysAgo(42),
+  },
+  {
+    id: "dmc-tr-4",
+    child_id: "demo-child-theo",
+    category: "high_stress",
+    date: daysAgo(18),
+    notes: "Classroom teacher change. Theo was visibly distressed at drop-off for several days.",
+    severity: "medium",
+    updatedAt: daysAgo(18),
+  },
+];
 
 // ── Journey states per scenario ───────────────────────────────────────────────
 

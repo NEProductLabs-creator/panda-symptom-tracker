@@ -8,6 +8,8 @@ import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
 import { useActiveChild } from '@/hooks/useActiveChild';
+import { DEMO_MULTI_CHILD_TRIGGERS } from '@/lib/demoData';
+import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
 function filterByChild(items: TriggerEntry[], childId: string | null): TriggerEntry[] {
   if (!childId) return items;
@@ -19,18 +21,24 @@ function sorted(items: TriggerEntry[]): TriggerEntry[] {
 }
 
 export function useTriggerLog() {
+  const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
   const { toast } = useToast();
   const activeChildId = useActiveChild()?.id ?? null;
 
-  const [entries, setEntries] = useState<TriggerEntry[]>(() =>
-    sorted(filterByChild(storage.getTriggerLog(), activeChildId)),
-  );
+  const [entries, setEntries] = useState<TriggerEntry[]>(() => {
+    if (isDemoMode) {
+      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
+      if (scenario === 'multi_child') return sorted(filterByChild(DEMO_MULTI_CHILD_TRIGGERS, activeChildId));
+      return [];
+    }
+    return sorted(filterByChild(storage.getTriggerLog(), activeChildId));
+  });
   const [loading, setLoading] = useState(false);
 
   const refetch = useCallback(() => {
-    if (!userId) return;
+    if (!userId || isDemoMode) return;
     setLoading(true);
     api.triggers.getAll()
       .then((serverEntries) => {
@@ -59,13 +67,21 @@ export function useTriggerLog() {
     return () => document.removeEventListener('pans:foreground', handler);
   }, [refetch]);
 
-  // Re-filter from localStorage immediately when the active child changes.
+  // Re-filter when the active child changes.
   useEffect(() => {
+    if (isDemoMode) {
+      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
+      if (scenario === 'multi_child') {
+        setEntries(sorted(filterByChild(DEMO_MULTI_CHILD_TRIGGERS, activeChildId)));
+      }
+      return;
+    }
     setEntries(sorted(filterByChild(storage.getTriggerLog(), activeChildId)));
-  }, [activeChildId]);
+  }, [activeChildId, isDemoMode]);
 
   const addEntry = useCallback(
     (entry: TriggerEntry) => {
+      if (isDemoMode) { return; }
       if (!activeChildId) {
         console.warn('[useTriggerLog] addEntry called with no active child; queuing without optimistic update');
         const stamped: TriggerEntry = { ...entry, updatedAt: now() };
@@ -73,21 +89,21 @@ export function useTriggerLog() {
         return;
       }
       const stamped: TriggerEntry = { ...entry, child_id: activeChildId, updatedAt: now() };
-      // storage.addTriggerEntry appends to the full list; then re-read and filter for display.
       storage.addTriggerEntry(stamped);
       setEntries(sorted(filterByChild(storage.getTriggerLog(), activeChildId)));
       queueMutation('POST', '/triggers', stamped, getToken, toast);
     },
-    [activeChildId, getToken, toast],
+    [isDemoMode, activeChildId, getToken, toast],
   );
 
   const deleteEntry = useCallback(
     (id: string) => {
+      if (isDemoMode) return;
       storage.deleteTriggerEntry(id);
       setEntries(sorted(filterByChild(storage.getTriggerLog(), activeChildId)));
       queueMutation('DELETE', `/triggers/${id}`, undefined, getToken, toast);
     },
-    [activeChildId, getToken, toast],
+    [isDemoMode, activeChildId, getToken, toast],
   );
 
   return { entries, loading, addEntry, deleteEntry, refetch };

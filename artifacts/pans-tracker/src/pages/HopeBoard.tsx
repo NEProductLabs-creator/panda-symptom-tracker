@@ -1,8 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart, Sparkles, X, RefreshCw } from "lucide-react";
 import { AFFIRMATIONS, getTodayAffirmationIndex } from "@/lib/affirmations";
 import { useHopeBoard } from "@/hooks/useHopeBoard";
 import { useToast } from "@/hooks/use-toast";
+import { useActiveChild } from "@/hooks/useActiveChild";
+import { useChildren } from "@/hooks/useChildren";
+import ChildSwitcher from "@/components/ChildSwitcher";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
@@ -40,8 +43,13 @@ const STORIES = [
 export default function HopeBoard() {
   const { savedIndices, toggleSaved, isSaved } = useHopeBoard();
   const { toast } = useToast();
+  const activeChildId = useActiveChild()?.id ?? null;
+  const { data: children = [] } = useChildren();
   const todayIdx = getTodayAffirmationIndex();
   const [showAll, setShowAll] = useState(false);
+
+  // Reset to saved-only view when the active child changes.
+  useEffect(() => { setShowAll(false); }, [activeChildId]);
 
   function handleHeart(idx: number) {
     const wasSaved = isSaved(idx);
@@ -89,6 +97,8 @@ export default function HopeBoard() {
           </p>
         </div>
       </div>
+
+      {children.length > 1 && <ChildSwitcher variant="pill" />}
 
       {/* Saved affirmations */}
       <div>

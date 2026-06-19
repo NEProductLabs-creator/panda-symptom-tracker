@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { format, parseISO, differenceInDays, addDays } from "date-fns";
 import { useMedications } from "@/hooks/useMedications";
 import {
@@ -41,6 +41,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useActiveChild } from "@/hooks/useActiveChild";
+import { useChildren } from "@/hooks/useChildren";
+import ChildSwitcher from "@/components/ChildSwitcher";
 import {
   Plus,
   Pencil,
@@ -52,7 +55,6 @@ import {
   ChevronUp,
   X,
   Clock,
-  Users,
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -399,12 +401,17 @@ export default function Medications() {
   const { medications, addMedication, deleteMedication, addMissedDose, deleteMissedDose } =
     useMedications();
   const { toast } = useToast();
+  const activeChildId = useActiveChild()?.id ?? null;
+  const { data: children = [] } = useChildren();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<Medication | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState<Partial<Record<string, string>>>({});
   const [showHistory, setShowHistory] = useState(false);
+
+  // Close any open form when the active child changes.
+  useEffect(() => { setDialogOpen(false); }, [activeChildId]);
 
   // ── Derived lists ───────────────────────────────────────────────────────────
   const active = useMemo(
@@ -574,15 +581,7 @@ export default function Medications() {
         </Button>
       </div>
 
-      {/* ── Shared-across-children notice ─────────────────────────────────────── */}
-
-      <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl border border-border/50 bg-muted/40 text-sm text-muted-foreground">
-        <Users className="w-4 h-4 mt-0.5 flex-shrink-0" />
-        <p>
-          Medications are <span className="font-medium text-foreground">shared across all children</span> in your account —
-          they capture the household's treatment history. If you track multiple children, include each child's name in the medication name or notes.
-        </p>
-      </div>
+      {children.length > 1 && <ChildSwitcher variant="pill" />}
 
       {/* ── Alert banners ─────────────────────────────────────────────────────── */}
 

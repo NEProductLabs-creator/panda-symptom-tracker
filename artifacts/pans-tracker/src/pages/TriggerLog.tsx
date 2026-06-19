@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { useTriggerLog } from "@/hooks/useTriggerLog";
 import { useHouseholdHealth } from "@/hooks/useHouseholdHealth";
@@ -26,6 +26,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
+import { useActiveChild } from "@/hooks/useActiveChild";
+import { useChildren } from "@/hooks/useChildren";
+import ChildSwitcher from "@/components/ChildSwitcher";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import {
   computeTriggerCorrelations,
@@ -180,6 +183,8 @@ export default function TriggerLog() {
   const { illnesses, addIllness, deleteIllness } = useHouseholdHealth();
   const { baseline } = useChildBaseline();
   const { toast } = useToast();
+  const activeChildId = useActiveChild()?.id ?? null;
+  const { data: children = [] } = useChildren();
 
   // Trigger form state
   const [category, setCategory] = useState<TriggerCategory | "">("");
@@ -196,6 +201,16 @@ export default function TriggerLog() {
   const [hhStartDate, setHhStartDate] = useState(today);
   const [hhEndDate, setHhEndDate] = useState("");
   const [hhNotes, setHhNotes] = useState("");
+
+  // Reset trigger form when the active child changes.
+  useEffect(() => {
+    setCategory("");
+    setDate(today);
+    setNotes("");
+    setSeverity("medium");
+    setMemberName("");
+    setCustomCategory("");
+  }, [activeChildId]);
 
   const childName = baseline?.childName?.trim();
   const { logs } = useSymptomLogs();
@@ -223,7 +238,7 @@ export default function TriggerLog() {
       ...illnesses.map((h) => ({ kind: "household" as const, illness: h, date: h.startDate })),
     ];
     return items.sort((a, b) => b.date.localeCompare(a.date));
-  }, [entries, illnesses]);
+  }, [entries, illnesses, activeChildId]);
 
   function handleSaveTrigger() {
     if (!category) return;
@@ -289,6 +304,7 @@ export default function TriggerLog() {
             ? `Track events that may have preceded ${childName}'s symptoms`
             : "Track events that may have triggered or preceded symptoms"}
         </p>
+        {children.length > 1 && <div className="mt-1.5"><ChildSwitcher variant="pill" /></div>}
       </div>
 
       {/* ── Pattern Insight ─────────────────────────────────────────────────── */}

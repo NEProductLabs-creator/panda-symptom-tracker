@@ -8,7 +8,12 @@ import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
 import { useActiveChild } from '@/hooks/useActiveChild';
-import { DEMO_MEDICATIONS, DEMO_IN_CRISIS_MEDICATIONS, DEMO_EXPLORING_MEDICATIONS } from '@/lib/demoData';
+import {
+  DEMO_MEDICATIONS,
+  DEMO_IN_CRISIS_MEDICATIONS,
+  DEMO_EXPLORING_MEDICATIONS,
+  DEMO_MULTI_CHILD_MEDICATIONS,
+} from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
 const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'));
@@ -16,6 +21,13 @@ const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'
 function filterByChild(items: Medication[], childId: string | null): Medication[] {
   if (!childId) return items;
   return items.filter((m) => !m.child_id || m.child_id === childId);
+}
+
+function demoInitForScenario(scenario: string | null, activeChildId: string | null): Medication[] {
+  if (scenario === 'exploring') return DEMO_EXPLORING_MEDICATIONS;
+  if (scenario === 'in_crisis') return DEMO_IN_CRISIS_MEDICATIONS;
+  if (scenario === 'multi_child') return filterByChild(DEMO_MULTI_CHILD_MEDICATIONS, activeChildId);
+  return DEMO_MEDICATIONS;
 }
 
 export function useMedications() {
@@ -27,10 +39,7 @@ export function useMedications() {
 
   const [medications, setMedications] = useState<Medication[]>(() => {
     if (!isDemoMode) return filterByChild(storage.getMedications(), activeChildId);
-    const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
-    if (scenario === 'exploring') return DEMO_EXPLORING_MEDICATIONS;
-    if (scenario === 'in_crisis') return DEMO_IN_CRISIS_MEDICATIONS;
-    return DEMO_MEDICATIONS;
+    return demoInitForScenario(localStorage.getItem(DEMO_SCENARIO_KEY), activeChildId);
   });
   const [loading, setLoading] = useState(false);
 
@@ -64,9 +73,15 @@ export function useMedications() {
     return () => document.removeEventListener('pans:foreground', handler);
   }, [refetch]);
 
-  // Re-filter from localStorage immediately when the active child changes.
+  // Re-filter when the active child changes.
   useEffect(() => {
-    if (isDemoMode) return;
+    if (isDemoMode) {
+      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
+      if (scenario === 'multi_child') {
+        setMedications(filterByChild(DEMO_MULTI_CHILD_MEDICATIONS, activeChildId));
+      }
+      return;
+    }
     setMedications(filterByChild(storage.getMedications(), activeChildId));
   }, [activeChildId, isDemoMode]);
 
@@ -84,7 +99,6 @@ export function useMedications() {
         const nextFiltered = existingIdx >= 0
           ? prev.map((m, i) => (i === existingIdx ? stamped : m))
           : [...prev, stamped];
-        // Preserve other children's medications in localStorage.
         const all = storage.getMedications();
         const others = all.filter((m) => m.child_id && m.child_id !== activeChildId);
         storage.saveMedications([...others, ...nextFiltered]);

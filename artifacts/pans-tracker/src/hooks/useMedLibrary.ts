@@ -8,7 +8,12 @@ import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
 import { useActiveChild } from '@/hooks/useActiveChild';
-import { DEMO_MED_LIBRARY, DEMO_EXPLORING_MED_LIBRARY, DEMO_IN_CRISIS_MED_LIBRARY } from '@/lib/demoData';
+import {
+  DEMO_MED_LIBRARY,
+  DEMO_EXPLORING_MED_LIBRARY,
+  DEMO_IN_CRISIS_MED_LIBRARY,
+  DEMO_MULTI_CHILD_MED_LIBRARY,
+} from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
 const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'));
@@ -16,6 +21,13 @@ const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'
 function filterByChild(items: MedLibraryItem[], childId: string | null): MedLibraryItem[] {
   if (!childId) return items;
   return items.filter((m) => !m.child_id || m.child_id === childId);
+}
+
+function demoInitForScenario(scenario: string | null, activeChildId: string | null): MedLibraryItem[] {
+  if (scenario === 'exploring') return DEMO_EXPLORING_MED_LIBRARY;
+  if (scenario === 'in_crisis') return DEMO_IN_CRISIS_MED_LIBRARY;
+  if (scenario === 'multi_child') return filterByChild(DEMO_MULTI_CHILD_MED_LIBRARY, activeChildId);
+  return DEMO_MED_LIBRARY;
 }
 
 export function useMedLibrary() {
@@ -27,10 +39,7 @@ export function useMedLibrary() {
 
   const [medLibrary, setMedLibrary] = useState<MedLibraryItem[]>(() => {
     if (!isDemoMode) return filterByChild(storage.getMedLibrary(), activeChildId);
-    const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
-    if (scenario === 'exploring') return DEMO_EXPLORING_MED_LIBRARY;
-    if (scenario === 'in_crisis') return DEMO_IN_CRISIS_MED_LIBRARY;
-    return DEMO_MED_LIBRARY;
+    return demoInitForScenario(localStorage.getItem(DEMO_SCENARIO_KEY), activeChildId);
   });
   const [loading, setLoading] = useState(false);
 
@@ -64,9 +73,15 @@ export function useMedLibrary() {
     return () => document.removeEventListener('pans:foreground', handler);
   }, [refetch]);
 
-  // Re-filter from localStorage immediately when the active child changes.
+  // Re-filter when the active child changes.
   useEffect(() => {
-    if (isDemoMode) return;
+    if (isDemoMode) {
+      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
+      if (scenario === 'multi_child') {
+        setMedLibrary(filterByChild(DEMO_MULTI_CHILD_MED_LIBRARY, activeChildId));
+      }
+      return;
+    }
     setMedLibrary(filterByChild(storage.getMedLibrary(), activeChildId));
   }, [activeChildId, isDemoMode]);
 

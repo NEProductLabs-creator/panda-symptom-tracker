@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMedLibrary } from "@/hooks/useMedLibrary";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { MedLibraryItem, FrequencyOption, FREQUENCY_LABELS } from "@/lib/types";
@@ -33,6 +33,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useActiveChild } from "@/hooks/useActiveChild";
+import { useChildren } from "@/hooks/useChildren";
+import ChildSwitcher from "@/components/ChildSwitcher";
 import { Plus, Pencil, Trash2, BookOpen } from "lucide-react";
 
 const emptyForm = {
@@ -45,11 +48,16 @@ export default function MedLibrary() {
   const { medLibrary, saveMedLibraryItem, deleteMedLibraryItem } = useMedLibrary();
   const { logs } = useSymptomLogs();
   const { toast } = useToast();
+  const activeChildId = useActiveChild()?.id ?? null;
+  const { data: children = [] } = useChildren();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<MedLibraryItem | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [errors, setErrors] = useState<Partial<typeof emptyForm>>({});
+
+  // Close the form when the active child changes.
+  useEffect(() => { setDialogOpen(false); }, [activeChildId]);
 
   function openAdd() {
     setEditing(null);
@@ -103,6 +111,8 @@ export default function MedLibrary() {
           Add Medication
         </Button>
       </div>
+
+      {children.length > 1 && <ChildSwitcher variant="pill" />}
 
       <Card className="border-border shadow-sm">
         <CardHeader className="pb-3">

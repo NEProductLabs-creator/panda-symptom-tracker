@@ -120,10 +120,12 @@ router.get("/:token", async (req, res) => {
         db.from("medications").select("data").eq("user_id", uid),
         db.from("med_library").select("data").eq("user_id", uid),
         db.from("children")
-          .select("id, name, sort_order, baseline")
+          .select("baseline")
           .eq("user_id", uid)
           .eq("is_archived", false)
-          .order("sort_order", { ascending: true }),
+          .order("sort_order", { ascending: true })
+          .limit(1)
+          .maybeSingle(),
         db.from("milestones").select("data").eq("user_id", uid),
       ]);
 
@@ -143,7 +145,7 @@ router.get("/:token", async (req, res) => {
       ptecLogs: (ptecRes.data ?? []).map((r) => r.data),
       medications: (medsRes.data ?? []).map((r) => r.data),
       medLibrary: (medLibRes.data ?? []).map((r) => r.data),
-      baseline: (childrenRes.data?.[0] as { baseline: unknown } | undefined)?.baseline ?? null,
+      baseline: (childrenRes.data as { baseline: unknown } | null)?.baseline ?? null,
       milestones: (milestonesRes.data ?? []).map((r) => r.data),
       meta: {
         expiresAt: share.expires_at as string,

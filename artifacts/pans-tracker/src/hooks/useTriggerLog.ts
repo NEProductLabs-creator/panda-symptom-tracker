@@ -18,7 +18,7 @@ export function useTriggerLog() {
   );
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const refetch = useCallback(() => {
     if (!userId) return;
     setLoading(true);
     api.triggers.getAll()
@@ -38,7 +38,15 @@ export function useTriggerLog() {
         toast({ title: 'Could not load latest data. Showing your last saved version.' });
         setLoading(false);
       });
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { refetch(); }, [refetch]);
+
+  useEffect(() => {
+    const handler = () => refetch();
+    document.addEventListener('pans:foreground', handler);
+    return () => document.removeEventListener('pans:foreground', handler);
+  }, [refetch]);
 
   const addEntry = useCallback(
     (entry: TriggerEntry) => {
@@ -59,5 +67,5 @@ export function useTriggerLog() {
     [getToken, toast],
   );
 
-  return { entries, loading, addEntry, deleteEntry };
+  return { entries, loading, addEntry, deleteEntry, refetch };
 }

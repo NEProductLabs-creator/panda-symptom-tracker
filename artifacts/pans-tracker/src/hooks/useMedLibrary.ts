@@ -27,7 +27,7 @@ export function useMedLibrary() {
   });
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const refetch = useCallback(() => {
     if (!userId || isDemoMode) return;
     setLoading(true);
     api.medLibrary.getAll()
@@ -46,7 +46,15 @@ export function useMedLibrary() {
         toast({ title: 'Could not load latest data. Showing your last saved version.' });
         setLoading(false);
       });
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { refetch(); }, [refetch]);
+
+  useEffect(() => {
+    const handler = () => refetch();
+    document.addEventListener('pans:foreground', handler);
+    return () => document.removeEventListener('pans:foreground', handler);
+  }, [refetch]);
 
   const saveMedLibraryItem = useCallback(
     (item: MedLibraryItem) => {
@@ -79,5 +87,5 @@ export function useMedLibrary() {
     [isDemoMode, getToken, toast],
   );
 
-  return { medLibrary, loading, saveMedLibraryItem, deleteMedLibraryItem };
+  return { medLibrary, loading, saveMedLibraryItem, deleteMedLibraryItem, refetch };
 }

@@ -25,7 +25,7 @@ export function useChildBaseline() {
   });
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const refetch = useCallback(() => {
     if (!userId || isDemoMode) return;
     setLoading(true);
     api.baseline.get()
@@ -46,7 +46,15 @@ export function useChildBaseline() {
         toast({ title: 'Could not load latest data. Showing your last saved version.' });
         setLoading(false);
       });
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { refetch(); }, [refetch]);
+
+  useEffect(() => {
+    const handler = () => refetch();
+    document.addEventListener('pans:foreground', handler);
+    return () => document.removeEventListener('pans:foreground', handler);
+  }, [refetch]);
 
   const saveBaseline = useCallback(
     (data: ChildBaseline) => {
@@ -64,5 +72,5 @@ export function useChildBaseline() {
     setBaseline(null);
   }, [isDemoMode]);
 
-  return { baseline, loading, saveBaseline, clearBaseline };
+  return { baseline, loading, saveBaseline, clearBaseline, refetch };
 }

@@ -16,7 +16,7 @@ export function useMilestones() {
   const [milestones, setMilestones] = useState<Milestone[]>(() => storage.getMilestones());
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const refetch = useCallback(() => {
     if (!userId) return;
     setLoading(true);
     api.milestones.getAll()
@@ -35,7 +35,15 @@ export function useMilestones() {
         toast({ title: 'Could not load latest data. Showing your last saved version.' });
         setLoading(false);
       });
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { refetch(); }, [refetch]);
+
+  useEffect(() => {
+    const handler = () => refetch();
+    document.addEventListener('pans:foreground', handler);
+    return () => document.removeEventListener('pans:foreground', handler);
+  }, [refetch]);
 
   const addMilestone = useCallback(
     (data: Omit<Milestone, 'id'>) => {
@@ -76,5 +84,5 @@ export function useMilestones() {
     [getToken, toast],
   );
 
-  return { milestones, loading, addMilestone, updateMilestone, deleteMilestone };
+  return { milestones, loading, addMilestone, updateMilestone, deleteMilestone, refetch };
 }

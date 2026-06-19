@@ -18,7 +18,7 @@ export function useHouseholdHealth() {
   );
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const refetch = useCallback(() => {
     if (!userId) return;
     setLoading(true);
     api.household.getAll()
@@ -38,7 +38,15 @@ export function useHouseholdHealth() {
         toast({ title: 'Could not load latest data. Showing your last saved version.' });
         setLoading(false);
       });
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { refetch(); }, [refetch]);
+
+  useEffect(() => {
+    const handler = () => refetch();
+    document.addEventListener('pans:foreground', handler);
+    return () => document.removeEventListener('pans:foreground', handler);
+  }, [refetch]);
 
   const addIllness = useCallback(
     (illness: HouseholdIllness) => {
@@ -59,5 +67,5 @@ export function useHouseholdHealth() {
     [getToken, toast],
   );
 
-  return { illnesses, loading, addIllness, deleteIllness };
+  return { illnesses, loading, addIllness, deleteIllness, refetch };
 }

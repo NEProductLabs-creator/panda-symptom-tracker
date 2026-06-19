@@ -42,8 +42,8 @@ export function useSymptomLogs() {
   });
   const [loading, setLoading] = useState(false);
 
-  // Sync from server when userId first resolves
-  useEffect(() => {
+  // Sync from server; also called on foreground return
+  const refetch = useCallback(() => {
     if (!userId || isDemoMode) return;
     setLoading(true);
     api.logs.getAll()
@@ -62,7 +62,15 @@ export function useSymptomLogs() {
         toast({ title: 'Could not load latest data. Showing your last saved version.' });
         setLoading(false);
       });
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { refetch(); }, [refetch]);
+
+  useEffect(() => {
+    const handler = () => refetch();
+    document.addEventListener('pans:foreground', handler);
+    return () => document.removeEventListener('pans:foreground', handler);
+  }, [refetch]);
 
   // Re-filter from localStorage (or demo source) whenever the active child changes
   useEffect(() => {
@@ -122,5 +130,5 @@ export function useSymptomLogs() {
     [isDemoMode, activeChildId, getToken, toast],
   );
 
-  return { logs, loading, addLog, deleteLog };
+  return { logs, loading, addLog, deleteLog, refetch };
 }

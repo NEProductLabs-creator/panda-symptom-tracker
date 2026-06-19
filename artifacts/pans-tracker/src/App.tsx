@@ -601,6 +601,17 @@ function Router() {
     }
   }, [isSignedIn, isDemoMode]);
 
+  // Foreground refetch: when the tab becomes visible again, notify all data hooks
+  useEffect(() => {
+    const handler = () => {
+      if (document.visibilityState === 'visible') {
+        document.dispatchEvent(new CustomEvent('pans:foreground'));
+      }
+    };
+    document.addEventListener('visibilitychange', handler);
+    return () => document.removeEventListener('visibilitychange', handler);
+  }, []);
+
   useEffect(() => {
     if (!isLoaded && !isDemoMode) return;
 

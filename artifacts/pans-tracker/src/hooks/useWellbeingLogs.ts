@@ -36,7 +36,7 @@ export function useWellbeingLogs() {
   );
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const refetch = useCallback(() => {
     if (!userId || isDemoMode) return;
     setLoading(true);
     api.wellbeing.getAll()
@@ -55,7 +55,15 @@ export function useWellbeingLogs() {
         toast({ title: 'Could not load latest data. Showing your last saved version.' });
         setLoading(false);
       });
-  }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => { refetch(); }, [refetch]);
+
+  useEffect(() => {
+    const handler = () => refetch();
+    document.addEventListener('pans:foreground', handler);
+    return () => document.removeEventListener('pans:foreground', handler);
+  }, [refetch]);
 
   const upsertLog = useCallback(
     (entry: Omit<WellbeingLog, 'id'> & { id?: string }) => {
@@ -97,5 +105,5 @@ export function useWellbeingLogs() {
     [isDemoMode, getToken, toast],
   );
 
-  return { logs, loading, upsertLog, deleteLog };
+  return { logs, loading, upsertLog, deleteLog, refetch };
 }

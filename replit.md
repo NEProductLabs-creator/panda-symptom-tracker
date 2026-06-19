@@ -9,6 +9,19 @@ A daily symptom and medication tracking app for parents managing children with P
 - `pnpm run typecheck` — full typecheck (all packages should pass clean)
 - Required env: `SUPABASE_SERVICE_ROLE_KEY` (Replit secret) for Supabase sync
 
+## How to deploy
+
+Before publishing, set these Replit secrets (Secrets tab → Add secret):
+
+| Secret | Description |
+|---|---|
+| `VAPID_PUBLIC_KEY` | VAPID public key for web push (base64url) |
+| `VAPID_PRIVATE_KEY` | VAPID private key for web push (base64url) |
+| `VAPID_SUBJECT` | Contact URI for push service, e.g. `mailto:admin@example.com` |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role key for server-side DB access |
+
+The **"Reminder: Daily push"** workflow must also be started after deployment. It loops every 60 seconds, checks `push_subscriptions` for matching `reminder_time` values, and sends a "Daily check-in" push to users who haven't logged yet today. VAPID keys can be generated with `npx web-push generate-vapid-keys`.
+
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9

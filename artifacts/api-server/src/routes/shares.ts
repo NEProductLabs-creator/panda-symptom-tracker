@@ -29,14 +29,30 @@ function buildShareUrl(req: Request, token: string): string {
 // POST /api/shares — create a share link (auth required)
 router.post("/", requireAuth(), async (req, res) => {
   const db = requireSupabase();
-  const { expiresInDays, includeNotes } = req.body as {
+  const { expiresInDays, includeNotes, child_id } = req.body as {
     expiresInDays: unknown;
     includeNotes: unknown;
+    child_id?: string;
   };
 
   if (!([7, 30, 90] as unknown[]).includes(expiresInDays)) {
     res.status(400).json({ error: "expiresInDays must be 7, 30, or 90" });
     return;
+  }
+
+  // Resolve child_id: use the supplied value or fall back to the user's first
+  // non-archived child so the share link is always scoped to a specific child.
+  let resolvedChildId: string | null = child_id ?? null;
+  if (!resolvedChildId) {
+    const { data: dc } = await db
+      .from("children")
+      .select("id")
+      .eq("user_id", userId(req))
+      .eq("is_archived", false)
+      .order("sort_order", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    resolvedChildId = (dc as { id: string } | null)?.id ?? null;
   }
 
   const token = randomBytes(32).toString("hex");
@@ -50,6 +66,7 @@ router.post("/", requireAuth(), async (req, res) => {
     expires_at: expiresAt,
     include_notes: includeNotes === true,
     revoked: false,
+    ...(resolvedChildId ? { child_id: resolvedChildId } : {}),
   });
 
   if (error) {
@@ -67,7 +84,7 @@ router.get("/", requireAuth(), async (req, res) => {
   try {
     const { data, error } = await db
       .from("shares")
-      .select("token, expires_at, include_notes, revoked, created_at")
+      .select("token, expires_at, include_notes, revoked, created_at, child_id")
       .eq("user_id", userId(req))
       .order("created_at", { ascending: false });
 
@@ -112,22 +129,42 @@ router.get("/:token", async (req, res) => {
 
     const uid = share.user_id as string;
     const includeNotes = share.include_notes as boolean;
+    const shareChildId = share.child_id as string | null;
 
-    const [logsRes, ptecRes, medsRes, medLibRes, childrenRes, milestonesRes] =
-      await Promise.all([
-        db.from("symptom_logs").select("data").eq("user_id", uid),
-        db.from("ptec_logs").select("data").eq("user_id", uid),
-        db.from("medications").select("data").eq("user_id", uid),
-        db.from("med_library").select("data").eq("user_id", uid),
-        db.from("children")
-          .select("baseline")
-          .eq("user_id", uid)
-          .eq("is_archived", false)
-          .order("sort_order", { ascending: true })
-          .limit(1)
-          .maybeSingle(),
-        db.from("milestones").select("data").eq("user_id", uid),
-      ]);
+    type ChildRow = { id: string; name: string; baseline: unknown };
+
+    // ── Phase 1: children + shared (non-child-scoped) data ────────────────────
+    const [childrenRes, medsRes, medLibRes, milestonesRes] = await Promise.all([
+      db
+        .from("children")
+        .select("id, name, baseline")
+        .eq("user_id", uid)
+        .eq("is_archived", false)
+        .order("sort_order", { ascending: true }),
+      db.from("medications").select("data").eq("user_id", uid),
+      db.from("med_library").select("data").eq("user_id", uid),
+      db.from("milestones").select("data").eq("user_id", uid),
+    ]);
+
+    const children = (childrenRes.data ?? []) as ChildRow[];
+    // Resolve child: prefer the share's pinned child_id, fall back to first child.
+    const resolvedChild: ChildRow | null =
+      shareChildId
+        ? (children.find((c) => c.id === shareChildId) ?? children[0] ?? null)
+        : (children[0] ?? null);
+
+    // ── Phase 2: child-scoped data ─────────────────────────────────────────────
+    // symptom_logs and ptec_logs carry a child_id column — filter to the
+    // resolved child when one exists so the viewer sees only that child's data.
+    const childFilter = resolvedChild?.id;
+    const [logsRes, ptecRes] = await Promise.all([
+      childFilter
+        ? db.from("symptom_logs").select("data").eq("user_id", uid).eq("child_id", childFilter)
+        : db.from("symptom_logs").select("data").eq("user_id", uid),
+      childFilter
+        ? db.from("ptec_logs").select("data").eq("user_id", uid).eq("child_id", childFilter)
+        : db.from("ptec_logs").select("data").eq("user_id", uid),
+    ]);
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let logs: any[] = (logsRes.data ?? []).map((r) => r.data);
@@ -141,11 +178,12 @@ router.get("/:token", async (req, res) => {
     }
 
     res.json({
+      child: resolvedChild ? { id: resolvedChild.id, name: resolvedChild.name } : null,
       logs,
       ptecLogs: (ptecRes.data ?? []).map((r) => r.data),
       medications: (medsRes.data ?? []).map((r) => r.data),
       medLibrary: (medLibRes.data ?? []).map((r) => r.data),
-      baseline: (childrenRes.data as { baseline: unknown } | null)?.baseline ?? null,
+      baseline: resolvedChild?.baseline ?? null,
       milestones: (milestonesRes.data ?? []).map((r) => r.data),
       meta: {
         expiresAt: share.expires_at as string,

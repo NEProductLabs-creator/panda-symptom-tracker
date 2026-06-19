@@ -14,6 +14,8 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { SectionCard } from "./shared";
+import { useChildren } from "@/hooks/useChildren";
+import { useActiveChild } from "@/hooks/useActiveChild";
 
 type ShareRecord = {
   token: string;
@@ -21,17 +23,21 @@ type ShareRecord = {
   include_notes: boolean;
   revoked: boolean;
   created_at: string;
+  child_id?: string | null;
 };
 
 export default function SettingsShares() {
   const { getToken } = useClerkAuth();
   const { toast } = useToast();
+  const { data: children = [] } = useChildren();
+  const activeChild = useActiveChild();
 
   const [shares, setShares] = useState<ShareRecord[]>([]);
   const [sharesLoading, setSharesLoading] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [newShareExpiry, setNewShareExpiry] = useState<7 | 30 | 90>(30);
   const [newShareNotes, setNewShareNotes] = useState(true);
+  const [selectedChildId, setSelectedChildId] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [createdUrl, setCreatedUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
@@ -61,6 +67,14 @@ export default function SettingsShares() {
     (s) => !s.revoked && new Date(s.expires_at) > new Date(),
   );
 
+  function openCreateDialog() {
+    setCreatedUrl(null);
+    setCopied(false);
+    // Default the picker to whichever child is currently active.
+    setSelectedChildId(activeChild?.id ?? children[0]?.id ?? null);
+    setShareDialogOpen(true);
+  }
+
   async function handleCreateShare() {
     setCreating(true);
     try {
@@ -71,7 +85,11 @@ export default function SettingsShares() {
           "Content-Type": "application/json",
           ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
-        body: JSON.stringify({ expiresInDays: newShareExpiry, includeNotes: newShareNotes }),
+        body: JSON.stringify({
+          expiresInDays: newShareExpiry,
+          includeNotes: newShareNotes,
+          ...(selectedChildId ? { child_id: selectedChildId } : {}),
+        }),
       });
       if (!res.ok) throw new Error("failed");
       const { url } = (await res.json()) as { url: string };
@@ -107,6 +125,12 @@ export default function SettingsShares() {
       .catch(() => {});
   }
 
+  // Resolve a child name from the loaded children list.
+  function childName(childId: string | null | undefined): string | null {
+    if (!childId) return null;
+    return children.find((c) => c.id === childId)?.name ?? null;
+  }
+
   return (
     <>
       <SectionCard icon={Share2} title="Care Team Sharing">
@@ -119,40 +143,43 @@ export default function SettingsShares() {
           <p className="text-xs text-muted-foreground">Loading…</p>
         ) : activeShares.length > 0 ? (
           <div className="space-y-2">
-            {activeShares.map((share) => (
-              <div
-                key={share.token}
-                className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border border-border bg-muted/30"
-              >
-                <div className="min-w-0">
-                  <p className="text-xs font-medium text-foreground">
-                    Expires {format(parseISO(share.expires_at), "MMM d, yyyy")}
-                  </p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {share.include_notes ? "Includes notes" : "No notes"} · Created{" "}
-                    {format(parseISO(share.created_at), "MMM d")}
-                  </p>
+            {activeShares.map((share) => {
+              const name = childName(share.child_id);
+              return (
+                <div
+                  key={share.token}
+                  className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border border-border bg-muted/30"
+                >
+                  <div className="min-w-0">
+                    <p className="text-xs font-medium text-foreground">
+                      {name ? `${name} · ` : ""}Expires {format(parseISO(share.expires_at), "MMM d, yyyy")}
+                    </p>
+                    <p className="text-[11px] text-muted-foreground">
+                      {share.include_notes ? "Includes notes" : "No notes"} · Created{" "}
+                      {format(parseISO(share.created_at), "MMM d")}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 flex-shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => copyShareUrl(share.token)}
+                      className="flex items-center gap-1 text-xs text-primary hover:underline font-medium"
+                    >
+                      <Copy className="w-3 h-3" />
+                      Copy
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleRevoke(share.token)}
+                      className="flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 font-medium"
+                    >
+                      <X className="w-3 h-3" />
+                      Revoke
+                    </button>
+                  </div>
                 </div>
-                <div className="flex items-center gap-3 flex-shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => copyShareUrl(share.token)}
-                    className="flex items-center gap-1 text-xs text-primary hover:underline font-medium"
-                  >
-                    <Copy className="w-3 h-3" />
-                    Copy
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleRevoke(share.token)}
-                    className="flex items-center gap-1 text-xs text-destructive hover:text-destructive/80 font-medium"
-                  >
-                    <X className="w-3 h-3" />
-                    Revoke
-                  </button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <p className="text-xs text-muted-foreground italic">No active share links.</p>
@@ -162,11 +189,7 @@ export default function SettingsShares() {
           type="button"
           variant="outline"
           className="w-full gap-2"
-          onClick={() => {
-            setCreatedUrl(null);
-            setCopied(false);
-            setShareDialogOpen(true);
-          }}
+          onClick={openCreateDialog}
         >
           <Plus className="w-4 h-4" />
           Create new share link
@@ -218,6 +241,36 @@ export default function SettingsShares() {
             </div>
           ) : (
             <div className="space-y-4">
+              {/* Child picker — only shown when the user has more than one child */}
+              {children.length > 1 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                    Child
+                  </p>
+                  <div
+                    className="grid gap-2"
+                    style={{
+                      gridTemplateColumns: `repeat(${Math.min(children.length, 3)}, 1fr)`,
+                    }}
+                  >
+                    {children.map((child) => (
+                      <button
+                        key={child.id}
+                        type="button"
+                        onClick={() => setSelectedChildId(child.id)}
+                        className={`py-2 px-3 rounded-xl border-2 text-sm font-medium transition-all truncate ${
+                          selectedChildId === child.id
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border hover:border-primary/40 text-foreground"
+                        }`}
+                      >
+                        {child.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Expires after

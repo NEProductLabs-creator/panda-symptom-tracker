@@ -54,6 +54,7 @@ import TermsGate from "@/pages/TermsGate";
 import { useTermsStatus } from "@/hooks/useTermsStatus";
 import { CURRENT_TERMS_VERSION } from "@/lib/termsVersion";
 import { DemoProvider, DemoBanner, useDemoContext } from "@/contexts/DemoContext";
+import DemoPicker from "@/pages/DemoPicker";
 import Landing from "@/pages/Landing";
 import InstallPrompt from "@/components/InstallPrompt";
 import OfflineBanner from "@/components/OfflineBanner";
@@ -137,7 +138,7 @@ const clerkAppearance = {
   },
 };
 
-const NO_SIDEBAR_ROUTES = ["/print", "/about", "/onboarding", "/sign-in", "/sign-up"];
+const NO_SIDEBAR_ROUTES = ["/print", "/about", "/onboarding", "/sign-in", "/sign-up", "/demo/pick"];
 
 // ─── Loading screen ────────────────────────────────────────────────────────────
 
@@ -694,6 +695,7 @@ function Router() {
         <Route path="/right-now/de-escalation" component={RightNowDeEscalation} />
         <Route path="/right-now/er-guide" component={RightNowERGuide} />
         <Route path="/advocate" component={Advocate} />
+        <Route path="/demo/pick" component={DemoPicker} />
         <Route path="/advocate/reports" component={AdvocateReports} />
         <Route path="/advocate/scripts" component={AdvocateScripts} />
         <Route path="/advocate/school" component={AdvocateSchool} />

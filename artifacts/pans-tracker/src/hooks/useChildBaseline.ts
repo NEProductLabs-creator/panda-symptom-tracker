@@ -6,8 +6,8 @@ import { createApiClient } from '@/lib/api';
 import { mergeSingleton } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
-import { DEMO_BASELINE } from '@/lib/demoData';
-import { DEMO_KEY } from '@/contexts/DemoContext';
+import { DEMO_BASELINE, DEMO_EXPLORING_BASELINE, DEMO_IN_CRISIS_BASELINE } from '@/lib/demoData';
+import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
 export function useChildBaseline() {
   const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
@@ -15,9 +15,13 @@ export function useChildBaseline() {
   const api = useMemo(() => createApiClient(getToken), [getToken]);
   const { toast } = useToast();
 
-  const [baseline, setBaseline] = useState<ChildBaseline | null>(() =>
-    isDemoMode ? DEMO_BASELINE : storage.getChildBaseline(),
-  );
+  const [baseline, setBaseline] = useState<ChildBaseline | null>(() => {
+    if (!isDemoMode) return storage.getChildBaseline();
+    const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
+    if (scenario === 'exploring') return DEMO_EXPLORING_BASELINE;
+    if (scenario === 'in_crisis') return DEMO_IN_CRISIS_BASELINE;
+    return DEMO_BASELINE;
+  });
 
   useEffect(() => {
     if (!userId || isDemoMode) return;

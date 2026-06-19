@@ -6,8 +6,8 @@ import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
-import { DEMO_MEDICATIONS } from '@/lib/demoData';
-import { DEMO_KEY } from '@/contexts/DemoContext';
+import { DEMO_MEDICATIONS, DEMO_IN_CRISIS_MEDICATIONS, DEMO_EXPLORING_MEDICATIONS } from '@/lib/demoData';
+import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
 const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'));
 
@@ -17,9 +17,13 @@ export function useMedications() {
   const api = useMemo(() => createApiClient(getToken), [getToken]);
   const { toast } = useToast();
 
-  const [medications, setMedications] = useState<Medication[]>(() =>
-    isDemoMode ? DEMO_MEDICATIONS : storage.getMedications(),
-  );
+  const [medications, setMedications] = useState<Medication[]>(() => {
+    if (!isDemoMode) return storage.getMedications();
+    const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
+    if (scenario === 'exploring') return DEMO_EXPLORING_MEDICATIONS;
+    if (scenario === 'in_crisis') return DEMO_IN_CRISIS_MEDICATIONS;
+    return DEMO_MEDICATIONS;
+  });
 
   useEffect(() => {
     if (!userId || isDemoMode) return;

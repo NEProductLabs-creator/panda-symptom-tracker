@@ -1,7 +1,8 @@
 // DEMO_DATA: update this dataset to reflect latest app features before sharing portfolio
 
-import type { SymptomLog, ChildBaseline, Medication, MedLibraryItem, PTECLog, WellbeingLog } from "@/lib/types";
+import type { SymptomLog, ChildBaseline, Medication, MedLibraryItem, PTECLog, WellbeingLog, JourneyState } from "@/lib/types";
 import { computePTECTotal } from "@/lib/ptec";
+import type { ReportHistoryItem } from "@/lib/reportHistory";
 
 function daysAgo(n: number): string {
   const d = new Date();
@@ -507,3 +508,129 @@ export const DEMO_WELLBEING_LOGS: WellbeingLog[] = [
 //   5 → "You did not cause this. You cannot always control it. But you are doing everything right."
 //   6 → "Recovery is not linear, but it is real, and it happens every day for PANS families."
 export const DEMO_HOPEBOARD_INDICES: number[] = [3, 5, 6];
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SCENARIO-SPECIFIC DEMO DATA
+// Three independent persona pathways for the demo scenario picker.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ── Shared "Sam" baseline for exploring + in_crisis ───────────────────────────
+
+export const DEMO_EXPLORING_BASELINE: ChildBaseline = {
+  childName: 'Sam',
+  childAge: '7',
+  description:
+    'Sam is usually an easygoing, imaginative kid who loves drawing and playing outside. At baseline she is calm, sleeps well, and doing well in first grade.',
+  sleepHours: '10',
+  appetite: 'Good — eats most things without fuss',
+  activityLevel: 'moderate',
+  socialBehavior: 'Shy at first but warms up quickly. Has one close best friend from school.',
+  schoolPerformance: 'On track — reading at grade level, strong in art. No behavioral concerns before now.',
+  behavioralNotes:
+    'No previous psychiatric history. Mild seasonal allergies. Otherwise very healthy. The sudden change began about three weeks ago.',
+  lastUpdated: daysAgo(25),
+};
+
+export const DEMO_IN_CRISIS_BASELINE: ChildBaseline = {
+  childName: 'Sam',
+  childAge: '7',
+  description:
+    'Sam is usually easygoing and imaginative. Three weeks ago she changed almost overnight — severe OCD around contamination, uncontrollable anxiety, and rage episodes unlike anything we have seen from her. We are in the middle of it right now.',
+  sleepHours: '10',
+  appetite: 'Barely eating during the flare',
+  activityLevel: 'moderate',
+  socialBehavior: 'Isolated during flare — refusing to see friends.',
+  schoolPerformance: 'Missed several days this week. School is aware something is wrong.',
+  behavioralNotes:
+    'First flare. No prior psychiatric history. Had a sore throat about a week before symptoms started. Pediatrician visit scheduled for tomorrow.',
+  lastUpdated: daysAgo(7),
+};
+
+// ── Exploring scenario — empty logs, no meds ─────────────────────────────────
+
+export const DEMO_EXPLORING_LOGS: SymptomLog[] = [];
+export const DEMO_EXPLORING_MEDICATIONS: Medication[] = [];
+export const DEMO_EXPLORING_MED_LIBRARY: MedLibraryItem[] = [];
+
+// ── In-crisis scenario — 3 days of severe logs ────────────────────────────────
+// Score notes:
+//   OCD 4, Anxiety 4, Rage 3, Tics 2 = high end of 0–5 scale (severe)
+//   Sleep 1, Cognition 1 = very poor (0=excellent, 5=very poor for these two)
+
+export const DEMO_IN_CRISIS_LOGS: SymptomLog[] = [
+  {
+    id: 'dc-6',
+    date: daysAgo(6),
+    ocd: 4, anxiety: 4, rage: 3, tics: 2, sleep: 1, cognition: 1,
+    notes:
+      'First flare. Started Monday. Sore throat last week at school. The OCD is mostly around contamination — washing hands over and over, terrified to touch things. We had no idea this was coming.',
+  },
+  {
+    id: 'dc-4',
+    date: daysAgo(4),
+    ocd: 4, anxiety: 4, rage: 4, tics: 2, sleep: 1, cognition: 1,
+  },
+  {
+    id: 'dc-1',
+    date: daysAgo(1),
+    ocd: 4, anxiety: 3, rage: 3, tics: 2, sleep: 1, cognition: 2,
+    notes:
+      'Slightly less rage today but OCD around hand-washing is constant. She cried for an hour this morning because she touched the doorknob. This is not our child.',
+  },
+];
+
+export const DEMO_IN_CRISIS_MEDICATIONS: Medication[] = [];
+export const DEMO_IN_CRISIS_MED_LIBRARY: MedLibraryItem[] = [];
+
+// ── Journey states per scenario ───────────────────────────────────────────────
+
+export const DEMO_JOURNEY_STATES: Record<'exploring' | 'in_crisis' | 'tracking', JourneyState> = {
+  exploring: {
+    user_id: 'demo',
+    journey_stage: 'exploring',
+    journey_stage_set_at: daysAgo(3) + 'T12:00:00.000Z',
+    onboarding_completed: true,
+    created_at: daysAgo(3) + 'T12:00:00.000Z',
+    updated_at: daysAgo(3) + 'T12:00:00.000Z',
+  },
+  in_crisis: {
+    user_id: 'demo',
+    journey_stage: 'in_crisis',
+    journey_stage_set_at: daysAgo(7) + 'T12:00:00.000Z',
+    onboarding_completed: true,
+    created_at: daysAgo(7) + 'T12:00:00.000Z',
+    updated_at: daysAgo(7) + 'T12:00:00.000Z',
+  },
+  tracking: {
+    user_id: 'demo',
+    journey_stage: 'tracking',
+    journey_stage_set_at: daysAgo(120) + 'T12:00:00.000Z',
+    onboarding_completed: true,
+    created_at: daysAgo(120) + 'T12:00:00.000Z',
+    updated_at: daysAgo(120) + 'T12:00:00.000Z',
+  },
+};
+
+// ── Report history seeds ──────────────────────────────────────────────────────
+
+const firstApptReport: ReportHistoryItem = {
+  id: 'demo-rh-1',
+  variant: 'first_appointment',
+  visitDate: daysAgo(0),
+  generatedAt: new Date().toISOString(),
+  childName: 'Sam',
+};
+
+const followUpReport: ReportHistoryItem = {
+  id: 'demo-rh-2',
+  variant: 'follow_up',
+  visitDate: daysAgo(14),
+  generatedAt: new Date(Date.now() - 14 * 86400000).toISOString(),
+  childName: 'Alex',
+};
+
+export const DEMO_REPORT_HISTORY: Record<'exploring' | 'in_crisis' | 'tracking', ReportHistoryItem[]> = {
+  exploring: [firstApptReport],
+  in_crisis: [firstApptReport],
+  tracking: [followUpReport],
+};

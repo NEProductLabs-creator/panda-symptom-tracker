@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { format, parseISO, subDays } from "date-fns";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
-import { FileDown } from "lucide-react";
+import { FileDown, Clock } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedications } from "@/hooks/useMedications";
@@ -16,6 +16,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import type { JourneyStage } from "@/lib/types";
 import AdvocateLayout from "./AdvocateLayout";
+import { getReportHistory, addReportToHistory, VARIANT_LABELS } from "@/lib/reportHistory";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -555,6 +556,7 @@ export default function AdvocateReports() {
   const [visitDate, setVisitDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [parentNotes, setParentNotes] = useState("");
   const [generating, setGenerating] = useState(false);
+  const [history, setHistory] = useState(getReportHistory);
 
   // Update default variant once journey state loads
   useEffect(() => {
@@ -592,6 +594,13 @@ export default function AdvocateReports() {
         variant,
         journey_stage: journeyState?.journey_stage ?? null,
       });
+
+      addReportToHistory({
+        variant,
+        visitDate,
+        childName: baseline?.childName?.trim(),
+      });
+      setHistory(getReportHistory());
 
       toast({ title: "PDF downloaded", description: "Your report has been saved." });
     } catch {
@@ -693,6 +702,36 @@ export default function AdvocateReports() {
         PDFs are generated locally — your data never leaves this device.
         {logs30.length === 0 && " No symptom logs in the last 30 days — the symptom timeline will show a placeholder."}
       </p>
+
+      {/* Previously generated reports */}
+      {history.length > 0 && (
+        <div className="mt-10 pt-8 border-t border-border">
+          <div className="flex items-center gap-2 mb-4">
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <h3 className="text-sm font-semibold text-foreground">Previously generated</h3>
+          </div>
+          <div className="space-y-2">
+            {history.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-center justify-between gap-3 py-2.5 px-3 rounded-lg bg-muted/40 border border-border/50"
+              >
+                <div className="min-w-0">
+                  <p className="text-[13px] font-medium text-foreground truncate">
+                    {VARIANT_LABELS[item.variant]}
+                    {item.childName ? ` · ${item.childName}` : ""}
+                  </p>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">
+                    Visit {format(parseISO(item.visitDate), "MMM d, yyyy")}
+                    {" · Generated "}
+                    {format(parseISO(item.generatedAt), "MMM d, yyyy")}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </AdvocateLayout>
   );
 }

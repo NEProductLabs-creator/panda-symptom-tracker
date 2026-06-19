@@ -4,6 +4,7 @@ import { Check } from "lucide-react";
 import { track } from "@/lib/analytics";
 import RightNowLayout from "./RightNowLayout";
 import { cn } from "@/lib/utils";
+import { DEMO_KEY, DEMO_SCENARIO_KEY } from "@/contexts/DemoContext";
 
 // ─── Checklist action definitions ────────────────────────────────────────────
 
@@ -98,16 +99,25 @@ export default function RightNowToday() {
   const { getToken } = useAuth();
   const today = todayDate();
 
-  const [completed, setCompleted] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
+  const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
+  const demoScenario = isDemoMode ? localStorage.getItem(DEMO_SCENARIO_KEY) : null;
+
+  const [completed, setCompleted] = useState<Set<string>>(() => {
+    if (demoScenario === 'in_crisis') {
+      return new Set(['write_observations', 'take_video']);
+    }
+    return new Set();
+  });
+  const [loading, setLoading] = useState(!isDemoMode);
 
   useEffect(() => {
     track("right_now_section_viewed", { section: "today" });
+    if (isDemoMode) return;
     fetchChecklist(getToken, today).then((set) => {
       setCompleted(set);
       setLoading(false);
     });
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const toggle = useCallback(
     async (key: string) => {

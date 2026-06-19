@@ -6,8 +6,8 @@ import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
-import { DEMO_LOGS } from '@/lib/demoData';
-import { DEMO_KEY } from '@/contexts/DemoContext';
+import { DEMO_LOGS, DEMO_EXPLORING_LOGS, DEMO_IN_CRISIS_LOGS } from '@/lib/demoData';
+import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 import { track } from '@/lib/analytics';
 
 const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'));
@@ -18,9 +18,13 @@ export function useSymptomLogs() {
   const api = useMemo(() => createApiClient(getToken), [getToken]);
   const { toast } = useToast();
 
-  const [logs, setLogs] = useState<SymptomLog[]>(() =>
-    isDemoMode ? DEMO_LOGS : storage.getLogs(),
-  );
+  const [logs, setLogs] = useState<SymptomLog[]>(() => {
+    if (!isDemoMode) return storage.getLogs();
+    const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
+    if (scenario === 'exploring') return DEMO_EXPLORING_LOGS;
+    if (scenario === 'in_crisis') return DEMO_IN_CRISIS_LOGS;
+    return DEMO_LOGS;
+  });
   const loading = false;
 
   useEffect(() => {

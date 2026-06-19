@@ -6,8 +6,8 @@ import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
-import { DEMO_MED_LIBRARY } from '@/lib/demoData';
-import { DEMO_KEY } from '@/contexts/DemoContext';
+import { DEMO_MED_LIBRARY, DEMO_EXPLORING_MED_LIBRARY, DEMO_IN_CRISIS_MED_LIBRARY } from '@/lib/demoData';
+import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
 const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'));
 
@@ -17,9 +17,13 @@ export function useMedLibrary() {
   const api = useMemo(() => createApiClient(getToken), [getToken]);
   const { toast } = useToast();
 
-  const [medLibrary, setMedLibrary] = useState<MedLibraryItem[]>(() =>
-    isDemoMode ? DEMO_MED_LIBRARY : storage.getMedLibrary(),
-  );
+  const [medLibrary, setMedLibrary] = useState<MedLibraryItem[]>(() => {
+    if (!isDemoMode) return storage.getMedLibrary();
+    const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
+    if (scenario === 'exploring') return DEMO_EXPLORING_MED_LIBRARY;
+    if (scenario === 'in_crisis') return DEMO_IN_CRISIS_MED_LIBRARY;
+    return DEMO_MED_LIBRARY;
+  });
 
   useEffect(() => {
     if (!userId || isDemoMode) return;

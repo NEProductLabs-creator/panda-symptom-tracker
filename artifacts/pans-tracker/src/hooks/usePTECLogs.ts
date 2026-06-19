@@ -8,7 +8,7 @@ import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { detectPTECFlare } from '@/lib/ptec';
 import { DEMO_PTEC_LOGS } from '@/lib/demoData';
-import { DEMO_KEY } from '@/contexts/DemoContext';
+import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 import { track } from '@/lib/analytics';
 import { format } from 'date-fns';
 
@@ -21,7 +21,11 @@ export function usePTECLogs() {
   const { toast } = useToast();
 
   const [ptecLogs, setPTECLogs] = useState<PTECLog[]>(() => {
-    if (isDemoMode) return DEMO_PTEC_LOGS;
+    if (isDemoMode) {
+      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
+      if (scenario === 'exploring' || scenario === 'in_crisis') return [];
+      return DEMO_PTEC_LOGS;
+    }
     return storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
   });
 

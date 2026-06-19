@@ -13,8 +13,6 @@ function uid(req: Request): string {
   return (req as any).auth.userId as string;
 }
 
-// Log a stable error code string instead of a full Supabase error object,
-// which may contain schema details or partial PII.
 function err(res: Response, e: unknown, ctx: string): void {
   logger.error({ errCode: errCode(e) }, ctx);
   res.status(500).json({ error: 'Internal server error' });
@@ -22,15 +20,25 @@ function err(res: Response, e: unknown, ctx: string): void {
 
 // ── Generic helpers ────────────────────────────────────────────────────────────
 
-async function getAll(table: string, userId: string): Promise<unknown[]> {
+/**
+ * Fetch all rows for a user from a table that stores its payload in a `data`
+ * column. When childId is provided, additionally filters by child_id.
+ */
+async function getAll(
+  table: string,
+  userId: string,
+  childId?: string,
+): Promise<unknown[]> {
   const db = requireSupabase();
-  const { data, error } = await db.from(table).select('data').eq('user_id', userId);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let query: any = db.from(table).select('data').eq('user_id', userId);
+  if (childId) query = query.eq('child_id', childId);
+  const { data, error } = await query;
   if (error) throw error;
   return (data ?? []).map((r: { data: unknown }) => r.data);
 }
 
 // Returns 'forbidden' when the id exists but is owned by a different user.
-// Route handlers must return 404 on 'forbidden' (don't reveal row existence).
 async function upsertItem(
   table: string,
   userId: string,
@@ -47,6 +55,26 @@ async function deleteItem(table: string, userId: string, id: string): Promise<vo
   const db = requireSupabase();
   const { error } = await db.from(table).delete().eq('id', id).eq('user_id', userId);
   if (error) throw error;
+}
+
+/**
+ * Resolve a child_id for the given user.
+ *  - If `provided` is non-empty, return it as-is.
+ *  - Otherwise look up the user's lowest sort_order non-archived child.
+ *  - Returns null when the user has no children at all (zero-children legacy path).
+ */
+async function resolveChildId(userId: string, provided: string | undefined): Promise<string | null> {
+  if (provided) return provided;
+  const db = requireSupabase();
+  const { data } = await db
+    .from('children')
+    .select('id')
+    .eq('user_id', userId)
+    .eq('is_archived', false)
+    .order('sort_order', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return (data as { id: string } | null)?.id ?? null;
 }
 
 // ── Symptom Logs ───────────────────────────────────────────────────────────────
@@ -88,13 +116,20 @@ router.delete('/logs/:id', async (req, res) => {
 // ── Medications ────────────────────────────────────────────────────────────────
 
 router.get('/medications', async (req, res) => {
-  try { res.json(await getAll('medications', uid(req))); }
-  catch (e) { err(res, e, 'GET /medications'); }
+  try {
+    const childId = req.query.child_id as string | undefined;
+    res.json(await getAll('medications', uid(req), childId));
+  } catch (e) { err(res, e, 'GET /medications'); }
 });
 
 router.post('/medications', async (req, res) => {
   try {
-    const result = await upsertItem('medications', uid(req), req.body.id, req.body);
+    const userId = uid(req);
+    const body = req.body as { id: string; child_id?: string };
+    const childId = await resolveChildId(userId, body.child_id);
+    // child_id is NOT NULL in the schema; skip silently for zero-children legacy callers.
+    if (!childId) { res.status(204).send(); return; }
+    const result = await upsertItem('medications', userId, body.id, body, { child_id: childId });
     if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /medications'); }
@@ -108,13 +143,19 @@ router.delete('/medications/:id', async (req, res) => {
 // ── Medication Library ─────────────────────────────────────────────────────────
 
 router.get('/medlibrary', async (req, res) => {
-  try { res.json(await getAll('med_library', uid(req))); }
-  catch (e) { err(res, e, 'GET /medlibrary'); }
+  try {
+    const childId = req.query.child_id as string | undefined;
+    res.json(await getAll('med_library', uid(req), childId));
+  } catch (e) { err(res, e, 'GET /medlibrary'); }
 });
 
 router.post('/medlibrary', async (req, res) => {
   try {
-    const result = await upsertItem('med_library', uid(req), req.body.id, req.body);
+    const userId = uid(req);
+    const body = req.body as { id: string; child_id?: string };
+    const childId = await resolveChildId(userId, body.child_id);
+    if (!childId) { res.status(204).send(); return; }
+    const result = await upsertItem('med_library', userId, body.id, body, { child_id: childId });
     if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /medlibrary'); }
@@ -128,13 +169,19 @@ router.delete('/medlibrary/:id', async (req, res) => {
 // ── Milestones ─────────────────────────────────────────────────────────────────
 
 router.get('/milestones', async (req, res) => {
-  try { res.json(await getAll('milestones', uid(req))); }
-  catch (e) { err(res, e, 'GET /milestones'); }
+  try {
+    const childId = req.query.child_id as string | undefined;
+    res.json(await getAll('milestones', uid(req), childId));
+  } catch (e) { err(res, e, 'GET /milestones'); }
 });
 
 router.post('/milestones', async (req, res) => {
   try {
-    const result = await upsertItem('milestones', uid(req), req.body.id, req.body);
+    const userId = uid(req);
+    const body = req.body as { id: string; child_id?: string };
+    const childId = await resolveChildId(userId, body.child_id);
+    if (!childId) { res.status(204).send(); return; }
+    const result = await upsertItem('milestones', userId, body.id, body, { child_id: childId });
     if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /milestones'); }
@@ -203,13 +250,19 @@ router.delete('/ptec/:id', async (req, res) => {
 // ── Flare History ──────────────────────────────────────────────────────────────
 
 router.get('/flares', async (req, res) => {
-  try { res.json(await getAll('flare_history', uid(req))); }
-  catch (e) { err(res, e, 'GET /flares'); }
+  try {
+    const childId = req.query.child_id as string | undefined;
+    res.json(await getAll('flare_history', uid(req), childId));
+  } catch (e) { err(res, e, 'GET /flares'); }
 });
 
 router.post('/flares', async (req, res) => {
   try {
-    const result = await upsertItem('flare_history', uid(req), req.body.id, req.body);
+    const userId = uid(req);
+    const body = req.body as { id: string; child_id?: string };
+    const childId = await resolveChildId(userId, body.child_id);
+    if (!childId) { res.status(204).send(); return; }
+    const result = await upsertItem('flare_history', userId, body.id, body, { child_id: childId });
     if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /flares'); }
@@ -218,13 +271,19 @@ router.post('/flares', async (req, res) => {
 // ── Trigger Log ────────────────────────────────────────────────────────────────
 
 router.get('/triggers', async (req, res) => {
-  try { res.json(await getAll('trigger_log', uid(req))); }
-  catch (e) { err(res, e, 'GET /triggers'); }
+  try {
+    const childId = req.query.child_id as string | undefined;
+    res.json(await getAll('trigger_log', uid(req), childId));
+  } catch (e) { err(res, e, 'GET /triggers'); }
 });
 
 router.post('/triggers', async (req, res) => {
   try {
-    const result = await upsertItem('trigger_log', uid(req), req.body.id, req.body);
+    const userId = uid(req);
+    const body = req.body as { id: string; child_id?: string };
+    const childId = await resolveChildId(userId, body.child_id);
+    if (!childId) { res.status(204).send(); return; }
+    const result = await upsertItem('trigger_log', userId, body.id, body, { child_id: childId });
     if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /triggers'); }
@@ -289,16 +348,16 @@ router.post('/sync', async (req, res) => {
     baseline = null, ptecLogs = [], flares = [], triggers = [],
     household = [], wellbeing = [],
   } = req.body as {
-    logs?: Array<{ id: string; date: string; child_id?: string }>;
-    medications?: Array<{ id: string }>;
-    medLibrary?: Array<{ id: string }>;
-    milestones?: Array<{ id: string }>;
-    baseline?: Record<string, unknown> | null;
-    ptecLogs?: Array<{ id: string; weekStartDate: string; child_id?: string }>;
-    flares?: Array<{ id: string }>;
-    triggers?: Array<{ id: string }>;
-    household?: Array<{ id: string }>;
-    wellbeing?: Array<{ id: string; date: string }>;
+    logs?:        Array<{ id: string; date: string; child_id?: string }>;
+    medications?: Array<{ id: string; child_id?: string }>;
+    medLibrary?:  Array<{ id: string; child_id?: string }>;
+    milestones?:  Array<{ id: string; child_id?: string }>;
+    baseline?:    Record<string, unknown> | null;
+    ptecLogs?:    Array<{ id: string; weekStartDate: string; child_id?: string }>;
+    flares?:      Array<{ id: string; child_id?: string }>;
+    triggers?:    Array<{ id: string; child_id?: string }>;
+    household?:   Array<{ id: string }>;
+    wellbeing?:   Array<{ id: string; date: string }>;
   };
 
   const errors: string[] = [];
@@ -319,58 +378,108 @@ router.post('/sync', async (req, res) => {
   }
 
   try {
-    // ── Resolve symptom_logs: each row must have a child_id ───────────────────
-    // For any log that lacks child_id, fall back to the user's first non-archived
-    // child. Logs with no resolvable child_id are skipped with an error entry.
+    // ── Resolve default child once for all collections that need one ──────────
+    // Look up the user's first non-archived child so rows that arrive without a
+    // child_id (legacy localStorage flushes) can be assigned automatically.
+    // Returns null when the user genuinely has no children yet.
+    const needsChildResolution =
+      logs.some((l) => !l.child_id) ||
+      medications.some((m) => !m.child_id) ||
+      medLibrary.some((m) => !m.child_id) ||
+      milestones.some((m) => !m.child_id) ||
+      flares.some((f) => !f.child_id) ||
+      triggers.some((t) => !t.child_id);
+
+    let defaultChildId: string | null = null;
+    if (needsChildResolution) {
+      const { data: dc } = await db
+        .from('children')
+        .select('id')
+        .eq('user_id', userId)
+        .eq('is_archived', false)
+        .order('sort_order', { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      defaultChildId = (dc as { id: string } | null)?.id ?? null;
+    }
+
+    // ── Helper: resolve child_id for a single item, push error and return null
+    //            when neither the item nor the default provides one. ──────────
+    function pickChildId(
+      table: string,
+      item: { id: string; child_id?: string },
+    ): string | null {
+      const childId = item.child_id ?? defaultChildId ?? null;
+      if (!childId) {
+        errors.push(`${table}: skipped item ${item.id} — no child_id and user has no children`);
+      }
+      return childId;
+    }
+
+    // ── Symptom logs (child-scoped, conflict on user_id,child_id,date) ───────
     const logsWithChild: Array<Record<string, unknown>> = [];
-    if (logs.length > 0) {
-      let defaultChildId: string | null = null;
-      if (logs.some((l) => !l.child_id)) {
-        const { data: dc } = await db
-          .from('children')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('is_archived', false)
-          .order('sort_order', { ascending: true })
-          .limit(1)
-          .maybeSingle();
-        defaultChildId = (dc as { id: string } | null)?.id ?? null;
-      }
-      for (const l of logs) {
-        const childId = l.child_id ?? defaultChildId ?? null;
-        if (!childId) {
-          errors.push(`symptom_logs: skipped log ${l.id} — no child_id and user has no children`);
-          continue;
-        }
-        logsWithChild.push({ id: l.id, user_id: userId, child_id: childId, date: l.date, data: l });
-      }
+    for (const l of logs) {
+      const childId = pickChildId('symptom_logs', l);
+      if (childId) logsWithChild.push({ id: l.id, user_id: userId, child_id: childId, date: l.date, data: l });
+    }
+
+    // ── Medications ───────────────────────────────────────────────────────────
+    const medsWithChild: Array<Record<string, unknown>> = [];
+    for (const m of medications) {
+      const childId = pickChildId('medications', m);
+      if (childId) medsWithChild.push({ id: m.id, user_id: userId, child_id: childId, data: m });
+    }
+
+    // ── Med Library ───────────────────────────────────────────────────────────
+    const medLibWithChild: Array<Record<string, unknown>> = [];
+    for (const m of medLibrary) {
+      const childId = pickChildId('med_library', m);
+      if (childId) medLibWithChild.push({ id: m.id, user_id: userId, child_id: childId, data: m });
+    }
+
+    // ── Milestones ────────────────────────────────────────────────────────────
+    const milestonesWithChild: Array<Record<string, unknown>> = [];
+    for (const m of milestones) {
+      const childId = pickChildId('milestones', m);
+      if (childId) milestonesWithChild.push({ id: m.id, user_id: userId, child_id: childId, data: m });
+    }
+
+    // ── Flare History ─────────────────────────────────────────────────────────
+    const flaresWithChild: Array<Record<string, unknown>> = [];
+    for (const f of flares) {
+      const childId = pickChildId('flare_history', f);
+      if (childId) flaresWithChild.push({ id: f.id, user_id: userId, child_id: childId, data: f });
+    }
+
+    // ── Trigger Log ───────────────────────────────────────────────────────────
+    const triggersWithChild: Array<Record<string, unknown>> = [];
+    for (const t of triggers) {
+      const childId = pickChildId('trigger_log', t);
+      if (childId) triggersWithChild.push({ id: t.id, user_id: userId, child_id: childId, data: t });
     }
 
     await Promise.all([
-      ...(logsWithChild.length > 0
-        ? [db.from('symptom_logs')
+      // symptom_logs — conflict on (user_id, child_id, date)
+      logsWithChild.length > 0
+        ? db.from('symptom_logs')
             .upsert(logsWithChild, { onConflict: 'user_id,child_id,date' })
-            .then(({ error }) => { if (error) errors.push(`symptom_logs: ${error.message}`); })]
-        : []),
-      bulkUpsert('medications',
-        medications as Array<Record<string, unknown>>,
-        (m) => ({ id: m.id, user_id: userId, data: m })),
-      bulkUpsert('med_library',
-        medLibrary as Array<Record<string, unknown>>,
-        (m) => ({ id: m.id, user_id: userId, data: m })),
-      bulkUpsert('milestones',
-        milestones as Array<Record<string, unknown>>,
-        (m) => ({ id: m.id, user_id: userId, data: m })),
+            .then(({ error }) => { if (error) errors.push(`symptom_logs: ${error.message}`); })
+        : Promise.resolve(),
+
+      // medications, med_library, milestones, flare_history, trigger_log
+      bulkUpsert('medications',   medsWithChild,      (r) => r),
+      bulkUpsert('med_library',   medLibWithChild,    (r) => r),
+      bulkUpsert('milestones',    milestonesWithChild,(r) => r),
+      bulkUpsert('flare_history', flaresWithChild,    (r) => r),
+      bulkUpsert('trigger_log',   triggersWithChild,  (r) => r),
+
+      // ptec_logs — conflict on (user_id, child_id, week_start)
       bulkUpsert('ptec_logs',
         ptecLogs as Array<Record<string, unknown>>,
         (p) => ({ id: p.id, user_id: userId, child_id: (p.child_id as string | undefined) ?? null, week_start: p.weekStartDate, data: p }),
         'user_id,child_id,week_start'),
-      bulkUpsert('flare_history',
-        flares as Array<Record<string, unknown>>,
-        (f) => ({ id: f.id, user_id: userId, data: f })),
-      bulkUpsert('trigger_log',
-        triggers as Array<Record<string, unknown>>,
-        (t) => ({ id: t.id, user_id: userId, data: t })),
+
+      // household_health / wellbeing_logs — not child-scoped
       bulkUpsert('household_health',
         household as Array<Record<string, unknown>>,
         (h) => ({ id: h.id, user_id: userId, data: h })),
@@ -378,27 +487,27 @@ router.post('/sync', async (req, res) => {
         wellbeing as Array<Record<string, unknown>>,
         (w) => ({ id: w.id, user_id: userId, date: w.date, data: w }),
         'user_id,date'),
-      ...(baseline
-        ? [
-            (async () => {
-              const { data: dc } = await db
-                .from('children')
-                .select('id')
-                .eq('user_id', userId)
-                .eq('is_archived', false)
-                .order('sort_order', { ascending: true })
-                .limit(1)
-                .maybeSingle();
-              if (!dc) { errors.push('sync baseline: no child found to attach baseline'); return; }
-              const { error } = await db
-                .from('children')
-                .update({ baseline })
-                .eq('id', (dc as { id: string }).id)
-                .eq('user_id', userId);
-              if (error) errors.push(`sync baseline: ${error.message}`);
-            })(),
-          ]
-        : []),
+
+      // baseline — attach to the user's first child
+      baseline
+        ? (async () => {
+            const { data: dc } = await db
+              .from('children')
+              .select('id')
+              .eq('user_id', userId)
+              .eq('is_archived', false)
+              .order('sort_order', { ascending: true })
+              .limit(1)
+              .maybeSingle();
+            if (!dc) { errors.push('sync baseline: no child found to attach baseline'); return; }
+            const { error } = await db
+              .from('children')
+              .update({ baseline })
+              .eq('id', (dc as { id: string }).id)
+              .eq('user_id', userId);
+            if (error) errors.push(`sync baseline: ${error.message}`);
+          })()
+        : Promise.resolve(),
     ]);
 
     res.json({ ok: errors.length === 0, errors });
@@ -413,7 +522,6 @@ router.get('/journey-state', async (req, res) => {
   const db = requireSupabase();
   const userId = uid(req);
   try {
-    // Insert row with defaults if it doesn't exist yet (no-op on conflict)
     const { error: insertError } = await db
       .from('user_journey_state')
       .upsert({ user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true });
@@ -433,8 +541,6 @@ router.patch('/journey-state', async (req, res) => {
   const db = requireSupabase();
   const userId = uid(req);
   try {
-    // journey_stage / journey_stage_set_at moved to the children table (migration 010).
-    // Only onboarding_completed is still on user_journey_state.
     const allowed = ['onboarding_completed'] as const;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     for (const key of allowed) {
@@ -510,7 +616,6 @@ router.put('/children/:id', async (req, res) => {
     for (const key of allowed) {
       if (key in req.body) patch[key] = req.body[key];
     }
-    // Auto-set journey_stage_set_at when journey_stage changes
     if ('journey_stage' in req.body && !('journey_stage_set_at' in req.body)) {
       patch['journey_stage_set_at'] = req.body.journey_stage ? new Date().toISOString() : null;
     }
@@ -667,14 +772,14 @@ router.delete('/labs/:id', async (req, res) => {
 });
 
 // ── Delete all data for user (account deletion) ───────────────────────────────
+// CASCADE from children covers medications, med_library, milestones, trigger_log,
+// and flare_history after migration 021, but we still delete by user_id first
+// (faster than waiting for the cascade) and rely on cascade as the safety net.
 
 router.delete('/all', async (req, res) => {
   const db = requireSupabase();
   const userId = uid(req);
 
-  // Delete child-scoped and user-scoped tables first (parallel), then delete
-  // children last so the ON DELETE CASCADE FKs fire for any rows not covered
-  // by an explicit user_id filter above (e.g. rows with only a child_id col).
   const nonChildTables = [
     'symptom_logs',
     'medications',
@@ -707,7 +812,6 @@ router.delete('/all', async (req, res) => {
     return err(res, nonChildErrors[0], 'DELETE /all');
   }
 
-  // Delete children last — cascades any remaining child-scoped rows.
   const { error: childrenError } = await db.from('children').delete().eq('user_id', userId);
   if (childrenError) {
     return err(res, childrenError, 'DELETE /all (children)');

@@ -1,9 +1,12 @@
 import { useState } from "react";
 import {
-  Settings2, User, Home, School, Plus, X, Save,
+  Settings2, User, Home, School, Plus, X, Save, Users, ChevronRight,
 } from "lucide-react";
+import { Link } from "wouter";
 import { useAppSettings } from "@/hooks/useAppSettings";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
+import { useChildren } from "@/hooks/useChildren";
+import { track } from "@/lib/analytics";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -24,14 +27,13 @@ const DIAGNOSIS_OPTIONS: { value: DiagnosisStatus; label: string }[] = [
 export default function Settings() {
   const { settings, saveSettings } = useAppSettings();
   const { baseline, saveBaseline } = useChildBaseline();
+  const { data: children = [] } = useChildren();
   const { toast } = useToast();
 
   const [savedChild, setSavedChild] = useState(false);
   const [savedSchool, setSavedSchool] = useState(false);
 
-  // Child section
-  const [childName, setChildName] = useState(baseline?.childName ?? "");
-  const [childAge, setChildAge] = useState(baseline?.childAge ?? "");
+  // Child section — name/age fields removed (managed in /settings/children)
   const [diagnosis, setDiagnosis] = useState<DiagnosisStatus>(settings.diagnosisStatus);
   const [childDesc, setChildDesc] = useState(baseline?.description ?? "");
 
@@ -47,6 +49,8 @@ export default function Settings() {
     try {
       saveBaseline({
         ...(baseline ?? {
+          childName: "",
+          childAge: "",
           sleepHours: "",
           appetite: "",
           activityLevel: "moderate" as const,
@@ -55,14 +59,12 @@ export default function Settings() {
           behavioralNotes: "",
           lastUpdated: new Date().toISOString(),
         }),
-        childName,
-        childAge,
         description: childDesc,
         lastUpdated: new Date().toISOString(),
       });
       saveSettings({ diagnosisStatus: diagnosis });
       setSavedChild(true);
-      toast({ title: "Child profile saved", variant: "success" });
+      toast({ title: "Profile saved", variant: "success" });
       setTimeout(() => setSavedChild(false), 1500);
     } catch {
       toast({ title: "Couldn't save — please try again", variant: "destructive" });
@@ -114,29 +116,33 @@ export default function Settings() {
         </div>
       </div>
 
-      {/* Child profile */}
-      <SectionCard icon={User} title="Your Child">
-        <Field label="First name">
-          <Input
-            value={childName}
-            onChange={(e) => setChildName(e.target.value)}
-            placeholder="e.g. Emma"
-            autoComplete="given-name"
-            data-testid="settings-child-name"
-          />
-        </Field>
+      {/* Children summary card */}
+      <SectionCard icon={Users} title="Your children">
+        <div className="flex items-center justify-between gap-3 py-1">
+          <p className="text-sm text-muted-foreground">
+            {children.length === 0
+              ? "No children added yet."
+              : children.length === 1
+              ? `1 child tracked`
+              : `${children.length} children tracked`}
+          </p>
+          <Link
+            href="/settings/children"
+            onClick={() => track("settings_children_clicked", { source: "settings_page" })}
+          >
+            <button
+              type="button"
+              className="flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+            >
+              {children.length === 0 ? "Add a child" : "Manage"}
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </Link>
+        </div>
+      </SectionCard>
 
-        <Field label="Age">
-          <Input
-            value={childAge}
-            onChange={(e) => setChildAge(e.target.value)}
-            placeholder="e.g. 9"
-            type="number"
-            min={1}
-            max={25}
-          />
-        </Field>
-
+      {/* Diagnosis & description */}
+      <SectionCard icon={User} title="Journey & Profile">
         <Field label="Where are you in the journey?">
           <div className="grid grid-cols-1 gap-2">
             {DIAGNOSIS_OPTIONS.map((opt) => (

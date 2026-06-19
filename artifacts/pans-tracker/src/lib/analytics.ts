@@ -98,7 +98,12 @@ export type AnalyticsEvent =
   | 'child_unarchived'
   | 'child_edited'
   | 'demo_child_switched'
-  | 'api_fetch_failed';
+  | 'api_fetch_failed'
+  | 'add_child_tip_shown'
+  | 'add_child_tip_clicked'
+  | 'add_child_tip_dismissed'
+  | 'settings_children_clicked'
+  | 'add_child_from_onboarding';
 
 export function track(event: AnalyticsEvent, properties?: Record<string, unknown>): void {
   if (!analyticsReady) return;

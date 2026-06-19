@@ -22,7 +22,6 @@ export default function ChildSwitcher({ variant }: Props) {
 
   function setOpen(next: boolean | ((prev: boolean) => boolean)) {
     setOpenRaw(next);
-    // Any interaction with the switcher dismisses the multi-child nudge
     if (isDemoMode) dismissDemoSwitchPrompt();
   }
 
@@ -40,6 +39,10 @@ export default function ChildSwitcher({ variant }: Props) {
   if (!activeChild) return null;
 
   const isMulti = (children?.length ?? 0) > 1;
+  // Button is interactive when there are multiple children OR the user is real
+  // (single real child → can always open to "Add another child").
+  // Demo users with a single child see a dead button intentionally.
+  const isInteractive = isMulti || !isDemoMode;
 
   function handleSelect(childId: string) {
     const fromName = activeChild?.name;
@@ -74,17 +77,17 @@ export default function ChildSwitcher({ variant }: Props) {
       <div ref={ref} className="relative">
         <button
           type="button"
-          onClick={() => isMulti && setOpen((v) => !v)}
+          onClick={() => isInteractive && setOpen((v) => !v)}
           className={[
             "flex items-center gap-1 text-[11px] font-medium rounded-full transition-colors px-1 py-0.5 -ml-1",
-            isMulti
+            isInteractive
               ? "hover:bg-primary/10 cursor-pointer"
               : "cursor-default",
           ].join(" ")}
           style={{ color: "var(--terracotta)" }}
         >
           <span>Tracking for {activeChild.name}</span>
-          {isMulti && (
+          {isInteractive && (
             <ChevronDown
               className="w-3 h-3 flex-shrink-0"
               style={{
@@ -95,7 +98,7 @@ export default function ChildSwitcher({ variant }: Props) {
           )}
         </button>
 
-        {open && isMulti && (
+        {open && isInteractive && (
           <div className="absolute left-0 top-full mt-1 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[180px] max-h-60 overflow-y-auto">
             {children?.map((child) => (
               <button
@@ -137,10 +140,10 @@ export default function ChildSwitcher({ variant }: Props) {
       <div ref={ref} className="relative">
         <button
           type="button"
-          onClick={() => isMulti && setOpen((v) => !v)}
+          onClick={() => isInteractive && setOpen((v) => !v)}
           className={[
             "flex items-center gap-1 text-[11px] font-medium px-2.5 py-1 rounded-full border transition-colors",
-            isMulti ? "hover:bg-accent cursor-pointer" : "cursor-default",
+            isInteractive ? "hover:bg-accent cursor-pointer" : "cursor-default",
           ].join(" ")}
           style={{
             borderColor: "color-mix(in srgb, var(--terracotta) 40%, transparent)",
@@ -149,7 +152,7 @@ export default function ChildSwitcher({ variant }: Props) {
           }}
         >
           <span>Viewing: {activeChild.name}</span>
-          {isMulti && (
+          {isInteractive && (
             <ChevronDown
               className="w-3 h-3 flex-shrink-0"
               style={{
@@ -160,7 +163,7 @@ export default function ChildSwitcher({ variant }: Props) {
           )}
         </button>
 
-        {open && isMulti && (
+        {open && isInteractive && (
           <div className="absolute right-0 top-full mt-1.5 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[180px] max-h-60 overflow-y-auto">
             {children?.map((child) => (
               <button
@@ -201,15 +204,15 @@ export default function ChildSwitcher({ variant }: Props) {
     <div ref={ref} className="relative">
       <button
         type="button"
-        onClick={() => isMulti && setOpen((v) => !v)}
+        onClick={() => isInteractive && setOpen((v) => !v)}
         className={[
           "flex items-center gap-1 text-[11px] font-semibold px-2.5 py-1 rounded-full border transition-colors",
-          isMulti ? "hover:bg-accent cursor-pointer" : "cursor-default",
+          isInteractive ? "hover:bg-accent cursor-pointer" : "cursor-default",
         ].join(" ")}
         style={{ borderColor: "var(--terracotta)", color: "var(--terracotta)" }}
       >
         <span>{activeChild.name}</span>
-        {isMulti && (
+        {isInteractive && (
           <ChevronDown
             className="w-3 h-3 flex-shrink-0"
             style={{
@@ -220,7 +223,7 @@ export default function ChildSwitcher({ variant }: Props) {
         )}
       </button>
 
-      {open && isMulti && (
+      {open && isInteractive && (
         <div className="absolute right-0 top-full mt-1.5 z-50 bg-card border border-border rounded-xl shadow-lg py-1 min-w-[180px] max-h-60 overflow-y-auto">
           {children?.map((child) => (
             <button

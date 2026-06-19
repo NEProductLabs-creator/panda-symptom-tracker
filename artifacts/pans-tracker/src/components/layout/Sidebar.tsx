@@ -2,6 +2,8 @@ import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
 import ChildSwitcher from "@/components/ChildSwitcher";
+import { useChildren } from "@/hooks/useChildren";
+import { track } from "@/lib/analytics";
 import {
   LayoutDashboard,
   ClipboardCheck,
@@ -328,6 +330,7 @@ export default function Sidebar() {
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const { user } = useUser();
   const { signOut } = useClerk();
+  const { data: children } = useChildren();
 
   const displayName = user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || null;
   const displayEmail = user?.emailAddresses?.[0]?.emailAddress || null;
@@ -360,6 +363,16 @@ export default function Sidebar() {
           </p>
         </Link>
         <ChildSwitcher variant="sidebar" />
+        {(children?.length ?? 0) >= 1 && (
+          <Link
+            href="/settings/children"
+            onClick={() => track("settings_children_clicked", { source: "sidebar" })}
+          >
+            <span className="text-[10px] text-muted-foreground hover:text-foreground transition-colors cursor-pointer mt-0.5 block">
+              Manage children
+            </span>
+          </Link>
+        )}
       </div>
 
       {/* Primary nav */}

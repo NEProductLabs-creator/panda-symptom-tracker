@@ -8,6 +8,7 @@ import {
   Sun,
   User,
   ChevronRight,
+  UserPlus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -165,6 +166,41 @@ export default function Onboarding() {
 
       track('onboarding_completed');
       navigate("/");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  async function finishAndAddChild() {
+    setSaving(true);
+    try {
+      saveSettings({ onboardingComplete: true });
+
+      if (childName) {
+        const age = childDob
+          ? String(
+              new Date().getFullYear() - new Date(childDob).getFullYear()
+            )
+          : "";
+        saveBaseline({
+          ...(baseline ?? {
+            description: "",
+            sleepHours: "",
+            appetite: "",
+            activityLevel: "moderate" as const,
+            socialBehavior: "",
+            schoolPerformance: "",
+            behavioralNotes: "",
+          }),
+          childName,
+          childAge: age,
+          lastUpdated: new Date().toISOString(),
+        });
+      }
+
+      track('onboarding_completed');
+      track('add_child_from_onboarding');
+      navigate("/onboarding/add-child");
     } finally {
       setSaving(false);
     }
@@ -344,6 +380,19 @@ export default function Onboarding() {
             {saving ? "Saving…" : "Finish setup"}
             {!saving && <ChevronRight className="w-4 h-4" />}
           </Button>
+
+          {canFinish && (
+            <Button
+              variant="outline"
+              className="w-full h-10 gap-2 text-sm"
+              onClick={finishAndAddChild}
+              disabled={saving}
+              data-testid="onboarding-add-another-child"
+            >
+              <UserPlus className="w-4 h-4" />
+              Add another child
+            </Button>
+          )}
 
           {!canFinish && (
             <p className="text-center text-xs text-muted-foreground">

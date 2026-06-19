@@ -7,6 +7,9 @@ import { useMedLibrary } from "@/hooks/useMedLibrary";
 import { useMilestones } from "@/hooks/useMilestones";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
 import { usePTECLogs } from "@/hooks/usePTECLogs";
+import { useChildren } from "@/hooks/useChildren";
+import { useActiveChild } from "@/hooks/useActiveChild";
+import { track } from "@/lib/analytics";
 import { CATEGORIES, getScoreColor } from "@/components/charts/SymptomChart";
 const SymptomChart = lazy(() => import("@/components/charts/SymptomChart"));
 import Sparkline from "@/components/charts/Sparkline";
@@ -33,6 +36,7 @@ import {
   FileText,
   HelpCircle,
   X,
+  UserPlus,
 } from "lucide-react";
 import { SymptomLog, FREQUENCY_LABELS } from "@/lib/types";
 import { computeDailyScore } from "@/lib/flare";
@@ -271,6 +275,8 @@ export default function Dashboard() {
   const { milestones } = useMilestones();
   const { baseline } = useChildBaseline();
   const { ptecLogs } = usePTECLogs();
+  const { data: children } = useChildren();
+  const activeChild = useActiveChild();
   const { toast } = useToast();
 
   const existingToday = logs.find((l) => l.date === today);
@@ -281,6 +287,9 @@ export default function Dashboard() {
   const [saved, setSaved] = useState(false);
   const [calmDay, setCalmDay] = useState(false);
   const [showHowItWorks, setShowHowItWorks] = useState(false);
+  const [tipDismissed, setTipDismissed] = useState(
+    () => localStorage.getItem("tip.addSecondChild.dismissed") === "1"
+  );
 
   // Once Supabase data loads, pre-fill the form with today's existing entry (if any)
   const formInitialized = useRef(false);
@@ -344,6 +353,18 @@ export default function Dashboard() {
   const todayMedsTaken = existingToday?.medicationsTaken?.length
     ? medLibrary.filter((m) => existingToday.medicationsTaken!.includes(m.id))
     : [];
+
+  // Add-second-child tip card (single-child tracking users only)
+  const showAddChildTip =
+    !tipDismissed &&
+    (children?.length ?? 0) === 1 &&
+    activeChild?.journey_stage === "tracking";
+
+  useEffect(() => {
+    if (showAddChildTip) {
+      track("add_child_tip_shown");
+    }
+  }, [showAddChildTip]);
 
   // PTEC-based flare detection (primary)
   const flareStatus = useMemo(() => detectPTECFlare(ptecLogs), [ptecLogs]);
@@ -449,6 +470,47 @@ export default function Dashboard() {
           ptecScore={flareStatus.latestScore}
           avgScore={flareStatus.fourWeekAvg}
         />
+      )}
+
+      {/* Add second child tip */}
+      {showAddChildTip && (
+        <div
+          className="relative flex items-start gap-3 rounded-xl border px-4 py-3"
+          style={{
+            borderColor: "color-mix(in srgb, var(--terracotta) 30%, transparent)",
+            backgroundColor: "color-mix(in srgb, var(--terracotta) 5%, transparent)",
+          }}
+        >
+          <UserPlus className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: "var(--terracotta)" }} />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground leading-snug">
+              Tracking multiple children?
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              You can manage separate symptom histories for each child.{" "}
+              <Link
+                href="/onboarding/add-child"
+                onClick={() => track("add_child_tip_clicked")}
+                className="font-medium underline underline-offset-2"
+                style={{ color: "var(--terracotta)" }}
+              >
+                Add another child
+              </Link>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.setItem("tip.addSecondChild.dismissed", "1");
+              setTipDismissed(true);
+              track("add_child_tip_dismissed");
+            }}
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Dismiss"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
       )}
 
       {/* Today's Snapshot + Sparklines */}

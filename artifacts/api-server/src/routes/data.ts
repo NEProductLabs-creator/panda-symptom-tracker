@@ -182,10 +182,10 @@ router.get('/ptec', async (req, res) => {
 router.post('/ptec', async (req, res) => {
   try {
     const db = requireSupabase();
-    const log = req.body as { id: string; weekStartDate: string };
+    const log = req.body as { id: string; weekStartDate: string; child_id?: string };
     const { error } = await db.from('ptec_logs').upsert(
-      { id: log.id, user_id: uid(req), week_start: log.weekStartDate, data: log, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id,week_start' },
+      { id: log.id, user_id: uid(req), child_id: log.child_id ?? null, week_start: log.weekStartDate, data: log, updated_at: new Date().toISOString() },
+      { onConflict: 'user_id,child_id,week_start' },
     );
     if (error) throw error;
     res.status(204).send();
@@ -330,8 +330,8 @@ router.post('/sync', async (req, res) => {
         (m) => ({ id: m.id, user_id: userId, data: m })),
       bulkUpsert('ptec_logs',
         ptecLogs as Array<Record<string, unknown>>,
-        (p) => ({ id: p.id, user_id: userId, week_start: p.weekStartDate, data: p }),
-        'user_id,week_start'),
+        (p) => ({ id: p.id, user_id: userId, child_id: (p.child_id as string | undefined) ?? null, week_start: p.weekStartDate, data: p }),
+        'user_id,child_id,week_start'),
       bulkUpsert('flare_history',
         flares as Array<Record<string, unknown>>,
         (f) => ({ id: f.id, user_id: userId, data: f })),

@@ -20,6 +20,7 @@ export function usePTECLogs() {
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
   const activeChild = useActiveChild();
+  const activeChildId = activeChild?.id ?? null;
   const { toast } = useToast();
 
   const [ptecLogs, setPTECLogs] = useState<PTECLog[]>(() => {
@@ -28,7 +29,9 @@ export function usePTECLogs() {
       if (scenario === 'exploring' || scenario === 'in_crisis') return [];
       return DEMO_PTEC_LOGS;
     }
-    return storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
+    const all = storage.getPTECLogs();
+    const scoped = activeChildId ? all.filter((l) => l.child_id === activeChildId) : [];
+    return scoped.sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
   });
   const [loading, setLoading] = useState(false);
 
@@ -37,10 +40,21 @@ export function usePTECLogs() {
     setLoading(true);
     api.ptec.getAll()
       .then((serverLogs) => {
-        const local = storage.getPTECLogs();
-        const { merged, localOnly } = mergeById(local, serverLogs);
+        // Scope to the active child only
+        const childServerLogs = activeChildId
+          ? serverLogs.filter((l) => l.child_id === activeChildId)
+          : [];
+        const allLocal = storage.getPTECLogs();
+        const childLocal = activeChildId
+          ? allLocal.filter((l) => l.child_id === activeChildId)
+          : [];
+        const { merged, localOnly } = mergeById(childLocal, childServerLogs);
+        // Preserve other children's logs in localStorage
+        const otherLogs = allLocal.filter((l) => l.child_id !== activeChildId);
+        storage.savePTECLogs(
+          [...otherLogs, ...merged].sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate)),
+        );
         const sorted = [...merged].sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
-        storage.savePTECLogs(sorted);
         setPTECLogs(sorted);
         localOnly.forEach((l) => {
           queueMutation('POST', '/ptec', l, getToken, toast);
@@ -52,7 +66,7 @@ export function usePTECLogs() {
         toast({ title: 'Could not load latest data. Showing your last saved version.' });
         setLoading(false);
       });
-  }, [userId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, activeChildId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { refetch(); }, [refetch]);
 
@@ -65,14 +79,18 @@ export function usePTECLogs() {
   const addOrUpdateLog = useCallback(
     (log: PTECLog) => {
       if (isDemoMode) { dispatchDemo(); return; }
-      const stamped: PTECLog = { ...log, updatedAt: now() };
+      const stamped: PTECLog = { ...log, child_id: activeChildId ?? undefined, updatedAt: now() };
       storage.addOrUpdatePTECLog(stamped);
-      const updated = storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
-      setPTECLogs(updated);
-      track('ptec_checkin_completed', { child_id: activeChild?.id ?? null });
+      const allLogs = storage.getPTECLogs();
+      const childLogs = activeChildId
+        ? allLogs.filter((l) => l.child_id === activeChildId)
+        : allLogs;
+      const sorted = childLogs.sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
+      setPTECLogs(sorted);
+      track('ptec_checkin_completed', { child_id: activeChildId });
       queueMutation('POST', '/ptec', stamped, getToken, toast);
 
-      const flare = detectPTECFlare(updated);
+      const flare = detectPTECFlare(sorted);
       if (flare.isActive && flare.latestWeekStart) {
         const event: FlareEvent = {
           id: `flare-${flare.latestWeekStart}`,
@@ -86,19 +104,23 @@ export function usePTECLogs() {
         queueMutation('POST', '/flares', event, getToken, toast);
       }
     },
-    [isDemoMode, getToken, toast],
+    [isDemoMode, activeChildId, getToken, toast],
   );
 
   const deleteLog = useCallback(
     (id: string) => {
       if (isDemoMode) { dispatchDemo(); return; }
       storage.deletePTECLog(id);
+      const allLogs = storage.getPTECLogs();
+      const childLogs = activeChildId
+        ? allLogs.filter((l) => l.child_id === activeChildId)
+        : allLogs;
       setPTECLogs(
-        storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate)),
+        childLogs.sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate)),
       );
       queueMutation('DELETE', `/ptec/${id}`, undefined, getToken, toast);
     },
-    [isDemoMode, getToken, toast],
+    [isDemoMode, activeChildId, getToken, toast],
   );
 
   const getLogForWeek = useCallback(

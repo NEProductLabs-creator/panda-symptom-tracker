@@ -78,6 +78,7 @@ export type Milestone = {
 
 export type PTECLog = {
   id: string;
+  child_id?: string; // Clerk child ID — set on all new logs; legacy rows backfilled by migration 015
   weekStartDate: string; // YYYY-MM-DD (Monday of the week)
   date: string; // YYYY-MM-DD (date of actual entry)
   scores: {

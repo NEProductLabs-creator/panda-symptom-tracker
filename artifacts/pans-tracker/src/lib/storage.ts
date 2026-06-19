@@ -1,5 +1,7 @@
 import { SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline, PTECLog, FlareEvent, TriggerEntry, HouseholdIllness } from './types';
 
+export const DEMO_CHILDREN_KEY = 'pans_tracker_demo_children';
+
 const SYMPTOM_LOGS_KEY = 'pans_tracker_symptom_logs';
 const MEDICATIONS_KEY = 'pans_tracker_medications';
 const MED_LIBRARY_KEY = 'pans_tracker_med_library';

@@ -6,7 +6,12 @@ import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
-import { DEMO_LOGS, DEMO_EXPLORING_LOGS, DEMO_IN_CRISIS_LOGS } from '@/lib/demoData';
+import {
+  DEMO_LOGS,
+  DEMO_EXPLORING_LOGS,
+  DEMO_IN_CRISIS_LOGS,
+  DEMO_MULTI_CHILD_LOGS,
+} from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 import { track } from '@/lib/analytics';
 import { useActiveChild } from '@/hooks/useActiveChild';
@@ -32,6 +37,7 @@ export function useSymptomLogs() {
     const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
     if (scenario === 'exploring') return DEMO_EXPLORING_LOGS;
     if (scenario === 'in_crisis') return DEMO_IN_CRISIS_LOGS;
+    if (scenario === 'multi_child') return filterByChild(DEMO_MULTI_CHILD_LOGS, activeChildId);
     return DEMO_LOGS;
   });
   const loading = false;
@@ -52,9 +58,15 @@ export function useSymptomLogs() {
       .catch(() => {});
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Re-filter from localStorage whenever the active child changes
+  // Re-filter from localStorage (or demo source) whenever the active child changes
   useEffect(() => {
-    if (isDemoMode) return;
+    if (isDemoMode) {
+      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
+      if (scenario === 'multi_child') {
+        setLogs(filterByChild(DEMO_MULTI_CHILD_LOGS, activeChildId));
+      }
+      return;
+    }
     setLogs(filterByChild(storage.getLogs(), activeChildId));
   }, [activeChildId, isDemoMode]);
 

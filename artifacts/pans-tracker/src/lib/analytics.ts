@@ -93,7 +93,8 @@ export type AnalyticsEvent =
   | 'child_switched'
   | 'child_archived'
   | 'child_unarchived'
-  | 'child_edited';
+  | 'child_edited'
+  | 'demo_child_switched';
 
 export function track(event: AnalyticsEvent, properties?: Record<string, unknown>): void {
   if (!analyticsReady) return;

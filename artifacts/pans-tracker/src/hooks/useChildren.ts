@@ -2,27 +2,38 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@clerk/react';
 import { useMemo } from 'react';
 import { createApiClient } from '@/lib/api';
-import type { CreateChildInput, UpdateChildInput } from '@/lib/types';
+import type { Child, CreateChildInput, UpdateChildInput } from '@/lib/types';
+import { DEMO_CHILDREN_KEY } from '@/lib/storage';
 
 export const CHILDREN_QUERY_KEY = ['children'] as const;
 
+const DEMO_KEY = 'pans_tracker_demo_mode';
+
 /**
  * Returns the current user's non-archived children sorted by sort_order.
- * Uses React Query — data is kept in the RQ cache (no localStorage layer).
+ * In demo mode, returns fake children seeded into localStorage by DemoContext.
+ * Uses React Query — data is kept in the RQ cache (no additional localStorage layer).
  */
 export function useChildren() {
   const { userId, getToken } = useAuth();
+  const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const api = useMemo(() => createApiClient(getToken), [getToken]);
 
   return useQuery({
     queryKey: CHILDREN_QUERY_KEY,
-    queryFn: async () => {
+    queryFn: async (): Promise<Child[]> => {
+      if (isDemoMode) {
+        const stored = localStorage.getItem(DEMO_CHILDREN_KEY);
+        if (!stored) return [];
+        const kids = JSON.parse(stored) as Child[];
+        return kids.filter((c) => !c.is_archived).sort((a, b) => a.sort_order - b.sort_order);
+      }
       const all = await api.children.getAll();
       return all
         .filter((c) => !c.is_archived)
         .sort((a, b) => a.sort_order - b.sort_order);
     },
-    enabled: !!userId,
+    enabled: !!userId || isDemoMode,
     staleTime: 30_000,
   });
 }
@@ -73,15 +84,21 @@ export function useArchiveChild() {
  */
 export function useAllChildren() {
   const { userId, getToken } = useAuth();
+  const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const api = useMemo(() => createApiClient(getToken), [getToken]);
 
   return useQuery({
     queryKey: [...CHILDREN_QUERY_KEY, 'all'] as const,
-    queryFn: async () => {
+    queryFn: async (): Promise<Child[]> => {
+      if (isDemoMode) {
+        const stored = localStorage.getItem(DEMO_CHILDREN_KEY);
+        if (!stored) return [];
+        return (JSON.parse(stored) as Child[]).sort((a, b) => a.sort_order - b.sort_order);
+      }
       const all = await api.children.getAll();
       return all.sort((a, b) => a.sort_order - b.sort_order);
     },
-    enabled: !!userId,
+    enabled: !!userId || isDemoMode,
     staleTime: 30_000,
   });
 }

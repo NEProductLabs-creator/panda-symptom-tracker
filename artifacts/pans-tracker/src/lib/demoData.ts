@@ -1,6 +1,6 @@
 // DEMO_DATA: update this dataset to reflect latest app features before sharing portfolio
 
-import type { SymptomLog, ChildBaseline, Medication, MedLibraryItem, PTECLog, WellbeingLog, JourneyState } from "@/lib/types";
+import type { SymptomLog, ChildBaseline, Medication, MedLibraryItem, PTECLog, WellbeingLog, JourneyState, Child } from "@/lib/types";
 import { computePTECTotal } from "@/lib/ptec";
 import type { ReportHistoryItem } from "@/lib/reportHistory";
 
@@ -27,17 +27,56 @@ function addDays(dateStr: string, k: number): string {
   return d.toISOString().split("T")[0];
 }
 
-// ── Child profile ─────────────────────────────────────────────────────────────
+// ── Demo child builder ─────────────────────────────────────────────────────────
+
+function demoChild(
+  id: string,
+  name: string,
+  ageYears: number,
+  diagnosisStatus: Child["diagnosis_status"],
+  journeyStage: NonNullable<Child["journey_stage"]>,
+  sortOrder: number,
+): Child {
+  const dob = new Date();
+  dob.setFullYear(dob.getFullYear() - ageYears);
+  return {
+    id,
+    user_id: "demo",
+    name,
+    date_of_birth: dob.toISOString().split("T")[0],
+    diagnosis_status: diagnosisStatus,
+    journey_stage: journeyStage,
+    journey_stage_set_at: daysAgo(90) + "T12:00:00.000Z",
+    is_archived: false,
+    sort_order: sortOrder,
+    created_at: daysAgo(90) + "T12:00:00.000Z",
+    updated_at: daysAgo(7) + "T12:00:00.000Z",
+  };
+}
+
+// ── Child profiles per scenario ────────────────────────────────────────────────
+
+export const DEMO_CHILDREN: Record<"exploring" | "in_crisis" | "tracking" | "multi_child", Child[]> = {
+  exploring:   [demoChild("demo-child-sam",   "Sam",   8,  "suspected",  "exploring", 0)],
+  in_crisis:   [demoChild("demo-child-riley", "Riley", 7,  "undiagnosed","in_crisis",  0)],
+  tracking:    [demoChild("demo-child-avery", "Avery", 10, "diagnosed",  "tracking",  0)],
+  multi_child: [
+    demoChild("demo-child-mia",  "Mia",  9, "diagnosed", "tracking",  0),
+    demoChild("demo-child-theo", "Theo", 6, "suspected", "exploring", 1),
+  ],
+};
+
+// ── Child profile (tracking scenario) ─────────────────────────────────────────
 
 export const DEMO_BASELINE: ChildBaseline = {
-  childName: "Alex",
-  childAge: "8",
+  childName: "Avery",
+  childAge: "10",
   description:
-    "Alex is usually curious, playful, and loves Lego and soccer. At baseline he's calm, sleeps well, and excels at school.",
+    "Avery is usually curious, playful, and loves Lego and soccer. At baseline they're calm, sleep well, and excel at school.",
   sleepHours: "9",
   appetite: "Good - eats most foods without fuss",
   activityLevel: "moderate",
-  socialBehavior: "Very social. Loves playing with friends and his younger sister.",
+  socialBehavior: "Very social. Loves playing with friends and their younger sibling.",
   schoolPerformance: "A/B student, strong in reading and math, well-liked by teachers.",
   behavioralNotes:
     "PANDAS diagnosis confirmed after a strep infection approximately 6 months ago. Responds well to antibiotics when treatment starts early.",
@@ -119,7 +158,7 @@ export const DEMO_LOGS: SymptomLog[] = [
     ocd: 1, anxiety: 1, rage: 1, tics: 1, sleep: 3, cognition: 4,
     medicationsTaken: daily,
     notes:
-      "Good day overall - Alex played soccer after school and was relaxed all evening. Hoping the stable stretch continues.",
+      "Good day overall - Avery played soccer after school and was relaxed all evening. Hoping the stable stretch continues.",
   },
   {
     id: "dl-38", date: daysAgo(38),
@@ -169,7 +208,7 @@ export const DEMO_LOGS: SymptomLog[] = [
     ocd: 3, anxiety: 3, rage: 2, tics: 1, sleep: 2, cognition: 3,
     medicationsTaken: daily,
     notes:
-      "Meltdown before school - couldn't get dressed for 45 minutes. This is very out of character for him. Calling the doctor tomorrow.",
+      "Meltdown before school - couldn't get dressed for 45 minutes. This is very out of character for them. Calling the doctor tomorrow.",
   },
   {
     id: "dl-26", date: daysAgo(26),
@@ -181,7 +220,7 @@ export const DEMO_LOGS: SymptomLog[] = [
     ocd: 3, anxiety: 4, rage: 2, tics: 2, sleep: 2, cognition: 2,
     medicationsTaken: daily,
     notes:
-      "Woke up at 2am anxious, took almost an hour to settle. Dark circles under his eyes this morning. Exhausted.",
+      "Woke up at 2am anxious, took almost an hour to settle. Dark circles under their eyes this morning. Exhausted.",
   },
   {
     id: "dl-23", date: daysAgo(23),
@@ -249,7 +288,7 @@ export const DEMO_LOGS: SymptomLog[] = [
     ocd: 3, anxiety: 3, rage: 3, tics: 2, sleep: 2, cognition: 2,
     medicationsTaken: daily,
     notes:
-      "Still not himself, but slightly calmer. Teacher emailed - Alex is struggling to focus and seems 'far away' in class.",
+      "Still not themselves, but slightly calmer. Teacher emailed - Avery is struggling to focus and seems 'far away' in class.",
   },
   {
     id: "dl-11", date: daysAgo(11),
@@ -288,7 +327,7 @@ export const DEMO_LOGS: SymptomLog[] = [
     ocd: 1, anxiety: 2, rage: 1, tics: 1, sleep: 3, cognition: 4,
     medicationsTaken: daily,
     notes:
-      "Much better day - laughed at his little sister's jokes at dinner for the first time in weeks. I actually cried after he went to bed.",
+      "Much better day - laughed at their little sister's jokes at dinner for the first time in weeks. I actually cried after they went to bed.",
   },
   {
     id: "dl-2", date: daysAgo(2),
@@ -351,7 +390,7 @@ export const DEMO_PTEC_LOGS: PTECLog[] = [
       restrictiveEating: 0, sleepDisturbance: 1, urinarySymptoms: 0,
       sensorySensitivities: 1, tics: 0, handwritingRegression: 0,
       academicDecline: 0, personalityChange: 0 },
-    "Alex seems okay this week, a few rough mornings but manageable",
+    "Avery seems okay this week, a few rough mornings but manageable",
   ),
 
   // ── Week 2 · Stable, slight rigidity emerging (total 7 — Mild) ───────────
@@ -401,16 +440,6 @@ export const DEMO_PTEC_LOGS: PTECLog[] = [
 ];
 
 // ── Parent wellbeing check-ins — 90 days, emotional arc matching child symptom timeline ──
-//
-// Frequency rules (today = May 20, 2026):
-//   Days 1–20  (daysAgo 89–70) · ~60% — 12 entries  · scattered, early chaos
-//   Days 21–April 22 (daysAgo 69–28) · ~70% — 29 entries · drifting 2–3, rare 4
-//   April 23–May 15 (daysAgo 27–5)  · ~90% — 21 entries · crisis then recovery
-//   May 16+   (daysAgo 4–1)         · ~65% —  3 entries  · stabilising
-//
-// Correlation noise: connected score trends UP across all 90 days regardless of child
-// Noise entries: dw-66 (4 when child stable), dw-42 (4 when child flaring),
-//               dw-15 (3 when child at peak), dw-10 (2 when child recovering)
 
 export const DEMO_WELLBEING_LOGS: WellbeingLog[] = [
   // ── Phase 1: Days 1–20 (daysAgo 89–70) — 60%, struggling but managing ──────
@@ -421,7 +450,7 @@ export const DEMO_WELLBEING_LOGS: WellbeingLog[] = [
   { id: "dw-84", date: daysAgo(84), holding: 2, stress: 3, connected: 1, hardDay: false },
   { id: "dw-82", date: daysAgo(82), holding: 3, stress: 3, connected: 2, hardDay: false },
   { id: "dw-80", date: daysAgo(80), holding: 2, stress: 2, connected: 1, hardDay: false,
-    notes: "Another sleepless night. Sat with him for two hours. Called the pediatrician again — still no answers." },
+    notes: "Another sleepless night. Sat with them for two hours. Called the pediatrician again — still no answers." },
   { id: "dw-78", date: daysAgo(78), holding: 3, stress: 2, connected: 2, hardDay: false },
   { id: "dw-76", date: daysAgo(76), holding: 2, stress: 2, connected: 1, hardDay: false },
   { id: "dw-74", date: daysAgo(74), holding: 3, stress: 3, connected: 2, hardDay: false },
@@ -469,7 +498,7 @@ export const DEMO_WELLBEING_LOGS: WellbeingLog[] = [
     notes: "Doctor appt tomorrow. Spent 2 hrs tonight organizing the tracker data into something I can actually show her. Terrified she won't take it seriously." },
   { id: "dw-25", date: daysAgo(25), holding: 1, stress: 1, connected: 2, hardDay: true },
   { id: "dw-24", date: daysAgo(24), holding: 1, stress: 1, connected: 2, hardDay: true,
-    notes: "He had a moment today around 3pm where he just seemed like himself. It lasted maybe 20 minutes. I sat on the floor of the bathroom afterward and cried." },
+    notes: "Avery had a moment today around 3pm where they just seemed like themselves. It lasted maybe 20 minutes. I sat on the floor of the bathroom afterward and cried." },
   { id: "dw-23", date: daysAgo(23), holding: 2, stress: 1, connected: 2, hardDay: true },
   { id: "dw-21", date: daysAgo(21), holding: 1, stress: 1, connected: 2, hardDay: true,
     notes: "My husband and I haven't really talked in two weeks. We're both just surviving." },
@@ -511,38 +540,40 @@ export const DEMO_HOPEBOARD_INDICES: number[] = [3, 5, 6];
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // SCENARIO-SPECIFIC DEMO DATA
-// Three independent persona pathways for the demo scenario picker.
+// Four independent persona pathways for the demo scenario picker.
 // ═══════════════════════════════════════════════════════════════════════════════
 
-// ── Shared "Sam" baseline for exploring + in_crisis ───────────────────────────
+// ── Exploring scenario — Sam, age 8 ───────────────────────────────────────────
 
 export const DEMO_EXPLORING_BASELINE: ChildBaseline = {
-  childName: 'Sam',
-  childAge: '7',
+  childName: "Sam",
+  childAge: "8",
   description:
-    'Sam is usually an easygoing, imaginative kid who loves drawing and playing outside. At baseline she is calm, sleeps well, and doing well in first grade.',
-  sleepHours: '10',
-  appetite: 'Good — eats most things without fuss',
-  activityLevel: 'moderate',
-  socialBehavior: 'Shy at first but warms up quickly. Has one close best friend from school.',
-  schoolPerformance: 'On track — reading at grade level, strong in art. No behavioral concerns before now.',
+    "Sam is usually an easygoing, imaginative kid who loves drawing and playing outside. At baseline she is calm, sleeps well, and doing well in second grade.",
+  sleepHours: "10",
+  appetite: "Good — eats most things without fuss",
+  activityLevel: "moderate",
+  socialBehavior: "Shy at first but warms up quickly. Has one close best friend from school.",
+  schoolPerformance: "On track — reading at grade level, strong in art. No behavioral concerns before now.",
   behavioralNotes:
-    'No previous psychiatric history. Mild seasonal allergies. Otherwise very healthy. The sudden change began about three weeks ago.',
+    "No previous psychiatric history. Mild seasonal allergies. Otherwise very healthy. The sudden change began about three weeks ago.",
   lastUpdated: daysAgo(25),
 };
 
+// ── In-crisis scenario — Riley, age 7 ────────────────────────────────────────
+
 export const DEMO_IN_CRISIS_BASELINE: ChildBaseline = {
-  childName: 'Sam',
-  childAge: '7',
+  childName: "Riley",
+  childAge: "7",
   description:
-    'Sam is usually easygoing and imaginative. Three weeks ago she changed almost overnight — severe OCD around contamination, uncontrollable anxiety, and rage episodes unlike anything we have seen from her. We are in the middle of it right now.',
-  sleepHours: '10',
-  appetite: 'Barely eating during the flare',
-  activityLevel: 'moderate',
-  socialBehavior: 'Isolated during flare — refusing to see friends.',
-  schoolPerformance: 'Missed several days this week. School is aware something is wrong.',
+    "Riley is usually easygoing and imaginative. Three weeks ago she changed almost overnight — severe OCD around contamination, uncontrollable anxiety, and rage episodes unlike anything we have seen from her. We are in the middle of it right now.",
+  sleepHours: "10",
+  appetite: "Barely eating during the flare",
+  activityLevel: "moderate",
+  socialBehavior: "Isolated during flare — refusing to see friends.",
+  schoolPerformance: "Missed several days this week. School is aware something is wrong.",
   behavioralNotes:
-    'First flare. No prior psychiatric history. Had a sore throat about a week before symptoms started. Pediatrician visit scheduled for tomorrow.',
+    "First flare. No prior psychiatric history. Had a sore throat about a week before symptoms started. Pediatrician visit scheduled for tomorrow.",
   lastUpdated: daysAgo(7),
 };
 
@@ -553,84 +584,175 @@ export const DEMO_EXPLORING_MEDICATIONS: Medication[] = [];
 export const DEMO_EXPLORING_MED_LIBRARY: MedLibraryItem[] = [];
 
 // ── In-crisis scenario — 3 days of severe logs ────────────────────────────────
-// Score notes:
-//   OCD 4, Anxiety 4, Rage 3, Tics 2 = high end of 0–5 scale (severe)
-//   Sleep 1, Cognition 1 = very poor (0=excellent, 5=very poor for these two)
 
 export const DEMO_IN_CRISIS_LOGS: SymptomLog[] = [
   {
-    id: 'dc-6',
+    id: "dc-6",
     date: daysAgo(6),
     ocd: 4, anxiety: 4, rage: 3, tics: 2, sleep: 1, cognition: 1,
     notes:
-      'First flare. Started Monday. Sore throat last week at school. The OCD is mostly around contamination — washing hands over and over, terrified to touch things. We had no idea this was coming.',
+      "First flare. Started Monday. Sore throat last week at school. The OCD is mostly around contamination — washing hands over and over, terrified to touch things. We had no idea this was coming.",
   },
   {
-    id: 'dc-4',
+    id: "dc-4",
     date: daysAgo(4),
     ocd: 4, anxiety: 4, rage: 4, tics: 2, sleep: 1, cognition: 1,
   },
   {
-    id: 'dc-1',
+    id: "dc-1",
     date: daysAgo(1),
     ocd: 4, anxiety: 3, rage: 3, tics: 2, sleep: 1, cognition: 2,
     notes:
-      'Slightly less rage today but OCD around hand-washing is constant. She cried for an hour this morning because she touched the doorknob. This is not our child.',
+      "Slightly less rage today but OCD around hand-washing is constant. Riley cried for an hour this morning because she touched the doorknob. This is not our child.",
   },
 ];
 
 export const DEMO_IN_CRISIS_MEDICATIONS: Medication[] = [];
 export const DEMO_IN_CRISIS_MED_LIBRARY: MedLibraryItem[] = [];
 
+// ── Multi-child scenario — Mia (age 9) + Theo (age 6) ────────────────────────
+
+export const DEMO_MULTI_CHILD_MIA_BASELINE: ChildBaseline = {
+  childName: "Mia",
+  childAge: "9",
+  description:
+    "Mia is usually bright, curious, and loves reading and gymnastics. At baseline she's chatty, sleeps well, and is a strong student. Her PANDAS diagnosis came after a strep infection 18 months ago.",
+  sleepHours: "9",
+  appetite: "Good — loves fruit and pasta, picky about vegetables",
+  activityLevel: "moderate",
+  socialBehavior: "Very social — has a close friend group and loves sleepovers.",
+  schoolPerformance: "Strong student, reads above grade level. Teachers describe her as engaged and kind.",
+  behavioralNotes:
+    "PANDAS diagnosis confirmed 18 months ago. On prophylactic antibiotics. Has had two prior flares, both triggered by strep. Currently in a flare — started two weeks ago after school strep exposure.",
+  lastUpdated: daysAgo(3),
+};
+
+export const DEMO_MULTI_CHILD_THEO_BASELINE: ChildBaseline = {
+  childName: "Theo",
+  childAge: "6",
+  description:
+    "Theo is usually a gentle, imaginative kid who loves trains and building things. He has been mostly typical developmentally. About three weeks ago we started noticing new motor tics and sudden separation anxiety that seem out of nowhere.",
+  sleepHours: "10",
+  appetite: "Good — eating normally",
+  activityLevel: "moderate",
+  socialBehavior: "Somewhat shy. Plays well with one or two kids at a time. Lately clingy at school drop-off.",
+  schoolPerformance: "Doing fine academically. Teacher has noted new separation anxiety at morning drop-off.",
+  behavioralNotes:
+    "No prior psychiatric history. Had a strep throat confirmed by rapid test six weeks ago, treated with amoxicillin. New motor tics (eye blinking, shoulder shrug) and sudden separation anxiety began about three weeks ago — two to three weeks after the strep. Pediatrician visit next week.",
+  lastUpdated: daysAgo(5),
+};
+
+// ── Mia's 21-day symptom logs — flare peaking around day 7 ───────────────────
+// Pattern: stable baseline → onset → peak at daysAgo(7) → resolving now
+
+export const DEMO_MULTI_CHILD_LOGS: SymptomLog[] = [
+  // Pre-flare (daysAgo 20-15)
+  { id: "dm-20", date: daysAgo(20), child_id: "demo-child-mia", ocd: 2, anxiety: 1, rage: 1, tics: 1, sleep: 4, cognition: 4 },
+  { id: "dm-18", date: daysAgo(18), child_id: "demo-child-mia", ocd: 2, anxiety: 2, rage: 1, tics: 1, sleep: 4, cognition: 4 },
+  { id: "dm-16", date: daysAgo(16), child_id: "demo-child-mia", ocd: 2, anxiety: 2, rage: 1, tics: 1, sleep: 3, cognition: 3 },
+  // Building (daysAgo 14-8)
+  { id: "dm-14", date: daysAgo(14), child_id: "demo-child-mia", ocd: 3, anxiety: 3, rage: 2, tics: 1, sleep: 3, cognition: 3 },
+  { id: "dm-12", date: daysAgo(12), child_id: "demo-child-mia", ocd: 4, anxiety: 3, rage: 3, tics: 2, sleep: 2, cognition: 2 },
+  { id: "dm-10", date: daysAgo(10), child_id: "demo-child-mia", ocd: 4, anxiety: 4, rage: 3, tics: 2, sleep: 2, cognition: 2 },
+  { id: "dm-8",  date: daysAgo(8),  child_id: "demo-child-mia", ocd: 5, anxiety: 4, rage: 4, tics: 2, sleep: 1, cognition: 2 },
+  // Peak — day 7 (OCD 5, anxiety 4, rage 4)
+  {
+    id: "dm-7", date: daysAgo(7), child_id: "demo-child-mia",
+    ocd: 5, anxiety: 4, rage: 4, tics: 2, sleep: 1, cognition: 1,
+    notes: "Strep exposure at school two weeks ago. Started antibiotics Monday.",
+  },
+  // Resolving (daysAgo 6-1)
+  { id: "dm-6", date: daysAgo(6),  child_id: "demo-child-mia", ocd: 4, anxiety: 4, rage: 3, tics: 2, sleep: 2, cognition: 2 },
+  { id: "dm-5", date: daysAgo(5),  child_id: "demo-child-mia", ocd: 4, anxiety: 3, rage: 3, tics: 2, sleep: 2, cognition: 2 },
+  { id: "dm-4", date: daysAgo(4),  child_id: "demo-child-mia", ocd: 3, anxiety: 3, rage: 2, tics: 1, sleep: 2, cognition: 3 },
+  { id: "dm-3", date: daysAgo(3),  child_id: "demo-child-mia", ocd: 3, anxiety: 3, rage: 2, tics: 1, sleep: 3, cognition: 3 },
+  { id: "dm-2", date: daysAgo(2),  child_id: "demo-child-mia", ocd: 2, anxiety: 2, rage: 1, tics: 1, sleep: 3, cognition: 3 },
+  { id: "dm-1", date: daysAgo(1),  child_id: "demo-child-mia", ocd: 2, anxiety: 2, rage: 1, tics: 1, sleep: 4, cognition: 4 },
+];
+
+// Theo has no symptom logs (still in exploring/suspected stage)
+
 // ── Journey states per scenario ───────────────────────────────────────────────
 
-export const DEMO_JOURNEY_STATES: Record<'exploring' | 'in_crisis' | 'tracking', JourneyState> = {
+export const DEMO_JOURNEY_STATES: Record<"exploring" | "in_crisis" | "tracking" | "multi_child", JourneyState> = {
   exploring: {
-    user_id: 'demo',
-    journey_stage: 'exploring',
-    journey_stage_set_at: daysAgo(3) + 'T12:00:00.000Z',
+    user_id: "demo",
+    journey_stage: "exploring",
+    journey_stage_set_at: daysAgo(3) + "T12:00:00.000Z",
     onboarding_completed: true,
-    created_at: daysAgo(3) + 'T12:00:00.000Z',
-    updated_at: daysAgo(3) + 'T12:00:00.000Z',
+    created_at: daysAgo(3) + "T12:00:00.000Z",
+    updated_at: daysAgo(3) + "T12:00:00.000Z",
   },
   in_crisis: {
-    user_id: 'demo',
-    journey_stage: 'in_crisis',
-    journey_stage_set_at: daysAgo(7) + 'T12:00:00.000Z',
+    user_id: "demo",
+    journey_stage: "in_crisis",
+    journey_stage_set_at: daysAgo(7) + "T12:00:00.000Z",
     onboarding_completed: true,
-    created_at: daysAgo(7) + 'T12:00:00.000Z',
-    updated_at: daysAgo(7) + 'T12:00:00.000Z',
+    created_at: daysAgo(7) + "T12:00:00.000Z",
+    updated_at: daysAgo(7) + "T12:00:00.000Z",
   },
   tracking: {
-    user_id: 'demo',
-    journey_stage: 'tracking',
-    journey_stage_set_at: daysAgo(120) + 'T12:00:00.000Z',
+    user_id: "demo",
+    journey_stage: "tracking",
+    journey_stage_set_at: daysAgo(120) + "T12:00:00.000Z",
     onboarding_completed: true,
-    created_at: daysAgo(120) + 'T12:00:00.000Z',
-    updated_at: daysAgo(120) + 'T12:00:00.000Z',
+    created_at: daysAgo(120) + "T12:00:00.000Z",
+    updated_at: daysAgo(120) + "T12:00:00.000Z",
+  },
+  multi_child: {
+    user_id: "demo",
+    journey_stage: "tracking",
+    journey_stage_set_at: daysAgo(180) + "T12:00:00.000Z",
+    onboarding_completed: true,
+    created_at: daysAgo(180) + "T12:00:00.000Z",
+    updated_at: daysAgo(1) + "T12:00:00.000Z",
   },
 };
 
 // ── Report history seeds ──────────────────────────────────────────────────────
 
-const firstApptReport: ReportHistoryItem = {
-  id: 'demo-rh-1',
-  variant: 'first_appointment',
-  visitDate: daysAgo(0),
-  generatedAt: new Date().toISOString(),
-  childName: 'Sam',
-};
-
-const followUpReport: ReportHistoryItem = {
-  id: 'demo-rh-2',
-  variant: 'follow_up',
-  visitDate: daysAgo(14),
-  generatedAt: new Date(Date.now() - 14 * 86400000).toISOString(),
-  childName: 'Alex',
-};
-
-export const DEMO_REPORT_HISTORY: Record<'exploring' | 'in_crisis' | 'tracking', ReportHistoryItem[]> = {
-  exploring: [firstApptReport],
-  in_crisis: [firstApptReport],
-  tracking: [followUpReport],
+export const DEMO_REPORT_HISTORY: Record<"exploring" | "in_crisis" | "tracking" | "multi_child", ReportHistoryItem[]> = {
+  exploring: [
+    {
+      id: "demo-rh-ex-1",
+      variant: "first_appointment",
+      visitDate: daysAgo(0),
+      generatedAt: new Date().toISOString(),
+      childName: "Sam",
+    },
+  ],
+  in_crisis: [
+    {
+      id: "demo-rh-ic-1",
+      variant: "first_appointment",
+      visitDate: daysAgo(0),
+      generatedAt: new Date().toISOString(),
+      childName: "Riley",
+    },
+  ],
+  tracking: [
+    {
+      id: "demo-rh-tr-1",
+      variant: "follow_up",
+      visitDate: daysAgo(14),
+      generatedAt: new Date(Date.now() - 14 * 86400000).toISOString(),
+      childName: "Avery",
+    },
+  ],
+  multi_child: [
+    {
+      id: "demo-rh-mc-1",
+      variant: "follow_up",
+      visitDate: daysAgo(14),
+      generatedAt: new Date(Date.now() - 14 * 86400000).toISOString(),
+      childName: "Mia",
+    },
+    {
+      id: "demo-rh-mc-2",
+      variant: "follow_up",
+      visitDate: daysAgo(45),
+      generatedAt: new Date(Date.now() - 45 * 86400000).toISOString(),
+      childName: "Mia",
+    },
+  ],
 };

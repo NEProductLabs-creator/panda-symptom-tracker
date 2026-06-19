@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "wouter";
-import { Search, Siren, LineChart, ChevronRight } from "lucide-react";
+import { Search, Siren, LineChart, ChevronRight, Users } from "lucide-react";
 import { useDemoContext, type DemoScenario } from "@/contexts/DemoContext";
 import { track } from "@/lib/analytics";
 import { DEMO_KEY } from "@/contexts/DemoContext";
@@ -19,7 +19,7 @@ const SCENARIOS: {
     title: "Just starting out: we think something is wrong",
     tag: "Exploring",
     description:
-      "A parent who noticed a sudden change three weeks ago and is trying to understand what PANS and PANDAS is. No symptom logs yet — they have not started daily tracking. Lands on the Learn section.",
+      "A parent who noticed a sudden change three weeks ago and is trying to understand what PANS and PANDAS is. Sam (age 8) has no symptom logs yet — they have not started daily tracking. Lands on the Learn section.",
     lands: "→ Lands on /learn",
   },
   {
@@ -28,7 +28,7 @@ const SCENARIOS: {
     title: "In the middle of a first flare",
     tag: "In crisis",
     description:
-      "Three days of severe symptom logs. The first two checklist items on 'What to do today' are already checked. Lands on the Right Now section.",
+      "Three days of severe symptom logs for Riley (age 7). The first two checklist items on 'What to do today' are already checked. Lands on the Right Now section.",
     lands: "→ Lands on /right-now",
   },
   {
@@ -37,8 +37,17 @@ const SCENARIOS: {
     title: "Tracking a known diagnosis",
     tag: "Tracking",
     description:
-      "Six weeks of realistic PANDAS symptom data — a stable stretch, a flare, and a recovery. Medications, PTEC check-ins, and milestones. Lands on the Dashboard.",
+      "Six weeks of realistic PANDAS symptom data for Avery (age 10) — a stable stretch, a flare, and a recovery. Medications, PTEC check-ins, and milestones. Lands on the Dashboard.",
     lands: "→ Lands on Dashboard",
+  },
+  {
+    id: "multi_child",
+    icon: Users,
+    title: "A family with two affected children",
+    tag: "Multi-child",
+    description:
+      "Mia (age 9, diagnosed) is mid-flare with 21 days of symptom data. Theo (age 6, suspected) has no logs yet — new tics and separation anxiety after a recent strep. Switch between children using the Viewing pill.",
+    lands: "→ Lands on Dashboard (Mia active)",
   },
 ];
 

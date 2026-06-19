@@ -5,24 +5,32 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useChildren } from "@/hooks/useChildren";
 import { useActiveChild, setActiveChild } from "@/hooks/useActiveChild";
 import { track } from "@/lib/analytics";
+import { useDemoContext } from "@/contexts/DemoContext";
 
 interface Props {
   variant: "sidebar" | "mobile" | "pill";
 }
 
 export default function ChildSwitcher({ variant }: Props) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpenRaw] = useState(false);
   const [, navigate] = useLocation();
   const qc = useQueryClient();
   const { data: children } = useChildren();
   const activeChild = useActiveChild();
   const ref = useRef<HTMLDivElement>(null);
+  const { isDemoMode, demoScenario, dismissDemoSwitchPrompt } = useDemoContext();
+
+  function setOpen(next: boolean | ((prev: boolean) => boolean)) {
+    setOpenRaw(next);
+    // Any interaction with the switcher dismisses the multi-child nudge
+    if (isDemoMode) dismissDemoSwitchPrompt();
+  }
 
   useEffect(() => {
     if (!open) return;
     function handler(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
+        setOpenRaw(false);
       }
     }
     document.addEventListener("mousedown", handler);
@@ -34,12 +42,24 @@ export default function ChildSwitcher({ variant }: Props) {
   const isMulti = (children?.length ?? 0) > 1;
 
   function handleSelect(childId: string) {
+    const fromName = activeChild?.name;
+    const toChild = children?.find((c) => c.id === childId);
+
     if (childId === activeChild?.id) {
       setOpen(false);
       return;
     }
     setActiveChild(childId, qc);
-    track("child_switched", { new_child_id: childId });
+
+    if (isDemoMode) {
+      track("demo_child_switched", {
+        from_child_name: fromName,
+        to_child_name: toChild?.name,
+        scenario: demoScenario,
+      });
+    } else {
+      track("child_switched", { new_child_id: childId });
+    }
     setOpen(false);
   }
 
@@ -92,17 +112,19 @@ export default function ChildSwitcher({ variant }: Props) {
                 )}
               </button>
             ))}
-            <div className="border-t border-border/60 mt-1 pt-1">
-              <button
-                type="button"
-                onClick={handleAddChild}
-                className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-medium hover:bg-accent transition-colors"
-                style={{ color: "var(--terracotta)" }}
-              >
-                <Plus className="w-3 h-3 flex-shrink-0" />
-                Add another child
-              </button>
-            </div>
+            {!isDemoMode && (
+              <div className="border-t border-border/60 mt-1 pt-1">
+                <button
+                  type="button"
+                  onClick={handleAddChild}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-medium hover:bg-accent transition-colors"
+                  style={{ color: "var(--terracotta)" }}
+                >
+                  <Plus className="w-3 h-3 flex-shrink-0" />
+                  Add another child
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -155,17 +177,19 @@ export default function ChildSwitcher({ variant }: Props) {
                 )}
               </button>
             ))}
-            <div className="border-t border-border/60 mt-1 pt-1">
-              <button
-                type="button"
-                onClick={handleAddChild}
-                className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-medium hover:bg-accent transition-colors"
-                style={{ color: "var(--terracotta)" }}
-              >
-                <Plus className="w-3 h-3 flex-shrink-0" />
-                Add another child
-              </button>
-            </div>
+            {!isDemoMode && (
+              <div className="border-t border-border/60 mt-1 pt-1">
+                <button
+                  type="button"
+                  onClick={handleAddChild}
+                  className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-medium hover:bg-accent transition-colors"
+                  style={{ color: "var(--terracotta)" }}
+                >
+                  <Plus className="w-3 h-3 flex-shrink-0" />
+                  Add another child
+                </button>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -213,17 +237,19 @@ export default function ChildSwitcher({ variant }: Props) {
               )}
             </button>
           ))}
-          <div className="border-t border-border/60 mt-1 pt-1">
-            <button
-              type="button"
-              onClick={handleAddChild}
-              className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-medium hover:bg-accent transition-colors"
-              style={{ color: "var(--terracotta)" }}
-            >
-              <Plus className="w-3 h-3 flex-shrink-0" />
-              Add another child
-            </button>
-          </div>
+          {!isDemoMode && (
+            <div className="border-t border-border/60 mt-1 pt-1">
+              <button
+                type="button"
+                onClick={handleAddChild}
+                className="w-full flex items-center gap-2 px-3 py-2 text-left text-xs font-medium hover:bg-accent transition-colors"
+                style={{ color: "var(--terracotta)" }}
+              >
+                <Plus className="w-3 h-3 flex-shrink-0" />
+                Add another child
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>

@@ -136,7 +136,7 @@ export default function LogEntry() {
   function handleSave() {
     try {
       const log: SymptomLog = {
-        id: existing?.id ?? `log-${Date.now()}`,
+        id: existing?.id ?? crypto.randomUUID(),
         date: selectedDate,
         // If calmDay, write explicit 0s so the log is distinguishable from "no data".
         // Otherwise preserve null for any category the user didn't score.

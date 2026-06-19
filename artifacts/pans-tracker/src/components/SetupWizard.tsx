@@ -93,7 +93,7 @@ export default function SetupWizard({ onDismiss }: { onDismiss: () => void }) {
   function addMed() {
     if (!medName.trim()) return;
     const item: MedLibraryItem = {
-      id: `med-wizard-${Date.now()}`,
+      id: crypto.randomUUID(),
       name: medName.trim(),
       dosage: medDosage.trim(),
       frequency: medFreq,

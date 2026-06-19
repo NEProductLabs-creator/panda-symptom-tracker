@@ -70,7 +70,7 @@ export function useWellbeingLogs() {
               : l,
           );
         } else {
-          const id = entry.id ?? `wlog_${Date.now()}_${Math.random().toString(36).slice(2)}`;
+          const id = entry.id ?? crypto.randomUUID();
           next = [...prev, { ...entry, id, updatedAt: now() }];
         }
         persistLogs(next);

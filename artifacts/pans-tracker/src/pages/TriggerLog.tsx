@@ -228,7 +228,7 @@ export default function TriggerLog() {
   function handleSaveTrigger() {
     if (!category) return;
     const entry: TriggerEntry = {
-      id: `trigger-${Date.now()}`,
+      id: crypto.randomUUID(),
       category: category as TriggerCategory,
       date,
       notes,
@@ -252,7 +252,7 @@ export default function TriggerLog() {
   function handleSaveHHIllness() {
     if (!hhMemberName.trim() || !hhIllnessType.trim()) return;
     const illness: HouseholdIllness = {
-      id: `hh-${Date.now()}`,
+      id: crypto.randomUUID(),
       memberName: hhMemberName.trim(),
       illnessType: hhIllnessType.trim(),
       startDate: hhStartDate,

@@ -77,7 +77,7 @@ export default function MedLibrary() {
     if (Object.keys(e).length > 0) { setErrors(e); return; }
 
     const item: MedLibraryItem = {
-      id: editing?.id ?? `lib-${Date.now()}`,
+      id: editing?.id ?? crypto.randomUUID(),
       name: form.name.trim(),
       dosage: form.dosage.trim(),
       frequency: form.frequency,

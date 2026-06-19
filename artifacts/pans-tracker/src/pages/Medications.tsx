@@ -151,7 +151,7 @@ function MissedDosesSection({
   function handleAdd() {
     if (!formDate) return;
     onAdd(med.id, {
-      id: `missed-${Date.now()}`,
+      id: crypto.randomUUID(),
       date: formDate,
       note: formNote.trim() || undefined,
     });
@@ -507,7 +507,7 @@ export default function Medications() {
     }
 
     const med: Medication = {
-      id: editing?.id ?? `med-${Date.now()}`,
+      id: editing?.id ?? crypto.randomUUID(),
       name: form.name.trim(),
       dose: form.dose.trim(),
       frequency: form.frequency,

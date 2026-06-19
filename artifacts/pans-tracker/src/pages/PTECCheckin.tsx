@@ -138,7 +138,7 @@ export default function PTECCheckin() {
   function handleSave() {
     try {
       const log: PTECLog = {
-        id: existingEntry?.id ?? `ptec-${Date.now()}`,
+        id: existingEntry?.id ?? crypto.randomUUID(),
         weekStartDate: weekStart,
         date: format(new Date(), "yyyy-MM-dd"),
         scores,

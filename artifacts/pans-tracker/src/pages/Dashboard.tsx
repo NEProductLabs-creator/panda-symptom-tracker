@@ -306,7 +306,7 @@ export default function Dashboard() {
   function handleSave() {
     try {
       const log: SymptomLog = {
-        id: existingToday?.id ?? `log-${Date.now()}`,
+        id: existingToday?.id ?? crypto.randomUUID(),
         date: today,
         ...scores,
         notes,

@@ -39,7 +39,7 @@ export function useMilestones() {
 
   const addMilestone = useCallback(
     (data: Omit<Milestone, 'id'>) => {
-      const item: Milestone = { ...data, id: `ms-${Date.now()}`, updatedAt: now() };
+      const item: Milestone = { ...data, id: crypto.randomUUID(), updatedAt: now() };
       setMilestones((prev) => {
         const updated = [...prev, item];
         storage.saveMilestones(updated);

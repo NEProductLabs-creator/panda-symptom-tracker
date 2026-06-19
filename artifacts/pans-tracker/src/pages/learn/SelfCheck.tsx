@@ -261,7 +261,7 @@ async function saveObservation(
   try {
     const token = await getToken();
     if (!token) return;
-    const id = `obs_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+    const id = crypto.randomUUID();
     await fetch("/api/data/parent-observation", {
       method: "POST",
       headers: {

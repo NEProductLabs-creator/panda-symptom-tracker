@@ -1,8 +1,9 @@
 import express, { type Express } from "express";
+import { rateLimit } from "express-rate-limit";
 import cors from "cors";
 import helmet from "helmet";
 import pinoHttp from "pino-http";
-import { clerkMiddleware } from "@clerk/express";
+import { clerkMiddleware, getAuth } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import {
   CLERK_PROXY_PATH,
@@ -137,6 +138,49 @@ app.use(
     ),
   })),
 );
+
+// ── Rate limiting ─────────────────────────────────────────────────────────────
+// keyGenerator: IP + Clerk userId when authenticated, otherwise IP alone.
+
+function makeKeyGenerator() {
+  return (req: express.Request): string => {
+    const ip = (req.ip ?? req.socket.remoteAddress ?? "unknown");
+    const userId = getAuth(req).userId;
+    return userId ? `${ip}:${userId}` : ip;
+  };
+}
+
+const rateLimitDefaults = {
+  standardHeaders: "draft-7" as const,
+  legacyHeaders: false,
+  keyGenerator: makeKeyGenerator(),
+};
+
+const dataLimiter = rateLimit({
+  ...rateLimitDefaults,
+  windowMs: 60 * 1000,
+  limit: 120,
+  message: { error: "Too many requests — please slow down." },
+});
+
+const termsLimiter = rateLimit({
+  ...rateLimitDefaults,
+  windowMs: 60 * 1000,
+  limit: 10,
+  message: { error: "Too many requests — please slow down." },
+});
+
+const notificationsTestLimiter = rateLimit({
+  ...rateLimitDefaults,
+  windowMs: 60 * 1000,
+  limit: 5,
+  message: { error: "Too many requests — please slow down." },
+});
+
+app.use("/api/data", dataLimiter);
+app.use("/api/shares", dataLimiter);
+app.use("/api/terms/agree", termsLimiter);
+app.use("/api/notifications/test", notificationsTestLimiter);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 

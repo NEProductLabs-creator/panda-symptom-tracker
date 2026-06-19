@@ -6,7 +6,7 @@ A daily symptom and medication tracking app for parents managing children with P
 
 - `pnpm --filter @workspace/pans-tracker run dev` — run the tracker app
 - `pnpm --filter @workspace/api-server run dev` — run the API server
-- `pnpm run typecheck` — full typecheck (note: lib/db has a pre-existing drizzle error, ignore it)
+- `pnpm run typecheck` — full typecheck (all packages should pass clean)
 - Required env: `SUPABASE_SERVICE_ROLE_KEY` (Replit secret) for Supabase sync
 
 ## Stack
@@ -77,7 +77,6 @@ _Populate as you build — explicit user instructions worth remembering across s
 - `SUPABASE_SERVICE_ROLE_KEY` must be set as a Replit secret; without it, `/api/data/*` routes return 500
 - Print page has its own layout (no sidebar) — enforced by route check in App.tsx Layout component
 - Google Fonts import must be the very first line in index.css
-- Pre-existing `lib/db` TS error about drizzle-orm (unrelated to this app — ignore in full typecheck)
 
 ## Supabase schema setup
 

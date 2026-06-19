@@ -57,12 +57,6 @@ export function createApiClient(getToken: () => Promise<string | null>) {
       delete: (id: string) => req<void>('DELETE', `/milestones/${id}`),
     },
 
-    // ── Child Baseline ───────────────────────────────────────────────────────
-    baseline: {
-      get: () => req<ChildBaseline | null>('GET', '/baseline'),
-      save: (data: ChildBaseline) => req<void>('PUT', '/baseline', data),
-    },
-
     // ── PTEC Logs ────────────────────────────────────────────────────────────
     ptec: {
       getAll: () => req<PTECLog[]>('GET', '/ptec'),
@@ -110,6 +104,8 @@ export function createApiClient(getToken: () => Promise<string | null>) {
       create: (child: CreateChildInput) => req<Child>('POST', '/children', child),
       update: (id: string, patch: UpdateChildInput) => req<Child>('PUT', `/children/${id}`, patch),
       archive: (id: string) => req<void>('DELETE', `/children/${id}`),
+      getBaseline: (id: string) => req<ChildBaseline | null>('GET', `/children/${id}/baseline`),
+      saveBaseline: (id: string, data: ChildBaseline) => req<void>('PUT', `/children/${id}/baseline`, data),
     },
 
     // ── Lab Results ──────────────────────────────────────────────────────────

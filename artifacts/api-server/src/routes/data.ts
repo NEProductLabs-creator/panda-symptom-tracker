@@ -145,30 +145,35 @@ router.delete('/milestones/:id', async (req, res) => {
   catch (e) { err(res, e, 'DELETE /milestones/:id'); }
 });
 
-// ── Child Baseline (singleton per user) ───────────────────────────────────────
+// ── Child Baseline (per-child column on children table) ───────────────────────
 
-router.get('/baseline', async (req, res) => {
+router.get('/children/:id/baseline', async (req, res) => {
+  const db = requireSupabase();
+  const userId = uid(req);
   try {
-    const db = requireSupabase();
     const { data, error } = await db
-      .from('child_baseline')
-      .select('data')
-      .eq('user_id', uid(req))
+      .from('children')
+      .select('baseline')
+      .eq('id', req.params.id)
+      .eq('user_id', userId)
       .maybeSingle();
     if (error) throw error;
-    res.json(data?.data ?? null);
-  } catch (e) { err(res, e, 'GET /baseline'); }
+    res.json((data as { baseline: unknown } | null)?.baseline ?? null);
+  } catch (e) { err(res, e, 'GET /children/:id/baseline'); }
 });
 
-router.put('/baseline', async (req, res) => {
+router.put('/children/:id/baseline', async (req, res) => {
+  const db = requireSupabase();
+  const userId = uid(req);
   try {
-    const db = requireSupabase();
     const { error } = await db
-      .from('child_baseline')
-      .upsert({ user_id: uid(req), data: req.body, updated_at: new Date().toISOString() });
+      .from('children')
+      .update({ baseline: req.body, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id)
+      .eq('user_id', userId);
     if (error) throw error;
     res.status(204).send();
-  } catch (e) { err(res, e, 'PUT /baseline'); }
+  } catch (e) { err(res, e, 'PUT /children/:id/baseline'); }
 });
 
 // ── PTEC Logs ──────────────────────────────────────────────────────────────────
@@ -374,9 +379,25 @@ router.post('/sync', async (req, res) => {
         (w) => ({ id: w.id, user_id: userId, date: w.date, data: w }),
         'user_id,date'),
       ...(baseline
-        ? [db.from('child_baseline').upsert({ user_id: userId, data: baseline }).then(({ error }) => {
-            if (error) errors.push(`child_baseline: ${error.message}`);
-          })]
+        ? [
+            (async () => {
+              const { data: dc } = await db
+                .from('children')
+                .select('id')
+                .eq('user_id', userId)
+                .eq('is_archived', false)
+                .order('sort_order', { ascending: true })
+                .limit(1)
+                .maybeSingle();
+              if (!dc) { errors.push('sync baseline: no child found to attach baseline'); return; }
+              const { error } = await db
+                .from('children')
+                .update({ baseline })
+                .eq('id', (dc as { id: string }).id)
+                .eq('user_id', userId);
+              if (error) errors.push(`sync baseline: ${error.message}`);
+            })(),
+          ]
         : []),
     ]);
 
@@ -657,7 +678,6 @@ router.delete('/all', async (req, res) => {
     'medications',
     'med_library',
     'milestones',
-    'child_baseline',
     'ptec_logs',
     'flare_history',
     'trigger_log',

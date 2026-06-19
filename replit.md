@@ -57,6 +57,7 @@ The **"Reminder: Daily push"** workflow must also be started after deployment. I
 
 ## Architecture decisions
 
+- **Child baseline storage**: `baseline` is a JSONB column on the `children` row (not a separate table). Accessed via `GET /api/data/children/:id/baseline` and `PUT /api/data/children/:id/baseline`. The old `child_baseline` table was dropped in migration 016. `useChildBaseline` scopes reads/writes to `activeChildId`.
 - **Dual-layer persistence**: localStorage = instant state, Supabase = cross-device sync
 - On mount (if authenticated), hooks fetch from server; if server has data → use it; if server empty → migrate localStorage data up
 - All mutations update localStorage immediately (optimistic), then fire API call (best-effort)

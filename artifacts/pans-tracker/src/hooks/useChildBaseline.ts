@@ -9,12 +9,15 @@ import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
 import { DEMO_BASELINE, DEMO_EXPLORING_BASELINE, DEMO_IN_CRISIS_BASELINE } from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
+import { useActiveChild } from '@/hooks/useActiveChild';
 
 export function useChildBaseline() {
   const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
   const { toast } = useToast();
+  const activeChild = useActiveChild();
+  const activeChildId = activeChild?.id ?? null;
 
   const [baseline, setBaseline] = useState<ChildBaseline | null>(() => {
     if (!isDemoMode) return storage.getChildBaseline();
@@ -26,9 +29,9 @@ export function useChildBaseline() {
   const [loading, setLoading] = useState(false);
 
   const refetch = useCallback(() => {
-    if (!userId || isDemoMode) return;
+    if (!userId || !activeChildId || isDemoMode) return;
     setLoading(true);
-    api.baseline.get()
+    api.children.getBaseline(activeChildId)
       .then((serverBaseline) => {
         const local = storage.getChildBaseline();
         const { winner, pushToServer } = mergeSingleton(local, serverBaseline, 'lastUpdated');
@@ -37,7 +40,7 @@ export function useChildBaseline() {
           setBaseline(winner);
         }
         if (pushToServer && winner) {
-          queueMutation('PUT', '/baseline', winner, getToken, toast);
+          queueMutation('PUT', `/children/${activeChildId}/baseline`, winner, getToken, toast);
         }
         setLoading(false);
       })
@@ -46,7 +49,7 @@ export function useChildBaseline() {
         toast({ title: 'Could not load latest data. Showing your last saved version.' });
         setLoading(false);
       });
-  }, [userId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, activeChildId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { refetch(); }, [refetch]);
 
@@ -58,12 +61,12 @@ export function useChildBaseline() {
 
   const saveBaseline = useCallback(
     (data: ChildBaseline) => {
-      if (isDemoMode) return;
+      if (isDemoMode || !activeChildId) return;
       storage.saveChildBaseline(data);
       setBaseline(data);
-      queueMutation('PUT', '/baseline', data, getToken, toast);
+      queueMutation('PUT', `/children/${activeChildId}/baseline`, data, getToken, toast);
     },
-    [isDemoMode, getToken, toast],
+    [isDemoMode, activeChildId, getToken, toast],
   );
 
   const clearBaseline = useCallback(() => {

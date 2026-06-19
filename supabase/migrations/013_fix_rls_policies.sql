@@ -7,7 +7,7 @@
 --   Migrations 008 (parent_observation_summaries), 009 (right_now_checklist_state),
 --   and 010 (children) each added a policy named "service_role_only" but wrote:
 --
---       CREATE POLICY "service_role_only" ON <table>
+--       CREATE POLICY "service_role_only" ON public.table_name
 --         USING (true) WITH CHECK (true);
 --
 --   USING (true) / WITH CHECK (true) with no role clause defaults to PUBLIC —

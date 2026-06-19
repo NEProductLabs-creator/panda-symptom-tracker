@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { track } from "@/lib/analytics";
 import LearnLayout from "./LearnLayout";
 import { ExternalLink } from "lucide-react";
+import { openExternal } from "@/lib/platform";
 
 export default function LearnFindProvider() {
   useEffect(() => {
@@ -101,10 +102,10 @@ export default function LearnFindProvider() {
           </p>
           <a
             href="https://pandasppn.org/ppnproviders/"
-            target="_blank"
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 mt-4 px-5 py-3 rounded-xl font-semibold text-sm text-white transition-opacity hover:opacity-90"
             style={{ backgroundColor: "var(--terracotta)" }}
+            onClick={(e) => { e.preventDefault(); void openExternal('https://pandasppn.org/ppnproviders/'); }}
           >
             Open PPN Provider Directory
             <ExternalLink className="w-4 h-4" />

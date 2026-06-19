@@ -118,7 +118,7 @@ export default function SettingsShares() {
   }
 
   function copyShareUrl(shareToken: string) {
-    const url = `${window.location.origin}/shared/${shareToken}`;
+    const url = `https://panssymptomtracker.com/shared/${shareToken}`;
     navigator.clipboard
       .writeText(url)
       .then(() => toast({ title: "Link copied to clipboard", variant: "success" }))

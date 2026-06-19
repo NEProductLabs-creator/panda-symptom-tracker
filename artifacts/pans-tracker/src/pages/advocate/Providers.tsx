@@ -3,6 +3,7 @@ import { ExternalLink, MapPin, Info } from "lucide-react";
 import { track } from "@/lib/analytics";
 import AdvocateLayout from "./AdvocateLayout";
 import { Button } from "@/components/ui/button";
+import { openExternal } from "@/lib/platform";
 
 export default function AdvocateProviders() {
   useEffect(() => {
@@ -49,8 +50,8 @@ export default function AdvocateProviders() {
           </p>
           <a
             href="https://pandasppn.org/ppnproviders/"
-            target="_blank"
             rel="noopener noreferrer"
+            onClick={(e) => { e.preventDefault(); void openExternal('https://pandasppn.org/ppnproviders/'); }}
           >
             <Button className="gap-2" style={{ backgroundColor: "var(--terracotta)", color: "#fff" }}>
               <ExternalLink className="w-4 h-4" />

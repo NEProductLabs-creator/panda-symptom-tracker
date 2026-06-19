@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
+import { openMail as platformMail } from "@/lib/platform";
 import { format } from "date-fns";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
@@ -431,12 +432,12 @@ export default function SchoolHub() {
     }
   }
 
-  // Open in Mail
+  // Open in Mail — uses platform helper so native builds get the share sheet
+  // instead of a mailto: link (Capacitor WebViews can't reliably open mailto:).
   function openMail() {
-    const subject = encodeURIComponent(meta.emailSubject(childName || "My Child"));
-    const body = encodeURIComponent(activeText);
-    const to = settings.teacherEmail ? encodeURIComponent(settings.teacherEmail) : "";
-    window.open(`mailto:${to}?subject=${subject}&body=${body}`, "_blank");
+    const to = settings.teacherEmail || "";
+    const subject = meta.emailSubject(childName || "My Child");
+    void platformMail(to, subject, activeText);
   }
 
   return (

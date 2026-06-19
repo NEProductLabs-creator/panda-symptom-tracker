@@ -1,5 +1,6 @@
 import { Link } from "wouter";
 import "@/pages/landing.css";
+import { openExternal } from "@/lib/platform";
 
 export default function Terms() {
   return (
@@ -72,7 +73,7 @@ export default function Terms() {
           </p>
           <p>
             We store and process your data to provide the service as described in our{" "}
-            <a href="/privacy" target="_blank" rel="noopener noreferrer">Privacy Policy</a>. By
+            <a href="/privacy" rel="noopener noreferrer" onClick={(e) => { e.preventDefault(); void openExternal('/privacy'); }}>Privacy Policy</a>. By
             using the app, you consent to that processing.
           </p>
           <p>

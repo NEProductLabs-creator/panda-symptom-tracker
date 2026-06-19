@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useClerk } from "@/hooks/useSupabaseAuth";
+import { openExternal } from "@/lib/platform";
 import { initAnalytics, ANALYTICS_CONSENT_KEY } from "@/lib/analytics";
 
 interface Props {
@@ -65,17 +66,17 @@ export default function TermsGate({ onAgree }: Props) {
           <div className="flex gap-6">
             <a
               href="/terms"
-              target="_blank"
               rel="noopener noreferrer"
               className="text-sm font-medium text-primary hover:underline"
+              onClick={(e) => { e.preventDefault(); void openExternal('/terms'); }}
             >
               Terms and Conditions ↗
             </a>
             <a
               href="/privacy"
-              target="_blank"
               rel="noopener noreferrer"
               className="text-sm font-medium text-primary hover:underline"
+              onClick={(e) => { e.preventDefault(); void openExternal('/privacy'); }}
             >
               Privacy Policy ↗
             </a>
@@ -101,9 +102,8 @@ export default function TermsGate({ onAgree }: Props) {
             I have read and agree to the updated{" "}
             <a
               href="/terms"
-              target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); void openExternal('/terms'); }}
               className="text-primary hover:underline font-medium"
             >
               Terms and Conditions
@@ -111,9 +111,8 @@ export default function TermsGate({ onAgree }: Props) {
             and{" "}
             <a
               href="/privacy"
-              target="_blank"
               rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
+              onClick={(e) => { e.preventDefault(); e.stopPropagation(); void openExternal('/privacy'); }}
               className="text-primary hover:underline font-medium"
             >
               Privacy Policy

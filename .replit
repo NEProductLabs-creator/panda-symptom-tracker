@@ -62,3 +62,6 @@ VITE_SUPABASE_URL = "https://mtzggjoqtzgwstursrfq.supabase.co"
 VITE_SUPABASE_ANON_KEY = "sb_publishable_wrG8rl_8VWNAaNiEEd8tGQ_LvLWS2M-"
 VITE_VAPID_PUBLIC_KEY = "BG6OuWHFL12qhMtSsedrbB7h1LtrzbXOd5zadbVIo8Ww0lpSAHdgtKBt-A7Apko5ReRdg-8lQgTV0tTjevWVV9U"
 VAPID_SUBJECT = "mailto:admin@panstrack.app"
+
+[nix]
+channel = "stable-25_05"

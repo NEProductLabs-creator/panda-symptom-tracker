@@ -1,4 +1,5 @@
 import { format, subDays } from "date-fns";
+import { isNative, printOrShare } from "@/lib/platform";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedications } from "@/hooks/useMedications";
 import { useLabResults } from "@/hooks/useLabResults";
@@ -47,6 +48,188 @@ export default function PrintSummary() {
 
   const logsWithNotes = recentLogs.filter((l) => l.notes && l.notes.trim());
 
+  // On web: trigger the browser print dialog (existing @media print CSS handles layout).
+  // On native: build a PDF with jsPDF/autoTable and open the OS share sheet.
+  async function handlePrintOrShare() {
+    if (!isNative()) {
+      window.print();
+      return;
+    }
+    const { default: jsPDF } = await import('jspdf');
+    const { default: autoTable } = await import('jspdf-autotable');
+
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'letter' });
+    const lm = 54;
+    const pageW = doc.internal.pageSize.getWidth();
+    let y = 54;
+
+    // ── Header ────────────────────────────────────────────────────────────────
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(18);
+    doc.text('PANS & PANDAS Symptom Report', lm, y);
+    y += 22;
+    if (childName) {
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(12);
+      doc.text(childName, lm, y);
+      y += 18;
+    }
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(9);
+    doc.setTextColor(100, 100, 100);
+    doc.text(
+      `Generated ${format(new Date(), 'MMMM d, yyyy')} · ` +
+      `${format(new Date(thirtyDaysAgo + 'T12:00:00'), 'MMM d')} – ${format(new Date(), 'MMM d, yyyy')}`,
+      lm, y,
+    );
+    doc.setTextColor(0, 0, 0);
+    y += 24;
+
+    // ── Current Medications ───────────────────────────────────────────────────
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('CURRENT MEDICATIONS', lm, y);
+    y += 6;
+    if (activeMeds.length === 0) {
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9);
+      doc.text('No active medications recorded.', lm, y + 10);
+      y += 28;
+    } else {
+      autoTable(doc, {
+        startY: y,
+        margin: { left: lm, right: lm },
+        head: [['Name', 'Dose', 'Type', 'Started', 'Notes']],
+        body: activeMeds.map((m) => [
+          m.name, m.dose || '—', MED_TYPE_LABELS[m.type],
+          format(new Date(m.startDate + 'T12:00:00'), 'MMM d, yyyy'), m.notes || '—',
+        ]),
+        styles: { fontSize: 8, cellPadding: 4 },
+        headStyles: { fillColor: [80, 50, 30], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      y = (doc as any).lastAutoTable.finalY + 18;
+    }
+
+    // ── Past Medications (last 30 days) ───────────────────────────────────────
+    const pastInRange = pastMeds.filter(
+      (m) => m.startDate >= thirtyDaysAgo || (m.endDate && m.endDate >= thirtyDaysAgo),
+    );
+    if (pastInRange.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('PAST MEDICATIONS (LAST 30 DAYS)', lm, y);
+      y += 6;
+      autoTable(doc, {
+        startY: y,
+        margin: { left: lm, right: lm },
+        head: [['Name', 'Dose', 'Type', 'Dates', 'Notes']],
+        body: pastInRange.map((m) => [
+          m.name, m.dose || '—', MED_TYPE_LABELS[m.type],
+          `${format(new Date(m.startDate + 'T12:00:00'), 'MMM d')} – ${m.endDate ? format(new Date(m.endDate + 'T12:00:00'), 'MMM d, yyyy') : 'ongoing'}`,
+          m.notes || '—',
+        ]),
+        styles: { fontSize: 8, cellPadding: 4 },
+        headStyles: { fillColor: [80, 50, 30], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      y = (doc as any).lastAutoTable.finalY + 18;
+    }
+
+    // ── Lab Results ───────────────────────────────────────────────────────────
+    if (labEntries.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('LAB RESULTS', lm, y);
+      y += 6;
+      autoTable(doc, {
+        startY: y,
+        margin: { left: lm, right: lm },
+        head: [['Date', 'Test', 'Result', 'Reference', 'Lab', 'Notes']],
+        body: [...labEntries]
+          .sort((a, b) => a.date.localeCompare(b.date))
+          .map((lab) => [
+            format(new Date(lab.date + 'T12:00:00'), 'MMM d, yyyy'),
+            lab.test_name,
+            lab.result_value != null
+              ? `${lab.result_value}${lab.result_unit ? ' ' + lab.result_unit : ''}` : '—',
+            lab.reference_range || '—', lab.lab_name || '—', lab.notes || '—',
+          ]),
+        styles: { fontSize: 8, cellPadding: 4 },
+        headStyles: { fillColor: [80, 50, 30], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      y = (doc as any).lastAutoTable.finalY + 18;
+    }
+
+    // ── 30-Day Symptom Log ────────────────────────────────────────────────────
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.text('30-DAY SYMPTOM LOG', lm, y);
+    y += 6;
+    if (recentLogs.length === 0) {
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(9);
+      doc.text('No symptom data recorded for this period.', lm, y + 10);
+      y += 28;
+    } else {
+      autoTable(doc, {
+        startY: y,
+        margin: { left: lm, right: lm },
+        head: [['Date', 'OCD', 'Anxiety', 'Rage', 'Tics', 'Sleep', 'Cog.', 'Notes']],
+        body: recentLogs.map((log) => [
+          format(new Date(log.date + 'T12:00:00'), 'MMM d, yyyy'),
+          log.ocd ?? '—', log.anxiety ?? '—', log.rage ?? '—',
+          log.tics ?? '—', log.sleep ?? '—', log.cognition ?? '—',
+          log.notes || '',
+        ]),
+        styles: { fontSize: 7.5, cellPadding: 3 },
+        headStyles: { fillColor: [80, 50, 30], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+        columnStyles: { 7: { cellWidth: 110 } },
+      });
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      y = (doc as any).lastAutoTable.finalY + 18;
+    }
+
+    // ── Daily Notes ───────────────────────────────────────────────────────────
+    if (logsWithNotes.length > 0) {
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(10);
+      doc.text('DAILY NOTES', lm, y);
+      y += 6;
+      autoTable(doc, {
+        startY: y,
+        margin: { left: lm, right: lm },
+        head: [['Date', 'Notes']],
+        body: logsWithNotes.map((log) => [
+          format(new Date(log.date + 'T12:00:00'), 'MMM d, yyyy'), log.notes || '',
+        ]),
+        styles: { fontSize: 8, cellPadding: 4 },
+        headStyles: { fillColor: [80, 50, 30], textColor: 255, fontStyle: 'bold', fontSize: 7 },
+        columnStyles: { 0: { cellWidth: 90 }, 1: { cellWidth: pageW - lm * 2 - 90 } },
+      });
+    }
+
+    // ── Footer on every page ──────────────────────────────────────────────────
+    const pageCount = doc.getNumberOfPages();
+    for (let i = 1; i <= pageCount; i++) {
+      doc.setPage(i);
+      doc.setFont('helvetica', 'italic');
+      doc.setFontSize(8);
+      doc.setTextColor(130, 130, 130);
+      doc.text(
+        `Printed from PANS & PANDAS Tracker · ${format(new Date(), 'MMMM d, yyyy')} · Page ${i} of ${pageCount}`,
+        pageW / 2,
+        doc.internal.pageSize.getHeight() - 30,
+        { align: 'center' },
+      );
+    }
+    doc.setTextColor(0, 0, 0);
+
+    const blob = doc.output('blob');
+    await printOrShare('pans-summary.pdf', blob);
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Print controls - hidden on actual print */}
@@ -61,9 +244,9 @@ export default function PrintSummary() {
           <p className="text-sm font-semibold text-foreground" style={{ fontFamily: "Fraunces, serif" }}>Print Summary</p>
           <p className="text-xs text-muted-foreground" style={{ fontFamily: "Newsreader, serif", fontStyle: "italic" }}>For doctor appointments</p>
         </div>
-        <Button onClick={() => window.print()} className="gap-2" data-testid="button-print">
+        <Button onClick={handlePrintOrShare} className="gap-2" data-testid="button-print">
           <Printer className="w-4 h-4" />
-          Print
+          {isNative() ? 'Share PDF' : 'Print'}
         </Button>
       </div>
 

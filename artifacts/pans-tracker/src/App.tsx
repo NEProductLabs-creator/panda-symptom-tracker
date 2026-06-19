@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/reac
 import { useUser, useClerk, useAuth } from "@/hooks/useSupabaseAuth";
 import { AuthProvider, useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
+import { openExternal } from "@/lib/platform";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Activity } from "lucide-react";
@@ -425,9 +426,9 @@ function SignInPage() {
               </div>
               <span className="text-sm text-foreground leading-snug">
                 I have read and agree to the{" "}
-                <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:underline font-medium">Terms and Conditions</a>
+                <a href="/terms" rel="noopener noreferrer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); void openExternal('/terms'); }} className="text-primary hover:underline font-medium">Terms and Conditions</a>
                 {" "}and{" "}
-                <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:underline font-medium">Privacy Policy</a>.
+                <a href="/privacy" rel="noopener noreferrer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); void openExternal('/privacy'); }} className="text-primary hover:underline font-medium">Privacy Policy</a>.
               </span>
             </label>
             <button
@@ -535,9 +536,9 @@ function SignUpPage() {
             </div>
             <span className="text-sm text-foreground leading-snug">
               I have read and agree to the{" "}
-              <a href="/terms" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:underline font-medium">Terms and Conditions</a>
+              <a href="/terms" rel="noopener noreferrer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); void openExternal('/terms'); }} className="text-primary hover:underline font-medium">Terms and Conditions</a>
               {" "}and{" "}
-              <a href="/privacy" target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="text-primary hover:underline font-medium">Privacy Policy</a>.
+              <a href="/privacy" rel="noopener noreferrer" onClick={(e) => { e.preventDefault(); e.stopPropagation(); void openExternal('/privacy'); }} className="text-primary hover:underline font-medium">Privacy Policy</a>.
             </span>
           </label>
 

@@ -571,6 +571,11 @@ router.delete('/all', async (req, res) => {
     'trigger_log',
     'household_health',
     'wellbeing_logs',
+    'parent_observation_summaries',
+    'right_now_checklist_state',
+    'shares',
+    'push_subscriptions',
+    'user_journey_state',
     'terms_agreements',
     'user_terms',
   ];

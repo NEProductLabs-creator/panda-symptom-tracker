@@ -3,10 +3,13 @@ import posthog from 'posthog-js';
 const key = import.meta.env.VITE_POSTHOG_KEY as string | undefined;
 const host = (import.meta.env.VITE_POSTHOG_HOST as string | undefined) ?? 'https://us.i.posthog.com';
 
+export const ANALYTICS_CONSENT_KEY = 'pans_tracker_analytics_consent';
+
 export const analyticsReady = Boolean(key);
 
 export function initAnalytics(): void {
   if (!key) return;
+  if (localStorage.getItem(ANALYTICS_CONSENT_KEY) !== '1') return;
   posthog.init(key, {
     api_host: host,
     person_profiles: 'identified_only',

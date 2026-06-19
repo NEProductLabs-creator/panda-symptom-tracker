@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useClerk } from "@clerk/react";
+import { initAnalytics, ANALYTICS_CONSENT_KEY } from "@/lib/analytics";
 
 interface Props {
   onAgree: () => Promise<void>;
@@ -22,6 +23,8 @@ export default function TermsGate({ onAgree }: Props) {
     if (!agreed || loading) return;
     setLoading(true);
     await onAgree();
+    localStorage.setItem(ANALYTICS_CONSENT_KEY, '1');
+    initAnalytics();
     setLoading(false);
   }
 

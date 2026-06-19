@@ -1,8 +1,10 @@
 import { createRoot } from "react-dom/client";
-import { initAnalytics } from "./lib/analytics";
+import { initAnalytics, ANALYTICS_CONSENT_KEY } from "./lib/analytics";
 import App from "./App";
 import "./index.css";
 
-initAnalytics();
+if (localStorage.getItem(ANALYTICS_CONSENT_KEY) === '1') {
+  initAnalytics();
+}
 
 createRoot(document.getElementById("root")!).render(<App />);

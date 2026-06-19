@@ -2,3 +2,4 @@
 - [Navigation architecture](nav-architecture.md) — PRIMARY_NAV (5), SECONDARY_NAV below divider, MOBILE_TABS (4) with matchPaths; post-login landing uses useRef flag + journey_stage.
 - [Onboarding gate pattern](onboarding-gate.md) — gate is per-child: check useChildren().length first, then active child journey_stage; both effects must wait for childrenLoading.
 - [Symptom logs child scoping](symptom-logs-child-scoping.md) — writes must merge filtered state with other children's localStorage data or data is silently wiped.
+- [Terms gate post-signup](terms-gate-post-signup.md) — record T&C in useTermsStatus (no time gate; Supabase email-confirm delays the session) and clear the pending key only after server success.

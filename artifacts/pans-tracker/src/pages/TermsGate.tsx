@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useClerk } from "@clerk/react";
+import { useClerk } from "@/hooks/useSupabaseAuth";
 import { initAnalytics, ANALYTICS_CONSENT_KEY } from "@/lib/analytics";
 
 interface Props {

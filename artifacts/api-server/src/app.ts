@@ -1,15 +1,9 @@
 import express, { type Express } from "express";
-import { rateLimit } from "express-rate-limit";
+import { rateLimit, ipKeyGenerator } from "express-rate-limit";
 import cors from "cors";
 import helmet from "helmet";
 import pinoHttp from "pino-http";
-import { clerkMiddleware, getAuth } from "@clerk/express";
-import { publishableKeyFromHost } from "@clerk/shared/keys";
-import {
-  CLERK_PROXY_PATH,
-  clerkProxyMiddleware,
-  getClerkProxyHost,
-} from "./middlewares/clerkProxyMiddleware";
+import { attachUser } from "./middlewares/supabaseAuth.js";
 import router from "./routes";
 import { logger } from "./lib/logger";
 
@@ -72,13 +66,9 @@ app.use(
   }),
 );
 
-// ── Clerk proxy (must be before other middleware that reads the body) ─────────
-
-app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
-
 // ── Security headers (helmet) ─────────────────────────────────────────────────
 // crossOriginEmbedderPolicy is disabled: it blocks cross-origin subresources
-// that don't opt in, which can interfere with Clerk and Supabase.
+// that don't opt in, which can interfere with Supabase.
 
 app.use(
   helmet({
@@ -91,12 +81,11 @@ app.use(
         styleSrc: ["'self'", "'unsafe-inline'"],
         imgSrc: ["'self'", "data:", "https:"],
         fontSrc: ["'self'", "data:"],
-        // Clerk proxy is same-origin; PostHog and Supabase are external
+        // PostHog and Supabase are external
         connectSrc: [
           "'self'",
           "https://*.supabase.co",
           "https://us.i.posthog.com",
-          "https://clerk.panssymptomtracker.com",
         ],
         objectSrc: ["'none'"],
         frameAncestors: ["'none'"],
@@ -128,24 +117,20 @@ app.use(
 app.use(express.json({ limit: "64kb" }));
 app.use(express.urlencoded({ extended: true, limit: "64kb" }));
 
-// ── Clerk auth middleware ─────────────────────────────────────────────────────
+// ── Supabase auth middleware (best-effort; attaches req.userId) ───────────────
+// Must run before rate limiting so the limiter can key by authenticated user,
+// and before routes whose requireAuth depends on req.userId.
 
-app.use(
-  clerkMiddleware((req) => ({
-    publishableKey: publishableKeyFromHost(
-      getClerkProxyHost(req) ?? "",
-      process.env.CLERK_PUBLISHABLE_KEY,
-    ),
-  })),
-);
+app.use(attachUser);
 
 // ── Rate limiting ─────────────────────────────────────────────────────────────
-// keyGenerator: IP + Clerk userId when authenticated, otherwise IP alone.
+// keyGenerator: IP + Supabase userId when authenticated, otherwise IP alone.
 
 function makeKeyGenerator() {
   return (req: express.Request): string => {
-    const ip = (req.ip ?? req.socket.remoteAddress ?? "unknown");
-    const userId = getAuth(req).userId;
+    // ipKeyGenerator normalizes IPv6 addresses so users can't bypass limits.
+    const ip = ipKeyGenerator(req.ip ?? req.socket.remoteAddress ?? "unknown");
+    const userId = req.userId;
     return userId ? `${ip}:${userId}` : ip;
   };
 }

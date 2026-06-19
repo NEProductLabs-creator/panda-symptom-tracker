@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useAuth } from '@clerk/react';
+import { useAuth } from '@/hooks/useSupabaseAuth';
 import { WellbeingLog } from '@/lib/types';
 import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';

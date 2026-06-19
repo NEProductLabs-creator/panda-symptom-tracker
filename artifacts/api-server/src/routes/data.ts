@@ -1,16 +1,15 @@
 import { Router, Request, Response } from 'express';
-import { requireAuth } from '@clerk/express';
+import { requireAuth } from '../middlewares/supabaseAuth.js';
 import { requireSupabase } from '../lib/supabase';
 import { logger, errCode } from '../lib/logger';
 import { safeUpsert } from '../lib/safeUpsert';
 
 const router = Router();
 
-router.use(requireAuth());
+router.use(requireAuth);
 
 function uid(req: Request): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (req as any).auth.userId as string;
+  return req.userId as string;
 }
 
 function err(res: Response, e: unknown, ctx: string): void {

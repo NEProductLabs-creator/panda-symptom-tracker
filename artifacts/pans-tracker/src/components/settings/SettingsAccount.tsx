@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { LogOut, Trash2, CheckCircle2 } from "lucide-react";
-import { useAuth as useClerkAuth } from "@clerk/react";
+import { useAuth as useClerkAuth } from "@/hooks/useSupabaseAuth";
 import { useAuth } from "@/contexts/AuthContext";
 import { createApiClient } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";

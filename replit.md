@@ -25,17 +25,20 @@ The **"Reminder: Daily push"** workflow must also be started after deployment. I
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- Frontend: React + Vite, wouter (routing), Recharts (charts), Clerk auth
+- Frontend: React + Vite, wouter (routing), Recharts (charts), Supabase Auth
 - Styling: Tailwind CSS v4, shadcn/ui components
 - Data: localStorage (instant cache) + Supabase (sync via API server)
-- Auth: Clerk (Replit-managed)
+- Auth: Supabase Auth (email/password + Google OAuth). Frontend uses `@supabase/supabase-js` `createClient` with localStorage + PKCE (no `@supabase/ssr` — cookies break in the proxied iframe and Capacitor). API verifies Supabase JWTs via JWKS using `jose` `createRemoteJWKSet` (no `SUPABASE_JWT_SECRET`).
 
 ## Where things live
 
 - `artifacts/pans-tracker/src/` — main app source
   - `lib/types.ts` — all data type definitions
   - `lib/storage.ts` — localStorage read/write helpers (cache layer)
-  - `lib/api.ts` — typed API client (createApiClient factory, uses Clerk token)
+  - `lib/api.ts` — typed API client (createApiClient factory, uses Supabase access token)
+  - `lib/supabaseClient.ts` — singleton Supabase browser client (localStorage + PKCE) + `getSupabaseToken`
+  - `contexts/AuthContext.tsx` — `AuthProvider` (onAuthStateChange), `useAuthContext`, normalized `AppUser`
+  - `hooks/useSupabaseAuth.ts` — Clerk-compatible `useAuth`/`useUser`/`useClerk` shims backed by Supabase (kept the Clerk call shapes so consumers only needed an import-path swap)
   - `hooks/useSymptomLogs.ts` — symptom log CRUD (localStorage + API sync)
   - `hooks/useMedications.ts` — medication CRUD
   - `hooks/useMedLibrary.ts` — medication library CRUD
@@ -52,7 +55,8 @@ The **"Reminder: Daily push"** workflow must also be started after deployment. I
   - `pages/Medications.tsx` — medication management
   - `pages/PrintSummary.tsx` — print-optimized doctor summary
 - `artifacts/api-server/src/` — Express API server
-  - `routes/data.ts` — all data CRUD routes (`/api/data/*`), protected by Clerk auth
+  - `routes/data.ts` — all data CRUD routes (`/api/data/*`), protected by Supabase JWT auth
+  - `middlewares/supabaseAuth.ts` — `attachUser` (best-effort, sets `req.userId`) + `requireAuth`; verifies JWTs against `${VITE_SUPABASE_URL}/auth/v1/.well-known/jwks.json` (issuer + audience `authenticated`)
   - `lib/supabase.ts` — server-side Supabase client (service-role key)
 
 ## Architecture decisions
@@ -64,8 +68,9 @@ The **"Reminder: Daily push"** workflow must also be started after deployment. I
 - **Dual-layer persistence**: localStorage = instant state, Supabase = cross-device sync
 - On mount (if authenticated), hooks fetch from server; if server has data → use it; if server empty → migrate localStorage data up
 - All mutations update localStorage immediately (optimistic), then fire API call (best-effort)
-- API server uses Clerk JWT middleware; data routes enforce auth, query Supabase with service-role key (no RLS needed)
-- User IDs are Clerk format (TEXT `user_2xyz...`) — not Supabase auth UUIDs
+- API server verifies Supabase JWTs via JWKS (`jose` `createRemoteJWKSet`); `attachUser` runs globally and sets `req.userId`, `requireAuth` enforces it on protected routes; data routes query Supabase with service-role key (no RLS needed)
+- User IDs are Supabase auth UUIDs (the JWT `sub` claim) stored in TEXT `user_id` columns. **Auth migration was a fresh start — pre-migration Clerk-format user data (`user_2xyz...`) is not carried over.**
+- Google OAuth uses `supabase.auth.signInWithOAuth` with `redirectTo` = `origin + basePath + '/auth/callback'`; the `/auth/callback` route lets supabase-js exchange the code (detectSessionInUrl) then routes home or back to sign-in
 - ReferenceArea from Recharts used for medication period overlays on the line chart
 - Print summary uses `@media print` CSS and `window.print()` — no server-side rendering
 - Score buttons (0–5) as toggle groups rather than sliders for quick finger-friendly entry; 0 = none/poor, 5 = extreme/excellent; null = not entered
@@ -86,7 +91,8 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-- Data hooks (all 9+) call `useAuth()` from `@clerk/react` — must be rendered inside ClerkProvider
+- Data hooks (all 9+) call `useAuth()` from `@/hooks/useSupabaseAuth` — must be rendered inside `AuthProvider`
+- The `useSupabaseAuth` hooks intentionally keep Clerk-shaped names/signatures (`useAuth`/`useUser`/`useClerk`, `useClerk().addListener`); leftover "Clerk" wording in comments/aliases is by design, not a missed migration
 - useSymptomLogs is now child-scoped: filters by activeChildId on init + API sync; preserves other children's localStorage data on every write by reading storage.getLogs() and filtering out the active child's entries before merging
 - ChildSwitcher has 3 variants: "sidebar" (full nav block), "mobile" (header pill), "pill" (page-level "Viewing: {name}" indicator rendered globally in Layout)
 - ViewingPill (ChildSwitcher variant="pill") is hidden on /learn/* and /settings/children; visible on all other child-scoped pages
@@ -102,7 +108,15 @@ Run migrations in order in the Supabase SQL editor:
 2. `supabase/migrations/010_children.sql` — adds children table + child_id to symptom_logs, right_now_checklist_state, parent_observation_summaries
 3. `supabase/migrations/011_symptom_logs_child_key.sql` — changes unique constraints to (user_id, child_id, date) so two children can have logs on the same date
 
-Tables use TEXT `user_id` (Clerk format) — NOT Supabase auth UUIDs.
+Tables use TEXT `user_id` columns holding Supabase auth UUIDs (the JWT `sub` claim).
+
+## Supabase Auth — required dashboard config
+
+The JWKS-based JWT verification and OAuth flow depend on dashboard settings (user actions, not code):
+
+1. **Asymmetric JWT signing keys** — the project must use asymmetric signing keys (RS256/ES256) so a JWKS endpoint exists at `${VITE_SUPABASE_URL}/auth/v1/.well-known/jwks.json`. Legacy HS256 (shared secret) projects publish no JWKS and the API cannot verify tokens. Migrate keys under Authentication → JWT Keys.
+2. **Redirect URL allowlist** — add the app origin(s) + `/auth/callback` (dev `${REPLIT_DEV_DOMAIN}` and the production domain) under Authentication → URL Configuration → Redirect URLs.
+3. **Google provider** — enable Google under Authentication → Providers and supply the OAuth client ID/secret for Google sign-in to work.
 
 ## Pointers
 

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { format, parseISO } from "date-fns";
 import { Share2, Plus, Copy, Check, X, Link2 } from "lucide-react";
-import { useAuth as useClerkAuth } from "@clerk/react";
+import { useAuth as useClerkAuth } from "@/hooks/useSupabaseAuth";
 import { useToast } from "@/hooks/use-toast";
 import { track } from "@/lib/analytics";
 import { Button } from "@/components/ui/button";

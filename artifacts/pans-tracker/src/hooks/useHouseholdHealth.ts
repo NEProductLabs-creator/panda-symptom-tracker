@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
-import { useAuth } from '@clerk/react';
+import { useAuth } from '@/hooks/useSupabaseAuth';
 import { HouseholdIllness } from '@/lib/types';
 import { storage } from '@/lib/storage';
 import { createApiClient } from '@/lib/api';

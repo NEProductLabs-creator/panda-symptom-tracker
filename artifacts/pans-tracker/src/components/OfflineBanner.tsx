@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { WifiOff } from "lucide-react";
-import { useAuth } from "@clerk/react";
+import { useAuth } from "@/hooks/useSupabaseAuth";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { drainQueue } from "@/lib/apiQueue";
 

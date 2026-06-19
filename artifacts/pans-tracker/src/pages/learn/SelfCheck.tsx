@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAuth } from "@clerk/react";
+import { useAuth } from "@/hooks/useSupabaseAuth";
 import { useActiveChild } from "@/hooks/useActiveChild";
 import jsPDF from "jspdf";
 import { track } from "@/lib/analytics";

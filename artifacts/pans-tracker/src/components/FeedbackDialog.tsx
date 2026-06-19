@@ -1,6 +1,6 @@
 import { useState } from "react";
 import emailjs from "@emailjs/browser";
-import { useUser } from "@clerk/react";
+import { useUser } from "@/hooks/useSupabaseAuth";
 import { MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,8 +29,7 @@ export default function FeedbackDialog({ open, onOpenChange }: Props) {
   const [feedback, setFeedback] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const userEmail =
-    user?.emailAddresses?.[0]?.emailAddress ?? "unknown@unknown.com";
+  const userEmail = user?.email ?? "unknown@unknown.com";
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

@@ -1,11 +1,116 @@
-// Thin compatibility wrapper — auth is now handled by Clerk.
-// Components that call useAuth() continue to work unchanged.
+// Supabase-backed auth context.
+//
+// Holds the live Supabase session/user and exposes a small, normalized
+// AppUser shape to the rest of the app. Clerk-compatible hooks
+// (useAuth/useUser/useClerk with the Clerk call signatures) live in
+// @/hooks/useSupabaseAuth and read from this context, so the bulk of the
+// codebase only needed an import-path swap during the Clerk → Supabase
+// migration.
 
-import { ReactNode } from "react";
-import { useUser, useClerk } from "@clerk/react";
+import {
+  ReactNode,
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+import type { Session, User as SupabaseUser } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabaseClient";
 import { DEMO_KEY } from "@/contexts/DemoContext";
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
+
+// ── Normalized app user ─────────────────────────────────────────────────────
+
+export interface AppUser {
+  id: string;
+  email: string | null;
+  fullName: string | null;
+  imageUrl: string | null;
+  createdAt: Date | null;
+}
+
+function toAppUser(u: SupabaseUser | null): AppUser | null {
+  if (!u) return null;
+  const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
+  const fullName =
+    (meta.full_name as string | undefined) ??
+    (meta.name as string | undefined) ??
+    null;
+  const imageUrl =
+    (meta.avatar_url as string | undefined) ??
+    (meta.picture as string | undefined) ??
+    null;
+  return {
+    id: u.id,
+    email: u.email ?? null,
+    fullName,
+    imageUrl,
+    createdAt: u.created_at ? new Date(u.created_at) : null,
+  };
+}
+
+// ── Context ─────────────────────────────────────────────────────────────────
+
+interface AuthState {
+  user: AppUser | null;
+  session: Session | null;
+  loading: boolean;
+}
+
+const AuthStateContext = createContext<AuthState | null>(null);
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [session, setSession] = useState<Session | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (!active) return;
+      setSession(data.session);
+      setLoading(false);
+    });
+
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, next) => {
+      setSession(next);
+      setLoading(false);
+    });
+
+    return () => {
+      active = false;
+      sub.subscription.unsubscribe();
+    };
+  }, []);
+
+  const value = useMemo<AuthState>(
+    () => ({
+      user: toAppUser(session?.user ?? null),
+      session,
+      loading,
+    }),
+    [session, loading],
+  );
+
+  return (
+    <AuthStateContext.Provider value={value}>
+      {children}
+    </AuthStateContext.Provider>
+  );
+}
+
+export function useAuthContext(): AuthState {
+  const ctx = useContext(AuthStateContext);
+  if (!ctx) {
+    throw new Error("useAuthContext must be used within an AuthProvider");
+  }
+  return ctx;
+}
+
+// ── Legacy app-level useAuth (settings/demo shape) ──────────────────────────
+// Preserves the original AuthContext.useAuth contract used by SettingsAccount.
 
 interface AuthContextType {
   user: { id: string } | null;
@@ -15,24 +120,17 @@ interface AuthContextType {
   enterGuestMode: () => void;
 }
 
-// AuthProvider is now a passthrough — ClerkProvider in App.tsx handles auth state
-export function AuthProvider({ children }: { children: ReactNode }) {
-  return <>{children}</>;
-}
-
 export function useAuth(): AuthContextType {
-  const { user, isLoaded } = useUser();
-  const { signOut: clerkSignOut } = useClerk();
+  const { user, loading } = useAuthContext();
   const isDemoMode = localStorage.getItem(DEMO_KEY) === "1";
 
   return {
-    user: isDemoMode ? null : (user ? { id: user.id } : null),
-    loading: isDemoMode ? false : !isLoaded,
+    user: isDemoMode ? null : user ? { id: user.id } : null,
+    loading: isDemoMode ? false : loading,
     isGuest: isDemoMode,
     signOut: async () => {
-      await clerkSignOut({
-        redirectUrl: `${window.location.origin}${basePath}/sign-in`,
-      });
+      await supabase.auth.signOut();
+      window.location.href = `${window.location.origin}${basePath}/sign-in`;
     },
     enterGuestMode: () => {},
   };

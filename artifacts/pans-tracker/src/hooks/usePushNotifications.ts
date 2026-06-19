@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { useAuth } from "@clerk/react";
+import { useAuth } from "@/hooks/useSupabaseAuth";
 
 const REMINDER_TIME_KEY = "push_reminder_time";
 

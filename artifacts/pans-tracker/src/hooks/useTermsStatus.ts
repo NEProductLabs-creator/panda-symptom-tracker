@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useAuth, useUser } from '@clerk/react';
+import { useAuth, useUser } from '@/hooks/useSupabaseAuth';
 import { CURRENT_TERMS_VERSION } from '@/lib/termsVersion';
 
 const SESSION_OK_KEY = 'pans_terms_ok';
@@ -26,18 +26,42 @@ export function useTermsStatus() {
       return;
     }
 
-    // Pending agreement from the signup T&C step — PostHogSync will record it
-    // shortly; treat as ok immediately so the user isn't blocked.
-    // Check localStorage too — Google OAuth clears sessionStorage on redirect.
+    // Pending agreement captured during the signup T&C pre-step. Record it
+    // authoritatively to the server here (not time-gated, so it survives
+    // Supabase's delayed email-confirmation flow), and only clear the pending
+    // key once the server accepts it. Check localStorage too — Google OAuth
+    // clears sessionStorage on redirect.
     const pending = sessionStorage.getItem(PENDING_KEY) ?? localStorage.getItem(PENDING_KEY);
     if (pending) {
       try {
         const { version } = JSON.parse(pending) as { version: string };
         if (version === CURRENT_TERMS_VERSION) {
+          const token = await getToken();
+          const email = user?.email ?? undefined;
+          const res = await fetch('/api/terms/agree', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify({ email, terms_version: version, context: 'signup' }),
+          });
+          if (res.ok) {
+            // Persisted — safe to drop the pending key and cache for the session.
+            sessionStorage.removeItem(PENDING_KEY);
+            localStorage.removeItem(PENDING_KEY);
+            sessionStorage.setItem(SESSION_OK_KEY, CURRENT_TERMS_VERSION);
+          }
+          // Don't block this session either way; if the write failed the key
+          // remains so the next mount retries the recording.
           setStatus('ok');
           return;
         }
-      } catch { /* ignore */ }
+      } catch {
+        // Network/parse failure — don't block; pending key is retried next mount.
+        setStatus('ok');
+        return;
+      }
     }
 
     try {
@@ -68,7 +92,7 @@ export function useTermsStatus() {
   const recordAgreement = useCallback(async () => {
     try {
       const token = await getToken();
-      const email = user?.emailAddresses?.[0]?.emailAddress;
+      const email = user?.email ?? undefined;
       await fetch('/api/terms/agree', {
         method: 'POST',
         headers: {

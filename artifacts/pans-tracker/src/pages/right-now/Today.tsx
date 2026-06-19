@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
-import { useAuth } from "@clerk/react";
+import { useAuth } from "@/hooks/useSupabaseAuth";
 import { Check } from "lucide-react";
 import { track } from "@/lib/analytics";
 import RightNowLayout from "./RightNowLayout";

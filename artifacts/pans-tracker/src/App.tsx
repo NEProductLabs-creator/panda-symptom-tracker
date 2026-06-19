@@ -1,10 +1,10 @@
 import { ReactNode, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { track, identifyUser, identifyAsDemo, enableSurveys } from "@/lib/analytics";
-import { Switch, Route, Router as WouterRouter, useLocation, Redirect, Link } from "wouter";
+import { Switch, Route, Router as WouterRouter, useLocation, Link } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
-import { ClerkProvider, SignIn, SignUp, useUser, useClerk, useAuth, useSignUp } from "@clerk/react";
-import { publishableKeyFromHost } from "@clerk/react/internal";
-import { shadcn } from "@clerk/themes";
+import { useUser, useClerk, useAuth } from "@/hooks/useSupabaseAuth";
+import { AuthProvider, useAuthContext } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabaseClient";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Activity } from "lucide-react";
@@ -73,78 +73,11 @@ const queryClient = new QueryClient();
 
 const basePath = import.meta.env.BASE_URL.replace(/\/$/, "");
 
-// REQUIRED — copy verbatim. Resolves the publishable key from the hostname.
-const clerkPubKey = publishableKeyFromHost(
-  window.location.hostname,
-  import.meta.env.VITE_CLERK_PUBLISHABLE_KEY,
-);
-
-// REQUIRED — copy verbatim. Empty in dev, auto-set in prod.
-const clerkProxyUrl = import.meta.env.VITE_CLERK_PROXY_URL;
-
-function stripBase(path: string): string {
-  return basePath && path.startsWith(basePath)
-    ? path.slice(basePath.length) || "/"
-    : path;
+function authCallbackUrl(): string {
+  return `${window.location.origin}${basePath}/auth/callback`;
 }
 
-if (!clerkPubKey) {
-  throw new Error("Missing VITE_CLERK_PUBLISHABLE_KEY");
-}
-
-// ─── Clerk appearance — warm muted-sage brand ─────────────────────────────────
-
-const clerkAppearance = {
-  theme: shadcn,
-  cssLayerName: "clerk",
-  options: {
-    logoPlacement: "inside" as const,
-    logoLinkUrl: basePath || "/",
-    logoImageUrl: `${window.location.origin}${basePath}/logo.svg`,
-    socialButtonsVariant: "blockButton" as const,
-  },
-  variables: {
-    colorPrimary: "hsl(16, 52%, 50%)",
-    colorForeground: "hsl(27, 26%, 18%)",
-    colorMutedForeground: "hsl(25, 11%, 55%)",
-    colorDanger: "hsl(0, 40%, 55%)",
-    colorBackground: "hsl(38, 62%, 97%)",
-    colorInput: "hsl(36, 33%, 87%)",
-    colorInputForeground: "hsl(27, 26%, 18%)",
-    colorNeutral: "hsl(36, 33%, 87%)",
-    fontFamily: "'Newsreader', Georgia, serif",
-    borderRadius: "0.25rem",
-  },
-  elements: {
-    rootBox: "w-full flex justify-center",
-    cardBox: "bg-white rounded-2xl w-[440px] max-w-full overflow-hidden shadow-lg",
-    card: "!shadow-none !border-0 !bg-transparent !rounded-none",
-    footer: "!shadow-none !border-0 !bg-transparent !rounded-none",
-    headerTitle: "text-foreground font-bold",
-    headerSubtitle: "text-muted-foreground",
-    socialButtonsBlockButtonText: "text-foreground font-medium",
-    formFieldLabel: "text-foreground text-xs font-semibold uppercase tracking-wide",
-    footerActionLink: "text-primary font-semibold",
-    footerActionText: "text-muted-foreground",
-    dividerText: "text-muted-foreground text-xs",
-    identityPreviewEditButton: "text-primary",
-    formFieldSuccessText: "text-emerald-600",
-    alertText: "text-foreground text-sm",
-    logoBox: "flex justify-center mb-1",
-    logoImage: "w-12 h-12 rounded-xl",
-    socialButtonsBlockButton: "border border-border bg-white hover:bg-accent transition-colors h-11",
-    formButtonPrimary: "bg-primary text-white hover:bg-primary/90 transition-colors h-11 font-semibold",
-    formFieldInput: "border border-border bg-white text-foreground h-11",
-    footerAction: "border-t border-border bg-transparent",
-    dividerLine: "bg-border",
-    alert: "border border-border rounded-xl",
-    otpCodeFieldInput: "border border-border bg-white h-11",
-    formFieldRow: "",
-    main: "",
-  },
-};
-
-const NO_SIDEBAR_ROUTES = ["/print", "/about", "/onboarding", "/sign-in", "/sign-up", "/demo/pick"];
+const NO_SIDEBAR_ROUTES = ["/print", "/about", "/onboarding", "/sign-in", "/sign-up", "/demo/pick", "/auth"];
 
 // ─── Loading screen ────────────────────────────────────────────────────────────
 
@@ -158,6 +91,156 @@ function LoadingScreen() {
         <p className="text-sm text-muted-foreground">Loading…</p>
       </div>
     </div>
+  );
+}
+
+// ─── Auth form building blocks ────────────────────────────────────────────────
+
+function GoogleIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden>
+      <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.48h4.84a4.14 4.14 0 0 1-1.8 2.72v2.26h2.92c1.71-1.57 2.68-3.88 2.68-6.62z" />
+      <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.26c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.7H.96v2.33A9 9 0 0 0 9 18z" />
+      <path fill="#FBBC05" d="M3.97 10.72a5.4 5.4 0 0 1 0-3.44V4.95H.96a9 9 0 0 0 0 8.1l3.01-2.33z" />
+      <path fill="#EA4335" d="M9 3.58c1.32 0 2.5.45 3.44 1.35l2.58-2.58C13.46.89 11.43 0 9 0A9 9 0 0 0 .96 4.95l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z" />
+    </svg>
+  );
+}
+
+function GoogleButton({ label }: { label: string }) {
+  const [loading, setLoading] = useState(false);
+  async function handleClick() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: authCallbackUrl() },
+    });
+    if (error) setLoading(false); // on success the browser redirects away
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={loading}
+      className="w-full h-11 rounded-lg border border-border bg-white hover:bg-accent transition-colors flex items-center justify-center gap-2 text-sm font-medium text-foreground disabled:opacity-60"
+    >
+      <GoogleIcon />
+      {loading ? "Redirecting…" : label}
+    </button>
+  );
+}
+
+function CredentialsForm({ mode }: { mode: "sign-in" | "sign-up" }) {
+  const [, navigate] = useLocation();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (submitting) return;
+    setError("");
+    setInfo("");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      if (mode === "sign-in") {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        if (signInError) {
+          setError(signInError.message);
+          setSubmitting(false);
+          return;
+        }
+        navigate("/");
+      } else {
+        const { data, error: signUpError } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: authCallbackUrl() },
+        });
+        if (signUpError) {
+          setError(signUpError.message);
+          setSubmitting(false);
+          return;
+        }
+        if (data.session) {
+          navigate("/");
+        } else {
+          setInfo(
+            "Check your email to confirm your account, then come back and sign in.",
+          );
+          setSubmitting(false);
+        }
+      }
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-3">
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold uppercase tracking-wide text-foreground" htmlFor="auth-email">
+          Email
+        </label>
+        <input
+          id="auth-email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+          inputMode="email"
+          autoComplete="email"
+          autoCapitalize="none"
+          spellCheck={false}
+          required
+        />
+      </div>
+      <div className="space-y-1.5">
+        <label className="text-xs font-semibold uppercase tracking-wide text-foreground" htmlFor="auth-password">
+          Password
+        </label>
+        <input
+          id="auth-password"
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          placeholder="••••••••"
+          className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+          autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+          required
+        />
+      </div>
+      {error && <p className="text-xs text-destructive">{error}</p>}
+      {info && <p className="text-xs text-emerald-600">{info}</p>}
+      <button
+        type="submit"
+        disabled={submitting}
+        className="w-full h-11 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
+      >
+        {submitting
+          ? mode === "sign-in"
+            ? "Signing in…"
+            : "Creating account…"
+          : mode === "sign-in"
+            ? "Sign in"
+            : "Create account"}
+      </button>
+    </form>
   );
 }
 
@@ -206,15 +289,29 @@ function SignInPage() {
 
   return (
     <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-8 gap-6">
-      <SignIn
-        routing="path"
-        path={`${basePath}/sign-in`}
-        signUpUrl={`${basePath}/sign-up`}
-      />
+      {demoStep === 0 && (
+        <div className="bg-white rounded-2xl w-[440px] max-w-full shadow-lg p-8 space-y-5">
+          <div className="text-center space-y-1">
+            <h1 className="text-foreground font-bold text-xl" style={{ fontFamily: "'Newsreader', Georgia, serif" }}>
+              Welcome back
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Sign in to track your child's symptoms
+            </p>
+          </div>
+          <GoogleButton label="Continue with Google" />
+          <div className="flex items-center gap-3">
+            <div className="h-px bg-border flex-1" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="h-px bg-border flex-1" />
+          </div>
+          <CredentialsForm mode="sign-in" />
+        </div>
+      )}
 
       {demoStep === 0 && (
         <>
-          {/* New user prompt — shown outside the Clerk card so it's always visible */}
+          {/* New user prompt — always visible */}
           <div className="w-full max-w-[440px] text-center -mt-2">
             <p className="text-sm text-muted-foreground">
               First time here?{" "}
@@ -223,7 +320,7 @@ function SignInPage() {
               </Link>
             </p>
             <p className="text-[11px] text-muted-foreground mt-1">
-              Google sign-in only works once you've signed up first.
+              You can sign in with email or Google.
             </p>
           </div>
 
@@ -354,72 +451,55 @@ function SignInPage() {
 }
 
 function SignUpPage() {
-  const [location] = useLocation();
-  // In Clerk v6 the hook returns the resource directly (a signal value), not {signUp, isLoaded}
-  const signUpResource = useSignUp();
   const [agreed, setAgreed] = useState(false);
 
-  // Skip the pre-step and go straight to the Clerk form when:
-  // 1. We're on a sub-path like /sign-up/sso-callback (Google OAuth callback after redirect)
-  // 2. The user already agreed before the OAuth redirect (flag survives in localStorage)
-  // 3. Clerk has a pending OAuth transfer from sign-in (no account found for Google user) —
-  //    signUp.status is set by Clerk when it transfers the Google session here automatically.
-  //    Terms are captured post-creation by the TermsGate in Router.
-  const isOAuthCallback = location !== '/sign-up';
+  // Skip the terms pre-step when the user already agreed (flag survives in
+  // localStorage across a full-page Google OAuth redirect).
   const alreadyAgreed = !!(
     sessionStorage.getItem('pans_terms_pending') ||
     localStorage.getItem('pans_terms_pending')
   );
-  // signUpResource is the SignUp object directly in Clerk v6; a non-null status means Clerk has
-  // a pending session (e.g., from an OAuth transfer when Google sign-in finds no account).
-  const hasClerkTransfer = signUpResource != null && (signUpResource as { status?: string | null }).status != null;
 
-  const [showClerkForm, setShowClerkForm] = useState(
-    isOAuthCallback || alreadyAgreed
-  );
-  // Latched true when the user arrives via a Clerk OAuth transfer (no account found on sign-in).
-  // Stored in state so it stays true after the form renders and the signal clears.
-  const [arrivedViaTransfer, setArrivedViaTransfer] = useState(false);
-
-  // When Clerk has a pending OAuth transfer, skip the terms pre-step and go
-  // straight to <SignUp> so Clerk can complete the account creation.
-  useEffect(() => {
-    if (hasClerkTransfer && !showClerkForm) {
-      setArrivedViaTransfer(true);
-      setShowClerkForm(true);
-    }
-  }, [hasClerkTransfer]); // eslint-disable-line react-hooks/exhaustive-deps
+  const [showForm, setShowForm] = useState(alreadyAgreed);
 
   useEffect(() => {
-    if (!showClerkForm) track('signup_started');
+    if (!showForm) track('signup_started');
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleContinue() {
     const pending = JSON.stringify({ version: CURRENT_TERMS_VERSION, agreedAt: new Date().toISOString() });
     // Write to localStorage so the flag survives a full-page OAuth redirect
-    // (Google sign-up navigates away and back, clearing sessionStorage)
+    // (Google sign-up navigates away and back, clearing sessionStorage).
+    // PostHogSync records the agreement once the account session exists.
     sessionStorage.setItem('pans_terms_pending', pending);
     localStorage.setItem('pans_terms_pending', pending);
-    setShowClerkForm(true);
+    setShowForm(true);
   }
 
-  if (showClerkForm) {
+  if (showForm) {
     return (
       <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-8 gap-4">
-        {arrivedViaTransfer && (
-          <div className="w-full max-w-[440px] rounded-xl border border-border bg-card px-4 py-3 flex items-start gap-3">
-            <span className="text-lg leading-none mt-0.5" aria-hidden>👋</span>
-            <p className="text-sm text-foreground leading-snug">
-              <span className="font-semibold">We didn't find an account for this Google address.</span>{" "}
-              Let's get you set up!
+        <div className="bg-white rounded-2xl w-[440px] max-w-full shadow-lg p-8 space-y-5">
+          <div className="text-center space-y-1">
+            <h1 className="text-foreground font-bold text-xl" style={{ fontFamily: "'Newsreader', Georgia, serif" }}>
+              Create your free account
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Private, secure, and designed for PANS &amp; PANDAS families
             </p>
           </div>
-        )}
-        <SignUp
-          routing="path"
-          path={`${basePath}/sign-up`}
-          signInUrl={`${basePath}/sign-in`}
-        />
+          <GoogleButton label="Sign up with Google" />
+          <div className="flex items-center gap-3">
+            <div className="h-px bg-border flex-1" />
+            <span className="text-xs text-muted-foreground">or</span>
+            <div className="h-px bg-border flex-1" />
+          </div>
+          <CredentialsForm mode="sign-up" />
+          <p className="text-center text-xs text-muted-foreground">
+            Already have an account?{" "}
+            <Link href="/sign-in" className="text-primary hover:underline">Sign in</Link>
+          </p>
+        </div>
       </div>
     );
   }
@@ -489,10 +569,12 @@ function SignUpPage() {
 
 function PostHogSync() {
   const { user, isSignedIn, isLoaded } = useUser();
-  const { getToken } = useAuth();
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !user) return;
     identifyUser(user.id);
+    // Analytics-only: fire signup_completed once for freshly created accounts.
+    // T&C recording is handled authoritatively by useTermsStatus (which is not
+    // time-gated, so it survives Supabase's delayed email-confirmation flow).
     const flagKey = `signup_tracked_${user.id}`;
     const isNewAccount =
       user.createdAt instanceof Date &&
@@ -500,31 +582,8 @@ function PostHogSync() {
     if (isNewAccount && !sessionStorage.getItem(flagKey)) {
       sessionStorage.setItem(flagKey, '1');
       track('signup_completed');
-      // Record the T&C agreement captured during the signup pre-step.
-      // Check both sessionStorage and localStorage — Google OAuth clears
-      // sessionStorage during the redirect, so localStorage is the fallback.
-      const pending = sessionStorage.getItem('pans_terms_pending') ?? localStorage.getItem('pans_terms_pending');
-      if (pending) {
-        try {
-          const { version } = JSON.parse(pending) as { version: string };
-          const email = user.emailAddresses?.[0]?.emailAddress;
-          getToken().then((token) => {
-            fetch('/api/terms/agree', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                ...(token ? { Authorization: `Bearer ${token}` } : {}),
-              },
-              body: JSON.stringify({ email, terms_version: version, context: 'signup' }),
-            }).catch(() => {});
-            sessionStorage.setItem('pans_terms_ok', version);
-          }).catch(() => {});
-          sessionStorage.removeItem('pans_terms_pending');
-          localStorage.removeItem('pans_terms_pending');
-        } catch { /* ignore */ }
-      }
     }
-  }, [isLoaded, isSignedIn, user, getToken]);
+  }, [isLoaded, isSignedIn, user]);
   return null;
 }
 
@@ -565,7 +624,7 @@ function Layout({ children }: { children: ReactNode }) {
 
 // ─── Cache invalidation when signed-in user changes ───────────────────────────
 
-function ClerkCacheInvalidator() {
+function SupabaseCacheInvalidator() {
   const { addListener } = useClerk();
   const qc = useQueryClient();
   const prevId = useRef<string | null | undefined>(undefined);
@@ -775,57 +834,43 @@ function Router() {
         <Route path="/settings" component={Settings} />
         <Route path="/settings/children" component={SettingsChildren} />
         <Route path="/about" component={Intro} />
-        {/* Legacy Supabase auth routes → redirect to Clerk paths */}
-        <Route path="/auth">
-          <Redirect to="/sign-in" />
-        </Route>
-        <Route path="/auth/callback">
-          <Redirect to="/sign-in" />
-        </Route>
         <Route component={NotFound} />
       </Switch>
     </Layout>
   );
 }
 
+// ─── OAuth / email-confirmation callback ──────────────────────────────────────
+// supabase-js (detectSessionInUrl) exchanges the code in the URL during client
+// init; AuthProvider then surfaces the session. Once auth resolves, route the
+// user home (success) or back to sign-in (failure).
+
+function AuthCallback() {
+  const [, navigate] = useLocation();
+  const { loading, session } = useAuthContext();
+  useEffect(() => {
+    if (loading) return;
+    navigate(session ? "/" : "/sign-in", { replace: true });
+  }, [loading, session, navigate]);
+  return <LoadingScreen />;
+}
+
 // ─── App providers ────────────────────────────────────────────────────────────
 
 function AppProviders() {
-  const [, setLocation] = useLocation();
   return (
-    <ClerkProvider
-      publishableKey={clerkPubKey}
-      proxyUrl={clerkProxyUrl}
-      appearance={clerkAppearance}
-      signInUrl={`${basePath}/sign-in`}
-      signUpUrl={`${basePath}/sign-up`}
-      localization={{
-        signIn: {
-          start: {
-            title: "Welcome back",
-            subtitle: "Sign in to track your child's symptoms",
-          },
-        },
-        signUp: {
-          start: {
-            title: "Create your free account",
-            subtitle: "Private, secure, and designed for PANS & PANDAS families",
-          },
-        },
-      }}
-      routerPush={(to) => setLocation(stripBase(to))}
-      routerReplace={(to) => setLocation(stripBase(to), { replace: true })}
-    >
+    <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <PostHogSync />
-        <ClerkCacheInvalidator />
+        <SupabaseCacheInvalidator />
         <TooltipProvider>
           <DemoProvider>
             <OfflineBanner />
             <Switch>
-              {/* Clerk sign-in / sign-up — /*? matches OAuth sub-paths */}
-              <Route path="/sign-in/*?" component={SignInPage} />
-              <Route path="/sign-up/*?" component={SignUpPage} />
+              <Route path="/sign-in" component={SignInPage} />
+              <Route path="/sign-up" component={SignUpPage} />
+              {/* OAuth / email-confirmation redirect target */}
+              <Route path="/auth/callback" component={AuthCallback} />
               {/* Public pages — no auth required */}
               <Route path="/privacy" component={Privacy} />
               <Route path="/terms" component={Terms} />
@@ -838,7 +883,7 @@ function AppProviders() {
           </DemoProvider>
         </TooltipProvider>
       </QueryClientProvider>
-    </ClerkProvider>
+    </AuthProvider>
   );
 }
 

@@ -24,8 +24,7 @@ const agreeLimiter = rateLimit({
 router.post('/agree', agreeLimiter, async (req: Request, res: Response) => {
   try {
     const db = requireSupabase();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const userId: string | null = (req as any).auth?.userId ?? null;
+    const userId: string | null = req.userId ?? null;
     const { email, terms_version, context } = req.body as {
       email?: string;
       terms_version: string;
@@ -75,8 +74,7 @@ router.post('/agree', agreeLimiter, async (req: Request, res: Response) => {
 // GET /api/terms/status
 // Auth required: returns the authenticated user's current agreed version.
 router.get('/status', async (req: Request, res: Response) => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const userId: string | null = (req as any).auth?.userId ?? null;
+  const userId: string | null = req.userId ?? null;
   if (!userId) {
     res.status(401).json({ error: 'Unauthorized' });
     return;

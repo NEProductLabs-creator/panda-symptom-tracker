@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { useUser, useClerk } from "@clerk/react";
+import { useUser, useClerk } from "@/hooks/useSupabaseAuth";
 import ChildSwitcher from "@/components/ChildSwitcher";
 import { useChildren } from "@/hooks/useChildren";
 import { track } from "@/lib/analytics";
@@ -332,8 +332,8 @@ export default function Sidebar() {
   const { signOut } = useClerk();
   const { data: children } = useChildren();
 
-  const displayName = user?.firstName || user?.emailAddresses?.[0]?.emailAddress?.split("@")[0] || null;
-  const displayEmail = user?.emailAddresses?.[0]?.emailAddress || null;
+  const displayName = user?.fullName || user?.email?.split("@")[0] || null;
+  const displayEmail = user?.email || null;
 
   function closeMobile() {
     setMobileOpen(false);

@@ -1,5 +1,5 @@
 import { Router, type Request } from "express";
-import { requireAuth } from "@clerk/express";
+import { requireAuth } from "../middlewares/supabaseAuth.js";
 import webpush from "web-push";
 import { requireSupabase } from "../lib/supabase.js";
 import { logger, errCode } from "../lib/logger.js";
@@ -17,12 +17,11 @@ if (vapidPublicKey && vapidPrivateKey) {
 }
 
 function userId(req: Request): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (req as any).auth.userId as string;
+  return req.userId as string;
 }
 
 // POST /api/notifications/subscribe (auth required)
-router.post("/subscribe", requireAuth(), async (req, res) => {
+router.post("/subscribe", requireAuth, async (req, res) => {
   if (!vapidPublicKey || !vapidPrivateKey) {
     res.status(503).json({ error: "Push notifications not configured" });
     return;
@@ -67,7 +66,7 @@ router.post("/subscribe", requireAuth(), async (req, res) => {
 });
 
 // POST /api/notifications/unsubscribe (auth required)
-router.post("/unsubscribe", requireAuth(), async (req, res) => {
+router.post("/unsubscribe", requireAuth, async (req, res) => {
   const db = requireSupabase();
   const uid = userId(req);
 
@@ -83,7 +82,7 @@ router.post("/unsubscribe", requireAuth(), async (req, res) => {
 });
 
 // POST /api/notifications/test (auth required, dev only)
-router.post("/test", requireAuth(), async (req, res) => {
+router.post("/test", requireAuth, async (req, res) => {
   if (process.env.NODE_ENV === "production") {
     res.status(404).json({ error: "Not found" });
     return;

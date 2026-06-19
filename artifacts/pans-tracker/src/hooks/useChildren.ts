@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@clerk/react';
+import { useAuth } from '@/hooks/useSupabaseAuth';
 import { useMemo } from 'react';
 import { createApiClient } from '@/lib/api';
 import type { Child, CreateChildInput, UpdateChildInput } from '@/lib/types';

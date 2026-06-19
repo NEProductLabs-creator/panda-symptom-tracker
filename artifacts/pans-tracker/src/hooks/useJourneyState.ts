@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useAuth } from '@clerk/react';
+import { useAuth } from '@/hooks/useSupabaseAuth';
 import { createApiClient } from '@/lib/api';
 import type { JourneyStage } from '@/lib/types';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';

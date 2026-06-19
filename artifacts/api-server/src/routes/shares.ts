@@ -1,5 +1,5 @@
 import { Router, type Request } from "express";
-import { requireAuth } from "@clerk/express";
+import { requireAuth } from "../middlewares/supabaseAuth.js";
 import { randomBytes } from "crypto";
 import { requireSupabase } from "../lib/supabase.js";
 import { logger, errCode } from "../lib/logger.js";
@@ -9,8 +9,7 @@ const router = Router();
 const TOKEN_RE = /^[0-9a-f]{64}$/;
 
 function userId(req: Request): string {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (req as any).auth.userId as string;
+  return req.userId as string;
 }
 
 function buildShareUrl(req: Request, token: string): string {
@@ -27,7 +26,7 @@ function buildShareUrl(req: Request, token: string): string {
 }
 
 // POST /api/shares — create a share link (auth required)
-router.post("/", requireAuth(), async (req, res) => {
+router.post("/", requireAuth, async (req, res) => {
   const db = requireSupabase();
   const { expiresInDays, includeNotes, child_id } = req.body as {
     expiresInDays: unknown;
@@ -79,7 +78,7 @@ router.post("/", requireAuth(), async (req, res) => {
 });
 
 // GET /api/shares — list caller's active shares (auth required)
-router.get("/", requireAuth(), async (req, res) => {
+router.get("/", requireAuth, async (req, res) => {
   const db = requireSupabase();
   try {
     const { data, error } = await db
@@ -197,7 +196,7 @@ router.get("/:token", async (req, res) => {
 });
 
 // POST /api/shares/:token/revoke — revoke a share (auth required, must own it)
-router.post("/:token/revoke", requireAuth(), async (req, res) => {
+router.post("/:token/revoke", requireAuth, async (req, res) => {
   const db = requireSupabase();
   const token = req.params["token"] as string;
 

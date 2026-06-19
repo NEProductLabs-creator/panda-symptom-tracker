@@ -52,6 +52,7 @@ import {
   ChevronUp,
   X,
   Clock,
+  Users,
 } from "lucide-react";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -571,6 +572,16 @@ export default function Medications() {
           <Plus className="w-4 h-4" />
           Add Medication
         </Button>
+      </div>
+
+      {/* ── Shared-across-children notice ─────────────────────────────────────── */}
+
+      <div className="flex items-start gap-2.5 px-4 py-3 rounded-xl border border-border/50 bg-muted/40 text-sm text-muted-foreground">
+        <Users className="w-4 h-4 mt-0.5 flex-shrink-0" />
+        <p>
+          Medications are <span className="font-medium text-foreground">shared across all children</span> in your account —
+          they capture the household's treatment history. If you track multiple children, include each child's name in the medication name or notes.
+        </p>
       </div>
 
       {/* ── Alert banners ─────────────────────────────────────────────────────── */}

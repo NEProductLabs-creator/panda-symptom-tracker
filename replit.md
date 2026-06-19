@@ -58,6 +58,9 @@ The **"Reminder: Daily push"** workflow must also be started after deployment. I
 ## Architecture decisions
 
 - **Child baseline storage**: `baseline` is a JSONB column on the `children` row (not a separate table). Accessed via `GET /api/data/children/:id/baseline` and `PUT /api/data/children/:id/baseline`. The old `child_baseline` table was dropped in migration 016. `useChildBaseline` scopes reads/writes to `activeChildId`.
+- **Per-child vs household-level data** (deliberate split):
+  - *Per-child* — symptom logs, lab results, baseline, PTEC logs, right-now checklist, flare history: clinical observations tied to a specific child's body and history.
+  - *Household-level / shared across all children* — medications, medication library, milestones, trigger log, household health: these capture the family's treatment history and environmental context. Triggers (strep, stress, schedule change) and household illness events affect all children simultaneously; the medication list records the household's cumulative treatment experience; milestones (appointments, lab results) are family health events. Scoping these per-child would split the treatment timeline artificially and make the print summary misleading for single-child families (the majority). Users with multiple PANS children can include the child's name in the title/notes of each entry.
 - **Dual-layer persistence**: localStorage = instant state, Supabase = cross-device sync
 - On mount (if authenticated), hooks fetch from server; if server has data → use it; if server empty → migrate localStorage data up
 - All mutations update localStorage immediately (optimistic), then fire API call (best-effort)

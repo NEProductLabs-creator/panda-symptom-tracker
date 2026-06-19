@@ -11,8 +11,15 @@
 -- The verification block at the end raises an exception if any are still
 -- present, so a silent no-op cannot go undetected again.
 
-DROP INDEX IF EXISTS public.symptom_logs_user_date;
-DROP INDEX IF EXISTS public.right_now_checklist_unique;
+-- symptom_logs_user_date and right_now_checklist_unique are constraint-backed
+-- indexes; they must be removed via ALTER TABLE DROP CONSTRAINT (which also
+-- drops the backing index). right_now_checklist_user_date_idx is a plain index.
+ALTER TABLE public.symptom_logs
+  DROP CONSTRAINT IF EXISTS symptom_logs_user_date;
+
+ALTER TABLE public.right_now_checklist_state
+  DROP CONSTRAINT IF EXISTS right_now_checklist_unique;
+
 DROP INDEX IF EXISTS public.right_now_checklist_user_date_idx;
 
 DO $$

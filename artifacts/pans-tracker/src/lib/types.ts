@@ -176,3 +176,16 @@ export type WellbeingLog = {
   hardDay: boolean;  // flags this date as a particularly hard day
   updatedAt?: string; // ISO timestamp — used for last-write-wins sync merge
 };
+
+// ─── Journey State ────────────────────────────────────────────────────────────
+
+export type JourneyStage = 'exploring' | 'in_crisis' | 'tracking';
+
+export type JourneyState = {
+  user_id: string;
+  journey_stage: JourneyStage | null;
+  journey_stage_set_at: string | null; // ISO timestamp
+  onboarding_completed: boolean;
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
+};

@@ -1,0 +1,36 @@
+Build out the /learn route as a structured education hub for parents who suspect PANS or PANDAS but do not yet have a diagnosis.
+
+The Learn landing page lists seven section cards, each linking to a sub-route:
+
+1. "What is PANS and PANDAS?" at /learn/overview
+   Three to five short paragraphs in parent-to-parent voice. Define both terms. PANS is the umbrella, PANDAS is a subset triggered by strep.
+
+2. "The sudden-onset hallmark" at /learn/sudden-onset
+   Explain that overnight or near-overnight behavioral change after an infection is the defining signal. Contrast briefly with how primary OCD or anxiety typically develop.
+
+3. "Diagnostic criteria" at /learn/criteria
+   Summarize the Swedo PANDAS criteria and the PANS Research Consortium criteria in plain language. Include a visible note: "This is for orientation. Diagnosis is made by a clinician."
+
+4. "Red flag symptoms" at /learn/red-flags
+   Bulleted list of common acute-onset signs: sudden severe OCD, separation anxiety, urinary changes, handwriting regression, food restriction, tics, rage, sensory sensitivities, sleep disruption, cognitive or math regression.
+
+5. "Glossary" at /learn/glossary
+   Definitions for: PANS, PANDAS, ASO titer, Anti-DNase B, IVIG, plasmapheresis, autoimmune encephalitis, Cunningham Panel, PPN, Swedo criteria.
+
+6. "Find a PANS-literate provider" at /learn/find-provider
+   Explain what to look for. Link out to the PANDAS Physicians Network directory at https://pandasppn.org/ppnproviders/. Note that many pediatricians and ER teams are not familiar with PANS or PANDAS and parents often need to advocate.
+
+7. "Is this what we are seeing?" at /learn/self-check
+   Structured questionnaire mapped to the diagnostic criteria. Question types: yes / no / not sure radio, and free-text for "What did you notice first?" and "When did the change start?"
+   At completion, generate a printable PDF using jsPDF titled "Parent Observation Summary" that lists the parent's answers organized for a doctor visit. Footer text: "This is a parent's organized observation, not a diagnosis."
+   Save responses to a new Supabase table parent_observation_summaries with columns: id (text), user_id (uuid), responses (jsonb), created_at (timestamptz, default now()). Enable RLS with the same per-user policies used elsewhere.
+
+Tone is parent-to-parent throughout. Use the warm earth in-app palette. Use Newsreader for the Learn hub headings for an editorial feel.
+
+Track PostHog events:
+- learn_section_viewed with property section
+- learn_self_check_started
+- learn_self_check_completed
+- learn_self_check_pdf_downloaded
+
+Keep the copy generic enough to work for a single affected child today and multiple children later. Prefer phrasings like "the child you are caring for" rather than "your child" where natural.

@@ -7,6 +7,7 @@
 import type {
   SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline,
   PTECLog, FlareEvent, TriggerEntry, HouseholdIllness, WellbeingLog,
+  JourneyState, JourneyStage,
 } from './types';
 
 const BASE = '/api/data';
@@ -94,6 +95,13 @@ export function createApiClient(getToken: () => Promise<string | null>) {
       getAll: () => req<WellbeingLog[]>('GET', '/wellbeing'),
       save: (log: WellbeingLog) => req<void>('POST', '/wellbeing', log),
       delete: (id: string) => req<void>('DELETE', `/wellbeing/${id}`),
+    },
+
+    // ── Journey State ─────────────────────────────────────────────────────────
+    journeyState: {
+      get: () => req<JourneyState>('GET', '/journey-state'),
+      patch: (fields: Partial<Pick<JourneyState, 'journey_stage' | 'journey_stage_set_at' | 'onboarding_completed'>>) =>
+        req<void>('PATCH', '/journey-state', fields),
     },
 
     // ── Account deletion ─────────────────────────────────────────────────────

@@ -344,6 +344,46 @@ router.post('/sync', async (req, res) => {
   }
 });
 
+// ── Journey State ─────────────────────────────────────────────────────────────
+
+router.get('/journey-state', async (req, res) => {
+  const db = requireSupabase();
+  const userId = uid(req);
+  try {
+    // Insert row with defaults if it doesn't exist yet (no-op on conflict)
+    const { error: insertError } = await db
+      .from('user_journey_state')
+      .upsert({ user_id: userId }, { onConflict: 'user_id', ignoreDuplicates: true });
+    if (insertError) throw insertError;
+
+    const { data, error } = await db
+      .from('user_journey_state')
+      .select('*')
+      .eq('user_id', userId)
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (e) { err(res, e, 'GET /journey-state'); }
+});
+
+router.patch('/journey-state', async (req, res) => {
+  const db = requireSupabase();
+  const userId = uid(req);
+  try {
+    const allowed = ['journey_stage', 'journey_stage_set_at', 'onboarding_completed'] as const;
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    for (const key of allowed) {
+      if (key in req.body) patch[key] = req.body[key];
+    }
+    const { error } = await db
+      .from('user_journey_state')
+      .update(patch)
+      .eq('user_id', userId);
+    if (error) throw error;
+    res.status(204).send();
+  } catch (e) { err(res, e, 'PATCH /journey-state'); }
+});
+
 // ── Delete all data for user (account deletion) ───────────────────────────────
 
 router.delete('/all', async (req, res) => {

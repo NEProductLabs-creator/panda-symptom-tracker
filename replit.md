@@ -20,8 +20,17 @@ Before publishing, set these Replit secrets (Secrets tab → Add secret):
 | `VAPID_SUBJECT` | Contact URI for push service, e.g. `mailto:admin@example.com` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role key for server-side DB access |
 | `VITE_API_BASE_URL` | **Capacitor builds only.** Full HTTPS URL of the deployed API server (e.g. `https://pans-tracker.replit.app`). Empty on web builds — the Replit Deployments same-origin proxy handles `/api/*` routing. Capacitor WebViews run from `capacitor://localhost` or `https://localhost`, so relative `/api/*` fetches would hit the local device rather than the server. |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | **Native push only.** Full JSON content of a Firebase service-account key file. Used by `api-server` to send FCM/APNs push notifications to iOS and Android Capacitor builds. Generate via Firebase Console → Project settings → Service accounts → Generate new private key. Paste the entire JSON as one line. If absent the native reminder loop is skipped gracefully; web VAPID push continues to work. |
 
-The **"Reminder: Daily push"** workflow must also be started after deployment. It loops every 60 seconds, checks `push_subscriptions` for matching `reminder_time` values, and sends a "Daily check-in" push to users who haven't logged yet today. VAPID keys can be generated with `npx web-push generate-vapid-keys`.
+The **"Reminder: Daily push"** workflow must also be started after deployment. It loops every 60 seconds and fans out to both tables:
+- `push_subscriptions` (web VAPID push) — existing logic
+- `push_subscriptions_native` (FCM/APNs) — requires `FIREBASE_SERVICE_ACCOUNT_JSON`
+
+VAPID keys can be generated with `npx web-push generate-vapid-keys`.
+
+### APNs note for iOS
+
+APNs provisioning is handled entirely through Firebase — no separate Apple Push Notification key needs to be uploaded to Replit. Configure the iOS app in Firebase Console → Project settings → Your apps → iOS app, and upload your APNs Auth Key (`.p8` file) or APNs Certificate there. Firebase acts as the FCM-to-APNs bridge, so the server only ever sends to an FCM token regardless of platform.
 
 ## Stack
 

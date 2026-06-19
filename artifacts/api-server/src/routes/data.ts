@@ -384,6 +384,21 @@ router.patch('/journey-state', async (req, res) => {
   } catch (e) { err(res, e, 'PATCH /journey-state'); }
 });
 
+// ── Parent observation summaries (Learn → Self-Check) ────────────────────────
+
+router.post('/parent-observation', async (req, res) => {
+  const db = requireSupabase();
+  const userId = uid(req);
+  try {
+    const { id, responses } = req.body as { id: string; responses: Record<string, string> };
+    const { error } = await db
+      .from('parent_observation_summaries')
+      .insert({ id, user_id: userId, responses });
+    if (error) throw error;
+    res.status(201).json({ ok: true });
+  } catch (e) { err(res, e, 'POST /parent-observation'); }
+});
+
 // ── Delete all data for user (account deletion) ───────────────────────────────
 
 router.delete('/all', async (req, res) => {

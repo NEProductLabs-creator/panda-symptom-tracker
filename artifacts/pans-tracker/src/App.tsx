@@ -16,6 +16,13 @@ import PrintSummary from "@/pages/PrintSummary";
 import ExportData from "@/pages/ExportData";
 import OnboardingStart from "@/pages/OnboardingStart";
 import Learn from "@/pages/Learn";
+import LearnOverview from "@/pages/learn/Overview";
+import LearnSuddenOnset from "@/pages/learn/SuddenOnset";
+import LearnCriteria from "@/pages/learn/Criteria";
+import LearnRedFlags from "@/pages/learn/RedFlags";
+import LearnGlossary from "@/pages/learn/Glossary";
+import LearnFindProvider from "@/pages/learn/FindProvider";
+import LearnSelfCheck from "@/pages/learn/SelfCheck";
 import RightNow from "@/pages/RightNow";
 import Advocate from "@/pages/Advocate";
 import Reports from "@/pages/Reports";
@@ -666,6 +673,13 @@ function Router() {
         <Route path="/wellbeing" component={WellbeingCheckin} />
         <Route path="/hope" component={HopeBoard} />
         <Route path="/learn" component={Learn} />
+        <Route path="/learn/overview" component={LearnOverview} />
+        <Route path="/learn/sudden-onset" component={LearnSuddenOnset} />
+        <Route path="/learn/criteria" component={LearnCriteria} />
+        <Route path="/learn/red-flags" component={LearnRedFlags} />
+        <Route path="/learn/glossary" component={LearnGlossary} />
+        <Route path="/learn/find-provider" component={LearnFindProvider} />
+        <Route path="/learn/self-check" component={LearnSelfCheck} />
         <Route path="/right-now" component={RightNow} />
         <Route path="/advocate" component={Advocate} />
         <Route path="/reports" component={Reports} />

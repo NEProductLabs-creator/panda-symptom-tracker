@@ -1,44 +1,129 @@
-import { BookOpen } from "lucide-react";
 import { Link } from "wouter";
+import {
+  BookOpen,
+  Zap,
+  ClipboardList,
+  AlertTriangle,
+  BookMarked,
+  MapPin,
+  ClipboardCheck,
+  ChevronRight,
+} from "lucide-react";
+
+// ─── Section definitions ──────────────────────────────────────────────────────
+
+const SECTIONS = [
+  {
+    href: "/learn/overview",
+    icon: BookOpen,
+    title: "What is PANS and PANDAS?",
+    description:
+      "What these conditions are, why they matter, and why parents often know before doctors do.",
+  },
+  {
+    href: "/learn/sudden-onset",
+    icon: Zap,
+    title: "The sudden-onset hallmark",
+    description:
+      "The overnight change that parents describe as their first signal something was wrong.",
+  },
+  {
+    href: "/learn/criteria",
+    icon: ClipboardList,
+    title: "Diagnostic criteria",
+    description:
+      "The clinical frameworks that clinicians use — explained in plain language.",
+  },
+  {
+    href: "/learn/red-flags",
+    icon: AlertTriangle,
+    title: "Red flag symptoms",
+    description:
+      "Signs to watch for and document before your first appointment.",
+  },
+  {
+    href: "/learn/glossary",
+    icon: BookMarked,
+    title: "Glossary",
+    description:
+      "Key terms — from ASO titers to IVIG — explained without jargon.",
+  },
+  {
+    href: "/learn/find-provider",
+    icon: MapPin,
+    title: "Find a PANS-literate provider",
+    description:
+      "How to find a clinician who takes PANS and PANDAS seriously.",
+  },
+  {
+    href: "/learn/self-check",
+    icon: ClipboardCheck,
+    title: "Is this what we are seeing?",
+    description:
+      "A structured questionnaire that organizes your observations into a format your doctor can use — and generates a printable summary.",
+  },
+];
+
+// ─── Hub landing page ─────────────────────────────────────────────────────────
 
 export default function Learn() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center px-6 py-14 bg-background">
-      <div className="w-full max-w-lg text-center space-y-6">
-        {/* Icon */}
-        <div
-          className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto"
-          style={{ backgroundColor: "hsl(var(--primary) / 0.12)" }}
-        >
-          <BookOpen className="w-8 h-8" style={{ color: "var(--terracotta)" }} />
-        </div>
-
-        {/* Heading */}
-        <div>
+    <div className="min-h-screen bg-background">
+      <div className="max-w-3xl mx-auto px-5 py-10">
+        {/* Header */}
+        <div className="mb-10">
+          <div
+            className="w-12 h-12 rounded-xl flex items-center justify-center mb-5"
+            style={{ backgroundColor: "hsl(var(--primary) / 0.12)" }}
+          >
+            <BookOpen className="w-6 h-6" style={{ color: "var(--terracotta)" }} />
+          </div>
           <h1
-            className="text-3xl font-bold text-foreground leading-tight"
-            style={{ fontFamily: "Fraunces, serif" }}
+            className="text-4xl font-bold text-foreground leading-tight"
+            style={{ fontFamily: "Newsreader, serif" }}
           >
             Learn
           </h1>
-          <span className="inline-block mt-2 text-[11px] font-semibold tracking-wide uppercase px-2.5 py-0.5 rounded-full bg-muted text-muted-foreground">
-            Coming soon
-          </span>
+          <p className="mt-3 text-base text-muted-foreground leading-relaxed max-w-xl">
+            For families who are trying to understand what might be happening.
+            Everything here is written in plain language, parent to parent.
+          </p>
         </div>
 
-        {/* Description */}
-        <p className="text-base text-muted-foreground leading-relaxed max-w-md mx-auto">
-          A gentle, parent-friendly guide to understanding PANS and PANDAS — what
-          they are, how flares work, what symptoms to watch for, and how to
-          build an effective relationship with your care team.
-        </p>
+        {/* Section cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {SECTIONS.map(({ href, icon: Icon, title, description }) => (
+            <Link key={href} href={href}>
+              <div className="group flex items-start gap-4 p-5 bg-card rounded-2xl border-2 border-border hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer h-full">
+                <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-primary/10"
+                  style={{ backgroundColor: "hsl(var(--primary) / 0.08)" }}
+                >
+                  <Icon
+                    className="w-5 h-5 transition-colors"
+                    style={{ color: "var(--terracotta)" }}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p
+                    className="font-semibold text-[14px] text-foreground leading-snug"
+                    style={{ fontFamily: "Newsreader, serif" }}
+                  >
+                    {title}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                    {description}
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5 group-hover:text-foreground transition-colors" />
+              </div>
+            </Link>
+          ))}
+        </div>
 
-        {/* Back link */}
-        <Link href="/">
-          <span className="inline-block text-sm font-medium transition-colors cursor-pointer" style={{ color: "var(--terracotta)" }}>
-            ← Go to Dashboard
-          </span>
-        </Link>
+        <p className="text-xs text-muted-foreground text-center mt-10 opacity-70">
+          Content is written for orientation only. Diagnosis is made by a clinician.
+        </p>
       </div>
     </div>
   );

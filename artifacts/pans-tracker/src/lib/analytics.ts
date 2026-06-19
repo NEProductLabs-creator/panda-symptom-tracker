@@ -76,7 +76,11 @@ export type AnalyticsEvent =
   | 'push_reminder_enabled_from_nudge'
   | 'push_reminder_nudge_dismissed'
   | 'csv_exported'
-  | 'onboarding_journey_stage_selected';
+  | 'onboarding_journey_stage_selected'
+  | 'learn_section_viewed'
+  | 'learn_self_check_started'
+  | 'learn_self_check_completed'
+  | 'learn_self_check_pdf_downloaded';
 
 export function track(event: AnalyticsEvent, properties?: Record<string, unknown>): void {
   if (!analyticsReady) return;

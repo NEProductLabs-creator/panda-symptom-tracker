@@ -1,5 +1,5 @@
 import { format, subDays, addDays, parseISO } from "date-fns";
-import { TriggerEntry, TriggerCategory, SymptomLog } from "./types";
+import { TriggerEntry, TriggerCategory, SymptomLog, Medication } from "./types";
 import { computeDailyScore } from "./flare";
 
 const WINDOW_DAYS = 7;
@@ -150,4 +150,166 @@ export function computePatternInsight(
   }
 
   return { hasPattern: false, message: null, ...base };
+}
+
+// ── Per-symptom trigger insights ──────────────────────────────────────────────
+
+export const SYMPTOM_INSIGHT_LABELS: Record<'ocd' | 'anxiety' | 'rage' | 'tics', string> = {
+  ocd: 'OCD symptoms',
+  anxiety: 'anxiety',
+  rage: 'rage',
+  tics: 'tic activity',
+};
+
+export const TRIGGER_CATEGORY_LABELS: Record<TriggerCategory, string> = {
+  strep_exposure: 'Strep exposures',
+  child_illness: 'Child illness events',
+  household_illness: 'Household illness events',
+  vaccination: 'Vaccinations',
+  high_stress: 'High-stress events',
+  dietary_change: 'Dietary changes',
+  poor_sleep: 'Poor sleep periods',
+  seasonal_weather: 'Seasonal or weather changes',
+  other: 'Trigger events',
+};
+
+const BEHAVIORAL_SYMPTOMS = ['ocd', 'anxiety', 'rage', 'tics'] as const;
+type BehavioralSymptom = (typeof BEHAVIORAL_SYMPTOMS)[number];
+
+export type TriggerInsightLine = {
+  category: TriggerCategory;
+  symptom: BehavioralSymptom;
+  avgDelta: number; // mean delta on 0–5 per-symptom scale
+  count: number;    // number of triggers in this category
+};
+
+/**
+ * Groups triggers by category, then finds which behavioral symptom
+ * shows the largest mean increase in the 7-day window after each trigger.
+ * Returns up to 2 insights sorted by avgDelta descending.
+ */
+export function getTopTriggerCorrelations(
+  logs: SymptomLog[],
+  triggers: TriggerEntry[],
+): TriggerInsightLine[] {
+  if (logs.length < 10 || triggers.length < 2) return [];
+
+  const logMap = new Map(logs.map((l) => [l.date, l]));
+  const MIN_DELTA = 1.0;
+  const MIN_WITH_DATA = 2;
+
+  const byCategory = new Map<TriggerCategory, TriggerEntry[]>();
+  for (const t of triggers) {
+    const arr = byCategory.get(t.category) ?? [];
+    arr.push(t);
+    byCategory.set(t.category, arr);
+  }
+
+  const insights: TriggerInsightLine[] = [];
+
+  for (const [category, catTriggers] of byCategory) {
+    if (catTriggers.length < 2) continue;
+
+    const deltas: Record<BehavioralSymptom, number[]> = {
+      ocd: [], anxiety: [], rage: [], tics: [],
+    };
+
+    for (const t of catTriggers) {
+      const center = parseISO(t.date);
+
+      for (const sym of BEHAVIORAL_SYMPTOMS) {
+        const before: number[] = [];
+        const after: number[] = [];
+
+        for (let i = 1; i <= WINDOW_DAYS; i++) {
+          const bd = format(subDays(center, i), 'yyyy-MM-dd');
+          const ad = format(addDays(center, i), 'yyyy-MM-dd');
+          const bLog = logMap.get(bd);
+          const aLog = logMap.get(ad);
+          if (bLog && bLog[sym] !== null) before.push(bLog[sym] as number);
+          if (aLog && aLog[sym] !== null) after.push(aLog[sym] as number);
+        }
+
+        if (before.length >= 1 && after.length >= 1) {
+          const ba = before.reduce((a, b) => a + b, 0) / before.length;
+          const aa = after.reduce((a, b) => a + b, 0) / after.length;
+          deltas[sym].push(aa - ba);
+        }
+      }
+    }
+
+    let bestSym: BehavioralSymptom | null = null;
+    let bestDelta = MIN_DELTA;
+
+    for (const sym of BEHAVIORAL_SYMPTOMS) {
+      const d = deltas[sym];
+      if (d.length < MIN_WITH_DATA) continue;
+      const mean = d.reduce((a, b) => a + b, 0) / d.length;
+      if (mean > bestDelta) { bestDelta = mean; bestSym = sym; }
+    }
+
+    if (bestSym !== null) {
+      insights.push({ category, symptom: bestSym, avgDelta: bestDelta, count: catTriggers.length });
+    }
+  }
+
+  return insights.sort((a, b) => b.avgDelta - a.avgDelta).slice(0, 2);
+}
+
+// ── Medication before/after insights ─────────────────────────────────────────
+
+export type MedInsightLine = {
+  medName: string;
+  startDate: string; // YYYY-MM-DD
+  beforeAvg: number; // mean per-symptom severity (0–5) in 14 days before
+  afterAvg: number;  // mean per-symptom severity (0–5) in 14 days after
+  improvement: number; // beforeAvg - afterAvg (positive = got better)
+};
+
+const MED_WINDOW = 14;
+const MED_MIN_LOGS = 3;
+const MED_MIN_IMPROVEMENT = 1.0;
+
+/**
+ * For each medication with a startDate, computes average daily severity
+ * (computeDailyScore / 6, giving a 0–5 scale) in the 14 days before and after.
+ * Returns up to 1 result for the medication with the greatest improvement.
+ */
+export function getMedInsights(
+  logs: SymptomLog[],
+  medications: Medication[],
+): MedInsightLine[] {
+  if (logs.length < MED_MIN_LOGS * 2) return [];
+
+  const logMap = new Map(logs.map((l) => [l.date, l]));
+  const results: MedInsightLine[] = [];
+
+  for (const med of medications) {
+    if (!med.startDate) continue;
+    const center = parseISO(med.startDate);
+
+    const beforeVals: number[] = [];
+    const afterVals: number[] = [];
+
+    for (let i = 1; i <= MED_WINDOW; i++) {
+      const bd = format(subDays(center, i), 'yyyy-MM-dd');
+      const ad = format(addDays(center, i), 'yyyy-MM-dd');
+      const bLog = logMap.get(bd);
+      const aLog = logMap.get(ad);
+      if (bLog) beforeVals.push(computeDailyScore(bLog) / 6);
+      if (aLog) afterVals.push(computeDailyScore(aLog) / 6);
+    }
+
+    if (beforeVals.length < MED_MIN_LOGS || afterVals.length < MED_MIN_LOGS) continue;
+
+    const beforeAvg = beforeVals.reduce((a, b) => a + b, 0) / beforeVals.length;
+    const afterAvg = afterVals.reduce((a, b) => a + b, 0) / afterVals.length;
+    const improvement = beforeAvg - afterAvg;
+
+    if (improvement >= MED_MIN_IMPROVEMENT) {
+      results.push({ medName: med.name, startDate: med.startDate, beforeAvg, afterAvg, improvement });
+    }
+  }
+
+  return results.sort((a, b) => b.improvement - a.improvement).slice(0, 1);
 }

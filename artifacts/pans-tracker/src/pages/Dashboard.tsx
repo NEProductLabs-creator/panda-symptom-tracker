@@ -12,6 +12,7 @@ const SymptomChart = lazy(() => import("@/components/charts/SymptomChart"));
 import Sparkline from "@/components/charts/Sparkline";
 import FlareAlert from "@/components/FlareAlert";
 import DailyAffirmation from "@/components/DailyAffirmation";
+import InsightsCard from "@/components/InsightsCard";
 import MilestoneCelebration from "@/components/MilestoneCelebration";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -607,6 +608,8 @@ export default function Dashboard() {
           </div>
         </Link>
       )}
+
+      <InsightsCard logs={logs} medications={medications} />
 
       {/* Range selector — controls both stats and chart */}
       <div className="flex items-center justify-between gap-3">

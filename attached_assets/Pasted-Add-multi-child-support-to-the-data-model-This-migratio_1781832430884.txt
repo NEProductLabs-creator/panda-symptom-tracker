@@ -1,0 +1,49 @@
+Add multi-child support to the data model. This migration creates a children table, threads child_id through every child-scoped table, backfills existing data, and moves journey_stage from user_journey_state to the children table.
+
+Run all schema changes inside a single Supabase migration. Verify on a database branch or staging copy before applying to production.
+
+1. Create a Supabase table named children:
+   - id (text, primary key)
+   - user_id (uuid, not null)
+   - name (text, not null)
+   - date_of_birth (date, nullable)
+   - diagnosis_status (text, not null, default 'undiagnosed', allowed values: 'undiagnosed', 'suspected', 'diagnosed')
+   - journey_stage (text, nullable, allowed values: 'exploring', 'in_crisis', 'tracking')
+   - journey_stage_set_at (timestamptz, nullable)
+   - is_archived (boolean, not null, default false)
+   - sort_order (integer, not null, default 0)
+   - created_at (timestamptz, not null, default now())
+   - updated_at (timestamptz, not null, default now())
+   Enable RLS. Add policies so a user can select, insert, update, and delete only rows where user_id = auth.uid().
+
+2. Add a nullable child_id (text) column to each of these tables:
+   - symptom_logs
+   - parent_observation_summaries
+   - right_now_checklist_state
+   - the existing reports or generated documents table (verify actual table name in the codebase)
+   Add an index on (user_id, child_id) for each.
+
+3. Backfill in a single transaction:
+   - For each distinct user_id appearing in symptom_logs, parent_observation_summaries, right_now_checklist_state, or the reports table, create one row in children with:
+     - id: use the same text id generation strategy used elsewhere in the codebase
+     - user_id: that user
+     - name: if the user has a child name stored on the healthy baseline profile or anywhere else, use it. Otherwise 'My child'.
+     - diagnosis_status: 'diagnosed' if the user has any symptom_logs, 'suspected' if they only have a parent_observation_summary, 'undiagnosed' otherwise
+     - journey_stage: copy from user_journey_state.journey_stage for that user
+     - journey_stage_set_at: copy from user_journey_state.journey_stage_set_at
+     - sort_order: 0
+   - Set child_id on every existing row in symptom_logs, parent_observation_summaries, right_now_checklist_state, and reports to the corresponding user's backfilled child id.
+
+4. After the backfill verifies clean, alter child_id to NOT NULL on symptom_logs, parent_observation_summaries, right_now_checklist_state, and reports.
+
+5. Drop journey_stage and journey_stage_set_at from user_journey_state. Keep onboarding_completed and timestamps.
+
+6. Add React Query hooks in the hooks directory:
+   - useChildren returns the current user's non-archived children sorted by sort_order.
+   - useActiveChild returns the currently active child object, derived from a localStorage key panstracker.activeChildId. If the stored id is not present in the children list, default to the first child by sort_order.
+   - setActiveChild(childId) writes to localStorage and triggers a refresh of all child-scoped queries.
+   - useAddChild, useUpdateChild, useArchiveChild, useUnarchiveChild mutations write to the children table and invalidate useChildren.
+
+Do not change any UI in this prompt. Subsequent prompts consume these hooks.
+
+Print a short report at the end of the migration: how many children rows were created, and how many rows were backfilled in each child-scoped table.

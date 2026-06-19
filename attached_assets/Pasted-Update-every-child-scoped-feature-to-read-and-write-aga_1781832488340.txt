@@ -1,0 +1,39 @@
+Update every child-scoped feature to read and write against the active child only.
+
+In every place below, use activeChildId from useActiveChild() to scope queries and writes.
+
+1. Symptom logging (/log) and Dashboard (/dashboard)
+   - All symptom_logs queries filter by child_id = activeChildId.
+   - New log entries write child_id = activeChildId.
+   - Dashboard charts, history view, date pickers, and trend calculations all use the active child's data only.
+   - Empty state when the active child has no logs yet: "No entries yet for [name]. Start logging to see patterns."
+
+2. Right Now checklist (/right-now/today)
+   - right_now_checklist_state reads and writes scope to child_id = activeChildId.
+   - Per-day per-child completion state.
+
+3. Parent observation summaries (/learn/self-check)
+   - Reads and writes scope to child_id = activeChildId.
+   - Previous summary list filters to active child.
+
+4. Reports (/advocate/reports)
+   - Wire the existing childId parameter on the report generator to activeChildId.
+   - PDF filename: pans-report-{childFirstName}-{visitDate}.pdf.
+   - Inside the PDF, reference the child by first name in headings (for example: "Symptom timeline for Mia").
+
+5. Copy throughout the app
+   - Replace "your child" with the active child's first name where natural. Examples:
+     - Dashboard heading: "How is [name] doing?"
+     - Right Now heading: "We are right here with you and [name]."
+     - Log entry confirmation: "Saved for [name]."
+   - Fall back to "your child" only if name is somehow missing.
+
+6. Page header chrome
+   - On every child-scoped page, render a small "Viewing: [child name]" pill near the page title. Tapping it opens the child switcher.
+   - Hide this pill on /learn (mostly child-agnostic education) and on /settings/children.
+
+7. Analytics
+   - Every existing child-scoped PostHog event gains a child_id property.
+   - On every page view event, include active_child_id.
+
+Single-child experience must not regress. With one child, the switcher reads as a calm "Viewing: [name]" pill with no extra interaction. With two or more children, it becomes a clickable selector.

@@ -183,9 +183,42 @@ export type JourneyStage = 'exploring' | 'in_crisis' | 'tracking';
 
 export type JourneyState = {
   user_id: string;
-  journey_stage: JourneyStage | null;
-  journey_stage_set_at: string | null; // ISO timestamp
+  /** @deprecated Moved to children.journey_stage after migration 010. May be absent. */
+  journey_stage?: JourneyStage | null;
+  /** @deprecated Moved to children.journey_stage_set_at after migration 010. May be absent. */
+  journey_stage_set_at?: string | null; // ISO timestamp
   onboarding_completed: boolean;
   created_at: string; // ISO timestamp
   updated_at: string; // ISO timestamp
 };
+
+// ─── Children ─────────────────────────────────────────────────────────────────
+
+export type DiagnosisStatus = 'undiagnosed' | 'suspected' | 'diagnosed';
+
+export type Child = {
+  id: string;
+  user_id: string;
+  name: string;
+  date_of_birth: string | null; // YYYY-MM-DD
+  diagnosis_status: DiagnosisStatus;
+  journey_stage: JourneyStage | null;
+  journey_stage_set_at: string | null; // ISO timestamp
+  is_archived: boolean;
+  sort_order: number;
+  created_at: string; // ISO timestamp
+  updated_at: string; // ISO timestamp
+};
+
+export type CreateChildInput = {
+  id: string;
+  name: string;
+  date_of_birth?: string | null;
+  diagnosis_status: DiagnosisStatus;
+  journey_stage?: JourneyStage | null;
+  sort_order?: number;
+};
+
+export type UpdateChildInput = Partial<
+  Pick<Child, 'name' | 'date_of_birth' | 'diagnosis_status' | 'journey_stage' | 'journey_stage_set_at' | 'sort_order' | 'is_archived'>
+>;

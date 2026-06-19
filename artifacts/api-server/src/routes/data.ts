@@ -370,7 +370,9 @@ router.patch('/journey-state', async (req, res) => {
   const db = requireSupabase();
   const userId = uid(req);
   try {
-    const allowed = ['journey_stage', 'journey_stage_set_at', 'onboarding_completed'] as const;
+    // journey_stage / journey_stage_set_at moved to the children table (migration 010).
+    // Only onboarding_completed is still on user_journey_state.
+    const allowed = ['onboarding_completed'] as const;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     for (const key of allowed) {
       if (key in req.body) patch[key] = req.body[key];
@@ -382,6 +384,96 @@ router.patch('/journey-state', async (req, res) => {
     if (error) throw error;
     res.status(204).send();
   } catch (e) { err(res, e, 'PATCH /journey-state'); }
+});
+
+// ── Children ──────────────────────────────────────────────────────────────────
+
+router.get('/children', async (req, res) => {
+  const db = requireSupabase();
+  try {
+    const { data, error } = await db
+      .from('children')
+      .select('*')
+      .eq('user_id', uid(req))
+      .order('sort_order', { ascending: true });
+    if (error) throw error;
+    res.json(data ?? []);
+  } catch (e) { err(res, e, 'GET /children'); }
+});
+
+router.post('/children', async (req, res) => {
+  const db = requireSupabase();
+  const userId = uid(req);
+  try {
+    const body = req.body as {
+      id: string;
+      name: string;
+      date_of_birth?: string | null;
+      diagnosis_status: string;
+      journey_stage?: string | null;
+      sort_order?: number;
+    };
+    const now = new Date().toISOString();
+    const { data, error } = await db
+      .from('children')
+      .insert({
+        id: body.id,
+        user_id: userId,
+        name: body.name,
+        date_of_birth: body.date_of_birth ?? null,
+        diagnosis_status: body.diagnosis_status ?? 'undiagnosed',
+        journey_stage: body.journey_stage ?? null,
+        journey_stage_set_at: body.journey_stage ? now : null,
+        sort_order: body.sort_order ?? 0,
+        created_at: now,
+        updated_at: now,
+      })
+      .select()
+      .single();
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (e) { err(res, e, 'POST /children'); }
+});
+
+router.put('/children/:id', async (req, res) => {
+  const db = requireSupabase();
+  const userId = uid(req);
+  try {
+    const allowed = [
+      'name', 'date_of_birth', 'diagnosis_status',
+      'journey_stage', 'journey_stage_set_at', 'sort_order', 'is_archived',
+    ] as const;
+    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+    for (const key of allowed) {
+      if (key in req.body) patch[key] = req.body[key];
+    }
+    // Auto-set journey_stage_set_at when journey_stage changes
+    if ('journey_stage' in req.body && !('journey_stage_set_at' in req.body)) {
+      patch['journey_stage_set_at'] = req.body.journey_stage ? new Date().toISOString() : null;
+    }
+    const { data, error } = await db
+      .from('children')
+      .update(patch)
+      .eq('id', req.params.id)
+      .eq('user_id', userId)
+      .select()
+      .single();
+    if (error) throw error;
+    res.json(data);
+  } catch (e) { err(res, e, 'PUT /children/:id'); }
+});
+
+router.delete('/children/:id', async (req, res) => {
+  const db = requireSupabase();
+  try {
+    const { error } = await db
+      .from('children')
+      .update({ is_archived: true, updated_at: new Date().toISOString() })
+      .eq('id', req.params.id)
+      .eq('user_id', uid(req));
+    if (error) throw error;
+    res.status(204).send();
+  } catch (e) { err(res, e, 'DELETE /children/:id'); }
 });
 
 // ── Right Now checklist state ─────────────────────────────────────────────────
@@ -444,6 +536,7 @@ router.delete('/all', async (req, res) => {
   const userId = uid(req);
 
   const tables = [
+    'children',
     'symptom_logs',
     'medications',
     'med_library',

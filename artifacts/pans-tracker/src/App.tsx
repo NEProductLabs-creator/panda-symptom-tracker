@@ -7,7 +7,7 @@ import { AuthProvider, useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { openExternal } from "@/lib/platform";
 import { Toaster } from "@/components/ui/toaster";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Activity } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
@@ -128,6 +128,35 @@ function GoogleButton({ label }: { label: string }) {
       <GoogleIcon />
       {loading ? "Redirecting…" : label}
     </button>
+  );
+}
+
+function AppleIcon() {
+  return (
+    <svg width="16" height="19" viewBox="0 0 814 1000" aria-hidden fill="currentColor">
+      <path d="M788.1 340.9c-5.8 4.5-108.2 62.2-108.2 190.5 0 148.4 130.3 200.9 134.2 202.2-.6 3.2-20.7 71.9-68.7 141.9-42.8 61.6-87.5 123.1-155.5 123.1s-85.5-39.5-164-39.5c-76 0-103.7 40.8-165.9 40.8s-105-32.8-155.5-127.4C46.7 790.7 0 663 0 541.8c0-207.5 135.4-317.5 269-317.5 70.7 0 129.5 46.4 174.8 46.4 43.4 0 112.6-49.7 192-49.7 30.5 0 108.3 2.6 168.1 87.3zm-126.5-213.4c33.3-40.8 57.3-97.1 57.3-153.4 0-7.7-.7-15.4-2-22.4-53.7 2-116.8 35.9-154.2 80.7C536.5 59.6 510.7 115 510.7 171.3c0 6.4.6 12.8 1.9 18.5 3.2.5 8.4 1.3 13.6 1.3 47.5 0 107.1-32.3 135.4-63.6z" />
+    </svg>
+  );
+}
+
+function AppleButton({ label }: { label: string }) {
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        {/* span wrapper needed: tooltip doesn't fire on disabled buttons directly */}
+        <span className="block w-full cursor-not-allowed">
+          <button
+            type="button"
+            disabled
+            className="w-full h-11 rounded-lg bg-[#000] text-white flex items-center justify-center gap-2 text-sm font-medium opacity-40 pointer-events-none"
+          >
+            <AppleIcon />
+            {label}
+          </button>
+        </span>
+      </TooltipTrigger>
+      <TooltipContent side="top">Coming soon</TooltipContent>
+    </Tooltip>
   );
 }
 
@@ -301,6 +330,7 @@ function SignInPage() {
             </p>
           </div>
           <GoogleButton label="Continue with Google" />
+          <AppleButton label="Continue with Apple" />
           <div className="flex items-center gap-3">
             <div className="h-px bg-border flex-1" />
             <span className="text-xs text-muted-foreground">or</span>
@@ -490,6 +520,7 @@ function SignUpPage() {
             </p>
           </div>
           <GoogleButton label="Sign up with Google" />
+          <AppleButton label="Sign up with Apple" />
           <div className="flex items-center gap-3">
             <div className="h-px bg-border flex-1" />
             <span className="text-xs text-muted-foreground">or</span>

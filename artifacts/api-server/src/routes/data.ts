@@ -384,6 +384,44 @@ router.patch('/journey-state', async (req, res) => {
   } catch (e) { err(res, e, 'PATCH /journey-state'); }
 });
 
+// ── Right Now checklist state ─────────────────────────────────────────────────
+
+router.get('/right-now-checklist', async (req, res) => {
+  const db = requireSupabase();
+  const userId = uid(req);
+  const date = (req.query.date as string) ?? new Date().toISOString().split('T')[0];
+  try {
+    const { data, error } = await db
+      .from('right_now_checklist_state')
+      .select('action_key, completed')
+      .eq('user_id', userId)
+      .eq('date', date);
+    if (error) throw error;
+    res.json(data ?? []);
+  } catch (e) { err(res, e, 'GET /right-now-checklist'); }
+});
+
+router.post('/right-now-checklist', async (req, res) => {
+  const db = requireSupabase();
+  const userId = uid(req);
+  try {
+    const { date, action_key, completed } = req.body as {
+      date: string;
+      action_key: string;
+      completed: boolean;
+    };
+    const id = `${userId}_${date}_${action_key}`;
+    const { error } = await db
+      .from('right_now_checklist_state')
+      .upsert(
+        { id, user_id: userId, date, action_key, completed },
+        { onConflict: 'user_id,date,action_key' },
+      );
+    if (error) throw error;
+    res.status(200).json({ ok: true });
+  } catch (e) { err(res, e, 'POST /right-now-checklist'); }
+});
+
 // ── Parent observation summaries (Learn → Self-Check) ────────────────────────
 
 router.post('/parent-observation', async (req, res) => {

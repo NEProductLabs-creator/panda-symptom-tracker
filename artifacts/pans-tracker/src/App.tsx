@@ -24,6 +24,10 @@ import LearnGlossary from "@/pages/learn/Glossary";
 import LearnFindProvider from "@/pages/learn/FindProvider";
 import LearnSelfCheck from "@/pages/learn/SelfCheck";
 import RightNow from "@/pages/RightNow";
+import RightNowReframe from "@/pages/right-now/Reframe";
+import RightNowToday from "@/pages/right-now/Today";
+import RightNowDeEscalation from "@/pages/right-now/DeEscalation";
+import RightNowERGuide from "@/pages/right-now/ERGuide";
 import Advocate from "@/pages/Advocate";
 import Reports from "@/pages/Reports";
 import Intro from "@/pages/Intro";
@@ -681,6 +685,10 @@ function Router() {
         <Route path="/learn/find-provider" component={LearnFindProvider} />
         <Route path="/learn/self-check" component={LearnSelfCheck} />
         <Route path="/right-now" component={RightNow} />
+        <Route path="/right-now/reframe" component={RightNowReframe} />
+        <Route path="/right-now/today" component={RightNowToday} />
+        <Route path="/right-now/de-escalation" component={RightNowDeEscalation} />
+        <Route path="/right-now/er-guide" component={RightNowERGuide} />
         <Route path="/advocate" component={Advocate} />
         <Route path="/reports" component={Reports} />
         <Route path="/onboarding" component={Onboarding} />

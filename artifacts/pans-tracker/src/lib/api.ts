@@ -7,7 +7,7 @@
 import type {
   SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline,
   PTECLog, FlareEvent, TriggerEntry, HouseholdIllness, WellbeingLog,
-  JourneyState, Child, CreateChildInput, UpdateChildInput,
+  JourneyState, Child, CreateChildInput, UpdateChildInput, LabResult,
 } from './types';
 
 const BASE = '/api/data';
@@ -110,6 +110,13 @@ export function createApiClient(getToken: () => Promise<string | null>) {
       create: (child: CreateChildInput) => req<Child>('POST', '/children', child),
       update: (id: string, patch: UpdateChildInput) => req<Child>('PUT', `/children/${id}`, patch),
       archive: (id: string) => req<void>('DELETE', `/children/${id}`),
+    },
+
+    // ── Lab Results ──────────────────────────────────────────────────────────
+    labs: {
+      getAll: () => req<LabResult[]>('GET', '/labs'),
+      save: (result: LabResult) => req<void>('POST', '/labs', result),
+      delete: (id: string) => req<void>('DELETE', `/labs/${id}`),
     },
 
     // ── Account deletion ─────────────────────────────────────────────────────

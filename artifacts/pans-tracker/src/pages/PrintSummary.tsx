@@ -1,6 +1,7 @@
 import { format, subDays } from "date-fns";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedications } from "@/hooks/useMedications";
+import { useLabResults } from "@/hooks/useLabResults";
 import { Medication, MedicationType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -27,6 +28,7 @@ const MED_TYPE_LABELS: Record<MedicationType, string> = {
 export default function PrintSummary() {
   const { logs } = useSymptomLogs();
   const { medications } = useMedications();
+  const { entries: labEntries } = useLabResults();
 
   const today = format(new Date(), "yyyy-MM-dd");
   const thirtyDaysAgo = format(subDays(new Date(), 29), "yyyy-MM-dd");
@@ -165,6 +167,47 @@ export default function PrintSummary() {
             </>
           )}
         </div>
+
+        {/* Lab results section */}
+        {labEntries.length > 0 && (
+          <div className="mb-10 print-section">
+            <h2 className="text-[11px] font-semibold text-foreground uppercase tracking-widest border-b border-border pb-2 mb-4" style={{ fontFamily: "Newsreader, serif", letterSpacing: "0.12em" }}>
+              Lab Results
+            </h2>
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border">
+                  <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Date</th>
+                  <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Test</th>
+                  <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Result</th>
+                  <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Reference</th>
+                  <th className="text-left py-2 pr-4 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Lab</th>
+                  <th className="text-left py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide">Notes</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[...labEntries]
+                  .sort((a, b) => a.date.localeCompare(b.date))
+                  .map((lab) => (
+                    <tr key={lab.id} className="border-b border-border/50">
+                      <td className="py-2.5 pr-4 text-muted-foreground whitespace-nowrap text-xs">
+                        {format(new Date(lab.date + "T12:00:00"), "MMM d, yyyy")}
+                      </td>
+                      <td className="py-2.5 pr-4 font-medium text-foreground">{lab.test_name}</td>
+                      <td className="py-2.5 pr-4 text-foreground">
+                        {lab.result_value != null
+                          ? `${lab.result_value}${lab.result_unit ? ` ${lab.result_unit}` : ""}`
+                          : "—"}
+                      </td>
+                      <td className="py-2.5 pr-4 text-muted-foreground text-xs">{lab.reference_range || "—"}</td>
+                      <td className="py-2.5 pr-4 text-muted-foreground text-xs">{lab.lab_name || "—"}</td>
+                      <td className="py-2.5 text-muted-foreground text-xs">{lab.notes || "—"}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
 
         {/* Symptom log table */}
         <div className="mb-10">

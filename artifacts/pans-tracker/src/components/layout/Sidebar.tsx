@@ -27,6 +27,7 @@ import {
   CloudOff,
   Loader2,
   Compass,
+  FlaskConical,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -77,6 +78,7 @@ const PRIMARY_NAV: NavSection[] = [
     children: [
       { href: "/medications", label: "Medications", icon: Pill },
       { href: "/triggers", label: "Triggers", icon: Zap },
+      { href: "/labs", label: "Lab Results", icon: FlaskConical },
     ],
   },
   {
@@ -147,7 +149,7 @@ const ALL_NAV = [...PRIMARY_NAV, ...SECONDARY_NAV, SETTINGS_SECTION];
 const MOBILE_TABS: MobileTab[] = [
   { href: "/learn", label: "Learn", icon: BookOpen, matchPaths: ["/learn"] },
   { href: "/right-now", label: "Right Now", icon: LifeBuoy, matchPaths: ["/right-now"] },
-  { href: "/log", label: "Log", icon: NotebookPen, matchPaths: ["/log", "/medications", "/triggers", "/ptec"] },
+  { href: "/log", label: "Log", icon: NotebookPen, matchPaths: ["/log", "/medications", "/triggers", "/ptec", "/labs"] },
   {
     href: "/reports",
     label: "Reports",

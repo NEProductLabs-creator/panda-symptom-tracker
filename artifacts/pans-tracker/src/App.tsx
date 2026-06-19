@@ -45,6 +45,7 @@ import Baseline from "@/pages/Baseline";
 import PTECCheckin from "@/pages/PTECCheckin";
 import TriggerLogPage from "@/pages/TriggerLog";
 import Medications from "@/pages/Medications";
+import Labs from "@/pages/Labs";
 import SchoolHub from "@/pages/SchoolHub";
 import WellbeingCheckin from "@/pages/WellbeingCheckin";
 import HopeBoard from "@/pages/HopeBoard";
@@ -713,6 +714,7 @@ function Router() {
         <Route path="/baseline" component={Baseline} />
         <Route path="/triggers" component={TriggerLogPage} />
         <Route path="/medications" component={Medications} />
+        <Route path="/labs" component={Labs} />
         <Route path="/school" component={SchoolHub} />
         <Route path="/wellbeing" component={WellbeingCheckin} />
         <Route path="/hope" component={HopeBoard} />

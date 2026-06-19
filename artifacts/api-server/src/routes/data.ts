@@ -553,6 +553,72 @@ router.post('/parent-observation', async (req, res) => {
   } catch (e) { err(res, e, 'POST /parent-observation'); }
 });
 
+// ── Lab Results ────────────────────────────────────────────────────────────────
+
+router.get('/labs', async (req, res) => {
+  try {
+    const db = requireSupabase();
+    const userId = uid(req);
+    const { data, error } = await db
+      .from('lab_results')
+      .select('id, child_id, date, test_name, result_value, result_unit, reference_range, lab_name, notes, updated_at')
+      .eq('user_id', userId)
+      .order('date', { ascending: false });
+    if (error) throw error;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const results = (data ?? []).map((r: any) => ({
+      id: r.id,
+      child_id: r.child_id,
+      date: r.date,
+      test_name: r.test_name,
+      result_value: r.result_value,
+      result_unit: r.result_unit,
+      reference_range: r.reference_range,
+      lab_name: r.lab_name,
+      notes: r.notes,
+      updatedAt: r.updated_at,
+    }));
+    res.json(results);
+  } catch (e) { err(res, e, 'GET /labs'); }
+});
+
+router.post('/labs', async (req, res) => {
+  try {
+    const db = requireSupabase();
+    const userId = uid(req);
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const body = req.body as any;
+    const { error } = await db.from('lab_results').upsert({
+      id: body.id,
+      user_id: userId,
+      child_id: body.child_id,
+      date: body.date,
+      test_name: body.test_name,
+      result_value: body.result_value ?? null,
+      result_unit: body.result_unit ?? null,
+      reference_range: body.reference_range ?? null,
+      lab_name: body.lab_name ?? null,
+      notes: body.notes ?? null,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'id' });
+    if (error) throw error;
+    res.status(204).send();
+  } catch (e) { err(res, e, 'POST /labs'); }
+});
+
+router.delete('/labs/:id', async (req, res) => {
+  try {
+    const db = requireSupabase();
+    const { error } = await db
+      .from('lab_results')
+      .delete()
+      .eq('id', req.params.id)
+      .eq('user_id', uid(req));
+    if (error) throw error;
+    res.status(204).send();
+  } catch (e) { err(res, e, 'DELETE /labs/:id'); }
+});
+
 // ── Delete all data for user (account deletion) ───────────────────────────────
 
 router.delete('/all', async (req, res) => {
@@ -571,6 +637,7 @@ router.delete('/all', async (req, res) => {
     'trigger_log',
     'household_health',
     'wellbeing_logs',
+    'lab_results',
     'parent_observation_summaries',
     'right_now_checklist_state',
     'shares',

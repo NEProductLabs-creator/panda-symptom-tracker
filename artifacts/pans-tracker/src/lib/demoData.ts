@@ -1,6 +1,6 @@
 // DEMO_DATA: update this dataset to reflect latest app features before sharing portfolio
 
-import type { SymptomLog, ChildBaseline, Medication, MedLibraryItem, PTECLog, WellbeingLog, JourneyState, Child } from "@/lib/types";
+import type { SymptomLog, ChildBaseline, Medication, MedLibraryItem, PTECLog, WellbeingLog, JourneyState, Child, LabResult } from "@/lib/types";
 import { computePTECTotal } from "@/lib/ptec";
 import type { ReportHistoryItem } from "@/lib/reportHistory";
 
@@ -756,3 +756,44 @@ export const DEMO_REPORT_HISTORY: Record<"exploring" | "in_crisis" | "tracking" 
     },
   ],
 };
+
+// ── Lab Results (tracking scenario: Avery's ASO trend Oct–Jan) ────────────────
+
+export const DEMO_LAB_RESULTS: LabResult[] = [
+  {
+    id: "demo-lab-1",
+    child_id: "demo-child-avery",
+    date: "2025-10-15",
+    test_name: "ASO",
+    result_value: 800,
+    result_unit: "IU/mL",
+    reference_range: "< 200",
+    lab_name: "Quest Diagnostics",
+    notes: "Elevated — starting prophylactic amoxicillin",
+    updatedAt: "2025-10-15T12:00:00.000Z",
+  },
+  {
+    id: "demo-lab-2",
+    child_id: "demo-child-avery",
+    date: "2025-11-26",
+    test_name: "ASO",
+    result_value: 450,
+    result_unit: "IU/mL",
+    reference_range: "< 200",
+    lab_name: "Quest Diagnostics",
+    notes: "6 weeks on amoxicillin — trending down",
+    updatedAt: "2025-11-26T12:00:00.000Z",
+  },
+  {
+    id: "demo-lab-3",
+    child_id: "demo-child-avery",
+    date: "2026-01-21",
+    test_name: "ASO",
+    result_value: 210,
+    result_unit: "IU/mL",
+    reference_range: "< 200",
+    lab_name: "Quest Diagnostics",
+    notes: "Near normal — continuing prophylactic dose",
+    updatedAt: "2026-01-21T12:00:00.000Z",
+  },
+];

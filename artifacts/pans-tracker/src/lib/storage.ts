@@ -1,4 +1,4 @@
-import { SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline, PTECLog, FlareEvent, TriggerEntry, HouseholdIllness } from './types';
+import { SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline, PTECLog, FlareEvent, TriggerEntry, HouseholdIllness, LabResult } from './types';
 
 export const DEMO_CHILDREN_KEY = 'pans_tracker_demo_children';
 
@@ -140,5 +140,14 @@ export const storage = {
 
   deleteHouseholdIllness: (id: string) => {
     storage.saveHouseholdHealth(storage.getHouseholdHealth().filter((h) => h.id !== id));
+  },
+
+  getLabResults: (): LabResult[] => {
+    const data = localStorage.getItem('labResults');
+    return data ? JSON.parse(data) : [];
+  },
+
+  saveLabResults: (results: LabResult[]) => {
+    localStorage.setItem('labResults', JSON.stringify(results));
   },
 };

@@ -223,3 +223,31 @@ export type CreateChildInput = {
 export type UpdateChildInput = Partial<
   Pick<Child, 'name' | 'date_of_birth' | 'diagnosis_status' | 'journey_stage' | 'journey_stage_set_at' | 'sort_order' | 'is_archived'>
 >;
+
+// ─── Lab Results ──────────────────────────────────────────────────────────────
+
+export type LabTestName =
+  | 'ASO'
+  | 'Anti-DNase B'
+  | 'CRP'
+  | 'ESR'
+  | 'Mycoplasma IgG'
+  | 'Mycoplasma IgM'
+  | 'Other';
+
+export const LAB_TEST_NAMES: LabTestName[] = [
+  'ASO', 'Anti-DNase B', 'CRP', 'ESR', 'Mycoplasma IgG', 'Mycoplasma IgM', 'Other',
+];
+
+export type LabResult = {
+  id: string;
+  child_id: string;
+  date: string; // YYYY-MM-DD
+  test_name: LabTestName;
+  result_value?: number | null;
+  result_unit?: string;
+  reference_range?: string;
+  lab_name?: string;
+  notes?: string;
+  updatedAt?: string; // ISO timestamp — used for last-write-wins sync merge
+};

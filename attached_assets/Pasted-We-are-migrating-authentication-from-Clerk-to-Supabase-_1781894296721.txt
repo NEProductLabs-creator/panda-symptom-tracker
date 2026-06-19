@@ -1,0 +1,17 @@
+We are migrating authentication from Clerk to Supabase Auth so the app works correctly inside a Capacitor native wrapper. Clerk's React SDK is built for browser origins and breaks under capacitor://localhost, especially for Google OAuth.
+
+Please do the following across artifacts/pans-tracker and artifacts/api-server:
+
+
+Install @supabase/supabase-js and @supabase/auth-helpers-react in artifacts/pans-tracker. Remove @clerk/react and @clerk/themes from both packages.
+Create artifacts/pans-tracker/src/lib/supabaseClient.ts that exports a singleton Supabase client using VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY. Configure auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true, flowType: 'pkce' } so the same code works in web and native.
+Replace ClerkProvider in App.tsx with a SessionContextProvider from @supabase/auth-helpers-react. Replace useUser, useAuth, useClerk, and useSignUp call sites with Supabase equivalents (useSession, useUser, useSupabaseClient). The user ID becomes session.user.id (a UUID).
+Build new SignIn and SignUp pages using Supabase Auth UI or a custom form with email plus password and Google OAuth via supabase.auth.signInWithOAuth({ provider: 'google' }). Use redirectTo: window.location.origin + '/auth/callback' for now. Add an /auth/callback route that calls supabase.auth.exchangeCodeForSession and routes to the dashboard.
+In artifacts/api-server, replace the Clerk JWT middleware in routes/data.ts with Supabase JWT verification using SUPABASE_JWT_SECRET. Use the jose library to verify the bearer token, extract sub as the user ID, and attach it to req.userId.
+Update artifacts/pans-tracker/src/lib/api.ts so getToken returns (await supabase.auth.getSession()).data.session?.access_token instead of the Clerk token.
+Write a one-time migration script in scripts/ that maps existing Clerk user IDs (format user_2xyz...) to the new Supabase UUIDs. Read all rows where user_id is in Clerk format, look up the matching email in Supabase auth.users, and update user_id to the new UUID. Wrap in a transaction. Print a summary.
+Update replit.md Stack section to say "Supabase Auth" instead of "Clerk."
+Remove VITE_CLERK_PUBLISHABLE_KEY and VITE_CLERK_PROXY_URL from any docs and replace with VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY, SUPABASE_JWT_SECRET.
+
+
+Do not change the symptom logging data model or any UI outside the auth pages. Keep the existing TermsGate flow.

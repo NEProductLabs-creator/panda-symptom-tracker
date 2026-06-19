@@ -185,10 +185,31 @@ const notificationsTestLimiter = rateLimit({
   message: { error: "Too many requests — please slow down." },
 });
 
+// Push token registration/unregistration — low-frequency but hits Supabase on
+// every call. 20 req/min is generous for normal device registration patterns
+// while preventing token-flooding abuse.
+const pushLimiter = rateLimit({
+  ...rateLimitDefaults,
+  windowMs: 60 * 1000,
+  limit: 20,
+  message: { error: "Too many requests — please slow down." },
+});
+
+// Web-push subscription management — covers subscribe and unsubscribe.
+// The tighter notificationsTestLimiter (5/min) stacks on top of this for /test.
+const notificationsLimiter = rateLimit({
+  ...rateLimitDefaults,
+  windowMs: 60 * 1000,
+  limit: 20,
+  message: { error: "Too many requests — please slow down." },
+});
+
 app.use("/api/data", dataLimiter);
 app.use("/api/shares", dataLimiter);
 app.use("/api/terms/agree", termsLimiter);
+app.use("/api/notifications", notificationsLimiter);
 app.use("/api/notifications/test", notificationsTestLimiter);
+app.use("/api/push", pushLimiter);
 
 // ── Routes ────────────────────────────────────────────────────────────────────
 

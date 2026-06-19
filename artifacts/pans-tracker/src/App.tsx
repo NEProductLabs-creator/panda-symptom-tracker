@@ -15,6 +15,7 @@ import MedLibrary from "@/pages/MedLibrary";
 import PrintSummary from "@/pages/PrintSummary";
 import ExportData from "@/pages/ExportData";
 import OnboardingStart from "@/pages/OnboardingStart";
+import OnboardingAddChild from "@/pages/OnboardingAddChild";
 import Learn from "@/pages/Learn";
 import LearnOverview from "@/pages/learn/Overview";
 import LearnSuddenOnset from "@/pages/learn/SuddenOnset";
@@ -60,6 +61,7 @@ import InstallPrompt from "@/components/InstallPrompt";
 import OfflineBanner from "@/components/OfflineBanner";
 import { getOnboardingComplete } from "@/hooks/useAppSettings";
 import { useJourneyState } from "@/hooks/useJourneyState";
+import { useChildren } from "@/hooks/useChildren";
 import SetupWizard, { SETUP_WIZARD_FLAG } from "@/components/SetupWizard";
 import { storage } from "@/lib/storage";
 
@@ -574,6 +576,7 @@ function Router() {
   const [location, navigate] = useLocation();
   const { status: termsStatus, recordAgreement } = useTermsStatus();
   const { journeyState, isLoading: journeyStateLoading, isError: journeyStateError } = useJourneyState();
+  const { data: children, isLoading: childrenLoading } = useChildren();
 
   const [showWizard, setShowWizard] = useState(() => (
     localStorage.getItem(SETUP_WIZARD_FLAG) !== "1" &&
@@ -602,7 +605,7 @@ function Router() {
     }
 
     if ((isSignedIn || isDemoMode) && location === "/sign-in") {
-      navigate(getOnboardingComplete() ? "/" : "/onboarding");
+      navigate("/");
       return;
     }
 
@@ -618,6 +621,7 @@ function Router() {
   }, [isSignedIn]);
   useEffect(() => {
     if (!isLoaded || !isSignedIn || isDemoMode) return;
+    if (childrenLoading || !children?.length) return; // no children yet — gate handles it
     if (journeyStateLoading || journeyStateError || !journeyState) return;
     if (journeyState.journey_stage === null) return; // handled by journey gate
     if (postLoginLanded.current) return;
@@ -625,18 +629,25 @@ function Router() {
     if (journeyState.journey_stage === "exploring") navigate("/learn");
     else if (journeyState.journey_stage === "in_crisis") navigate("/right-now");
     // 'tracking' → stays on '/' (dashboard)
-  }, [isLoaded, isSignedIn, isDemoMode, journeyStateLoading, journeyStateError, journeyState]);
+  }, [isLoaded, isSignedIn, isDemoMode, childrenLoading, children, journeyStateLoading, journeyStateError, journeyState]);
 
-  // Journey gate: redirect to /onboarding/start if journey_stage is null
+  // Onboarding gate: per-child journey gating
+  // 1. No children yet → /onboarding/add-child
+  // 2. Active child has no journey_stage → /onboarding/start
   useEffect(() => {
     if (!isLoaded || !isSignedIn || isDemoMode) return;
-    if (journeyStateLoading || journeyStateError || !journeyState) return;
-    if (journeyState.journey_stage !== null) return;
+    if (childrenLoading) return;
     // Already on an onboarding or public route — don't loop
     const skip = ["/onboarding", "/sign-in", "/sign-up", "/about", "/print"];
     if (skip.some((r) => location === r || location.startsWith(r + "/"))) return;
+    if (!children?.length) {
+      navigate("/onboarding/add-child");
+      return;
+    }
+    if (journeyStateLoading || journeyStateError || !journeyState) return;
+    if (journeyState.journey_stage !== null) return;
     navigate("/onboarding/start");
-  }, [isLoaded, isSignedIn, isDemoMode, journeyStateLoading, journeyStateError, journeyState, location]);
+  }, [isLoaded, isSignedIn, isDemoMode, childrenLoading, children, journeyStateLoading, journeyStateError, journeyState, location]);
 
   // Unauthenticated users at root → landing page (show LoadingScreen while Clerk initialises)
   if (!isSignedIn && !isDemoMode && location === "/") {
@@ -702,6 +713,7 @@ function Router() {
         <Route path="/advocate/providers" component={AdvocateProviders} />
         <Route path="/reports" component={Reports} />
         <Route path="/onboarding" component={Onboarding} />
+        <Route path="/onboarding/add-child" component={OnboardingAddChild} />
         <Route path="/onboarding/start" component={OnboardingStart} />
         <Route path="/settings" component={Settings} />
         <Route path="/about" component={Intro} />

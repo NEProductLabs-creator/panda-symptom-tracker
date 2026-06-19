@@ -4,6 +4,7 @@ import { motion, type Variants, type Transition } from "framer-motion";
 import { BookOpen, Zap, BarChart2 } from "lucide-react";
 import { track } from "@/lib/analytics";
 import { useJourneyState } from "@/hooks/useJourneyState";
+import { useActiveChild } from "@/hooks/useActiveChild";
 import type { JourneyStage } from "@/lib/types";
 
 // ─── Animation variants ───────────────────────────────────────────────────────
@@ -63,15 +64,22 @@ const OPTIONS: JourneyOption[] = [
 
 export default function OnboardingStart() {
   const [, navigate] = useLocation();
-  const { setJourneyStage, isSettingStage } = useJourneyState();
+  const { setJourneyStage, completeOnboarding, isSettingStage } = useJourneyState();
+  const activeChild = useActiveChild();
   const [selected, setSelected] = useState<JourneyStage | null>(null);
+
+  const childName = activeChild?.name ?? null;
 
   function handleSelect(option: JourneyOption) {
     if (isSettingStage || selected !== null) return;
     setSelected(option.stage);
-    // Optimistic navigation — mutation fires in background
+    // Optimistic navigation — both mutations fire in background
     setJourneyStage(option.stage);
-    track("onboarding_journey_stage_selected", { stage: option.stage });
+    completeOnboarding();
+    track("onboarding_journey_stage_selected", {
+      stage: option.stage,
+      child_id: activeChild?.id ?? null,
+    });
     navigate(option.destination);
   }
 
@@ -92,7 +100,9 @@ export default function OnboardingStart() {
             className="text-3xl sm:text-4xl font-bold text-foreground leading-tight"
             style={{ fontFamily: "Fraunces, serif" }}
           >
-            Where are you right now?
+            {childName
+              ? `Where are you with ${childName} right now?`
+              : "Where are you right now?"}
           </h1>
           <p
             className="mt-3 text-base"

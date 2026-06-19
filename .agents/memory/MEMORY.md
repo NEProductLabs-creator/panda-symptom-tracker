@@ -1,2 +1,3 @@
 - [Framer Motion v12 Variants typing](framer-motion-v12-variants.md) — `ease` in Variants must be a typed `Transition` constant, not an inline string or cubic-bezier array.
 - [Navigation architecture](nav-architecture.md) — PRIMARY_NAV (5), SECONDARY_NAV below divider, MOBILE_TABS (4) with matchPaths; post-login landing uses useRef flag + journey_stage.
+- [Onboarding gate pattern](onboarding-gate.md) — gate is per-child: check useChildren().length first, then active child journey_stage; both effects must wait for childrenLoading.

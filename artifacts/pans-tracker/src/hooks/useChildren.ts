@@ -68,6 +68,25 @@ export function useArchiveChild() {
 }
 
 /**
+ * Returns ALL children for the current user including archived ones, sorted by sort_order.
+ * Used by the Children settings page where archived entries need to be shown.
+ */
+export function useAllChildren() {
+  const { userId, getToken } = useAuth();
+  const api = useMemo(() => createApiClient(getToken), [getToken]);
+
+  return useQuery({
+    queryKey: [...CHILDREN_QUERY_KEY, 'all'] as const,
+    queryFn: async () => {
+      const all = await api.children.getAll();
+      return all.sort((a, b) => a.sort_order - b.sort_order);
+    },
+    enabled: !!userId,
+    staleTime: 30_000,
+  });
+}
+
+/**
  * Unarchives a child (sets is_archived = false via update).
  * Invalidates useChildren on success.
  */

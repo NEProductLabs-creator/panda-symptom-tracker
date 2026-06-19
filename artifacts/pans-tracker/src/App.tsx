@@ -16,6 +16,7 @@ import PrintSummary from "@/pages/PrintSummary";
 import ExportData from "@/pages/ExportData";
 import OnboardingStart from "@/pages/OnboardingStart";
 import OnboardingAddChild from "@/pages/OnboardingAddChild";
+import SettingsChildren from "@/pages/SettingsChildren";
 import Learn from "@/pages/Learn";
 import LearnOverview from "@/pages/learn/Overview";
 import LearnSuddenOnset from "@/pages/learn/SuddenOnset";
@@ -716,6 +717,7 @@ function Router() {
         <Route path="/onboarding/add-child" component={OnboardingAddChild} />
         <Route path="/onboarding/start" component={OnboardingStart} />
         <Route path="/settings" component={Settings} />
+        <Route path="/settings/children" component={SettingsChildren} />
         <Route path="/about" component={Intro} />
         {/* Legacy Supabase auth routes → redirect to Clerk paths */}
         <Route path="/auth">

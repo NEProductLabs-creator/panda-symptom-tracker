@@ -89,7 +89,11 @@ export type AnalyticsEvent =
   | 'advocate_script_copied'
   | 'demo_scenario_selected'
   | 'demo_scenario_action'
-  | 'child_added';
+  | 'child_added'
+  | 'child_switched'
+  | 'child_archived'
+  | 'child_unarchived'
+  | 'child_edited';
 
 export function track(event: AnalyticsEvent, properties?: Record<string, unknown>): void {
   if (!analyticsReady) return;

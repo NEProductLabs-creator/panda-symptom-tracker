@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
+import ChildSwitcher from "@/components/ChildSwitcher";
 import {
   LayoutDashboard,
   ClipboardCheck,
@@ -29,7 +30,6 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { useChildBaseline } from "@/hooks/useChildBaseline";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { useQueueStatus } from "@/lib/apiQueue";
 import FeedbackDialog from "@/components/FeedbackDialog";
@@ -324,8 +324,6 @@ export default function Sidebar() {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
-  const { baseline } = useChildBaseline();
-  const childName = baseline?.childName?.trim();
   const { user } = useUser();
   const { signOut } = useClerk();
 
@@ -346,23 +344,21 @@ export default function Sidebar() {
   const navContent = (
     <>
       {/* Logo */}
-      <Link
-        href="/"
-        onClick={handleLogoClick}
-        className="block px-5 py-5 border-b border-border cursor-pointer hover:opacity-80 transition-opacity"
-      >
-        <p className="font-semibold text-[15px] leading-tight text-foreground" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.02em" }}>
-          PANS &amp; PANDAS
-        </p>
-        <p className="text-[12px] leading-snug mt-0.5 text-muted-foreground" style={{ fontFamily: "Newsreader, serif", fontStyle: "italic" }}>
-          Symptom Tracker
-        </p>
-        {childName && (
-          <p className="text-[11px] mt-1.5 font-medium" style={{ color: "var(--terracotta)" }}>
-            Tracking for {childName}
+      <div className="px-5 pt-5 pb-4 border-b border-border">
+        <Link
+          href="/"
+          onClick={handleLogoClick}
+          className="block cursor-pointer hover:opacity-80 transition-opacity"
+        >
+          <p className="font-semibold text-[15px] leading-tight text-foreground" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.02em" }}>
+            PANS &amp; PANDAS
           </p>
-        )}
-      </Link>
+          <p className="text-[12px] leading-snug mt-0.5 text-muted-foreground" style={{ fontFamily: "Newsreader, serif", fontStyle: "italic" }}>
+            Symptom Tracker
+          </p>
+        </Link>
+        <ChildSwitcher variant="sidebar" />
+      </div>
 
       {/* Primary nav */}
       <nav className="flex flex-col gap-1 p-3 overflow-y-auto" data-testid="sidebar-nav">
@@ -455,23 +451,17 @@ export default function Sidebar() {
         className="md:hidden fixed top-0 left-0 right-0 bg-sidebar border-b border-sidebar-border z-30"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
       >
-        <div className="flex items-center justify-between px-4 h-14">
+        <div className="flex items-center gap-2 px-4 h-14">
           <Link
             href="/"
             onClick={handleLogoClick}
-            className="flex items-center min-w-0 cursor-pointer hover:opacity-80 transition-opacity"
+            className="flex items-center min-w-0 cursor-pointer hover:opacity-80 transition-opacity flex-1"
           >
-            <div className="min-w-0">
-              <span className="font-semibold text-[14px] text-foreground leading-tight block truncate" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.01em" }}>
-                PANS &amp; PANDAS
-              </span>
-              {childName && (
-                <span className="text-[11px] font-medium truncate block" style={{ color: "var(--terracotta)" }}>
-                  Tracking for {childName}
-                </span>
-              )}
-            </div>
+            <span className="font-semibold text-[14px] text-foreground leading-tight truncate" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.01em" }}>
+              PANS &amp; PANDAS
+            </span>
           </Link>
+          <ChildSwitcher variant="mobile" />
           <Button
             variant="ghost"
             size="icon"

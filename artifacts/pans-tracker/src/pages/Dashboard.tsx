@@ -192,10 +192,8 @@ function ScoreInput({
                 type="button"
                 onClick={() => onChange(n)}
                 data-testid={`score-btn-${label.toLowerCase().replace(/\s|\//g, '-')}-${n}`}
-                className="touch-manipulation"
+                className="touch-manipulation h-11 w-11 min-h-[44px] min-w-[44px]"
                 style={{
-                  width: '44px',
-                  height: '44px',
                   borderRadius: '50%',
                   fontSize: '14px',
                   fontFamily: 'Newsreader, serif',
@@ -906,8 +904,7 @@ export default function Dashboard() {
 
       {/* Sticky save button */}
       <div
-        className="fixed bottom-0 left-0 right-0 z-50 px-5 pt-3 bg-background/95 backdrop-blur-sm border-t border-border md:static md:bg-transparent md:border-0 md:backdrop-blur-none md:p-0 md:pb-2"
-        style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}
+        className="fixed bottom-0 left-0 right-0 z-50 px-5 pt-3 pb-[max(env(safe-area-inset-bottom),12px)] bg-background/95 backdrop-blur-sm border-t border-border md:static md:bg-transparent md:border-0 md:backdrop-blur-none md:p-0 md:pb-2"
       >
         <div className="max-w-5xl mx-auto">
           <Button

@@ -42,7 +42,7 @@ function ScoreBubble({ value, active, onClick, label }: { value: number; active:
     <button
       type="button"
       onClick={onClick}
-      className={`flex-1 h-11 w-11 rounded-full text-sm font-semibold transition-all flex flex-col items-center justify-center border-2 ${
+      className={`flex-1 h-11 w-11 min-h-[44px] min-w-[44px] rounded-full text-sm font-semibold transition-all flex flex-col items-center justify-center border-2 ${
         active
           ? "border-transparent shadow-sm scale-105 text-white"
           : "border-border bg-transparent text-muted-foreground hover:border-muted-foreground/40"

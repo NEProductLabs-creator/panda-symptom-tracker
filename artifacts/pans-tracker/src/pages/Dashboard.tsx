@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useRef } from "react";
+import { lazy, Suspense, useMemo, useState, useEffect, useRef } from "react";
 import { format, subDays, parseISO, startOfWeek } from "date-fns";
 import { Link } from "wouter";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
@@ -7,7 +7,8 @@ import { useMedLibrary } from "@/hooks/useMedLibrary";
 import { useMilestones } from "@/hooks/useMilestones";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
 import { usePTECLogs } from "@/hooks/usePTECLogs";
-import SymptomChart, { CATEGORIES, getScoreColor } from "@/components/charts/SymptomChart";
+import { CATEGORIES, getScoreColor } from "@/components/charts/SymptomChart";
+const SymptomChart = lazy(() => import("@/components/charts/SymptomChart"));
 import Sparkline from "@/components/charts/Sparkline";
 import FlareAlert from "@/components/FlareAlert";
 import DailyAffirmation from "@/components/DailyAffirmation";
@@ -772,13 +773,15 @@ export default function Dashboard() {
               </Link>
             </div>
           ) : (
-            <SymptomChart
-              logs={logs}
-              medications={medications}
-              medLibrary={medLibrary}
-              milestones={milestones}
-              days={chartDays}
-            />
+            <Suspense fallback={<div style={{ height: 260 }} />}>
+              <SymptomChart
+                logs={logs}
+                medications={medications}
+                medLibrary={medLibrary}
+                milestones={milestones}
+                days={chartDays}
+              />
+            </Suspense>
           )}
         </CardContent>
       </Card>

@@ -1,4 +1,4 @@
-import { ReactNode, useEffect, useRef, useState } from "react";
+import { ReactNode, lazy, Suspense, useEffect, useRef, useState } from "react";
 import { track, identifyUser, identifyAsDemo, enableSurveys } from "@/lib/analytics";
 import { Switch, Route, Router as WouterRouter, useLocation, Redirect, Link } from "wouter";
 import { QueryClient, QueryClientProvider, useQueryClient } from "@tanstack/react-query";
@@ -13,7 +13,7 @@ import Dashboard from "@/pages/Dashboard";
 import LogEntry from "@/pages/LogEntry";
 import MedLibrary from "@/pages/MedLibrary";
 import PrintSummary from "@/pages/PrintSummary";
-import ExportData from "@/pages/ExportData";
+const ExportData = lazy(() => import("@/pages/ExportData"));
 import OnboardingStart from "@/pages/OnboardingStart";
 import OnboardingAddChild from "@/pages/OnboardingAddChild";
 import SettingsChildren from "@/pages/SettingsChildren";
@@ -693,7 +693,9 @@ function Router() {
         <Route path="/log" component={LogEntry} />
         <Route path="/library" component={MedLibrary} />
         <Route path="/print" component={PrintSummary} />
-        <Route path="/export" component={ExportData} />
+        <Suspense fallback={<div className="p-6">Loading…</div>}>
+          <Route path="/export" component={ExportData} />
+        </Suspense>
         <Route path="/milestones" component={MilestonesPage} />
         <Route path="/ptec" component={PTECCheckin} />
         <Route path="/timeline" component={Timeline} />

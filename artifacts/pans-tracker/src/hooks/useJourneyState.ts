@@ -27,7 +27,12 @@ export function useJourneyState() {
     qc.invalidateQueries({ queryKey: CHILDREN_QUERY_KEY });
   };
 
-  // ── Fetch onboarding state from user_journey_state ─────────────────────────
+  // ── Fetch onboarding state from user_journey_state (legacy read-only) ────────
+  // Journey stage is per-child as of migration 010. The user_journey_state
+  // table is legacy and no longer written to — all stage mutations go through
+  // api.children.update(activeChild.id, { journey_stage, journey_stage_set_at }).
+  // This query survives only to read onboarding_completed for users who had it
+  // set before migration 010.
   const query = useQuery({
     queryKey: JOURNEY_STATE_KEY,
     queryFn: () => api.journeyState.get(),

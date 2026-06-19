@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import { motion, type Variants, type Transition } from "framer-motion";
-import { BookOpen, Zap, BarChart2 } from "lucide-react";
+import { BookOpen, Zap, BarChart2, Check, UserPlus } from "lucide-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { track } from "@/lib/analytics";
 import { useJourneyState } from "@/hooks/useJourneyState";
-import { useActiveChild } from "@/hooks/useActiveChild";
+import { useActiveChild, setActiveChild } from "@/hooks/useActiveChild";
+import { useChildren } from "@/hooks/useChildren";
 import type { JourneyStage } from "@/lib/types";
 
 // ─── Animation variants ───────────────────────────────────────────────────────
@@ -66,9 +68,27 @@ export default function OnboardingStart() {
   const [, navigate] = useLocation();
   const { setJourneyStage, completeOnboarding, isSettingStage } = useJourneyState();
   const activeChild = useActiveChild();
+  const { data: children = [] } = useChildren();
+  const qc = useQueryClient();
   const [selected, setSelected] = useState<JourneyStage | null>(null);
 
+  // Step "pick-child" is prepended when the user has multiple children so they
+  // can confirm (or change) which child they're setting up before picking a stage.
+  const isMultiChild = children.length > 1;
+  const [step, setStep] = useState<"pick-child" | "pick-stage">(
+    isMultiChild ? "pick-child" : "pick-stage"
+  );
+  const [pickedChildId, setPickedChildId] = useState(activeChild?.id ?? "");
+
+  // childName reflects the active child (may update after setActiveChild fires)
   const childName = activeChild?.name ?? null;
+
+  function confirmChildPick() {
+    if (pickedChildId && pickedChildId !== activeChild?.id) {
+      setActiveChild(pickedChildId, qc);
+    }
+    setStep("pick-stage");
+  }
 
   function handleSelect(option: JourneyOption) {
     if (isSettingStage || selected !== null) return;
@@ -83,6 +103,95 @@ export default function OnboardingStart() {
     navigate(option.destination);
   }
 
+  // ── Step 0: Pick child (multi-child only) ─────────────────────────────────
+  if (step === "pick-child") {
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-5 py-14"
+        style={{ backgroundColor: "hsl(var(--background))" }}
+      >
+        <motion.div
+          className="w-full max-w-lg"
+          variants={container}
+          initial="hidden"
+          animate="show"
+        >
+          <motion.div variants={fadeUp} transition={ITEM_TRANSITION} className="text-center mb-8">
+            <h1
+              className="text-3xl font-bold text-foreground leading-tight"
+              style={{ fontFamily: "Fraunces, serif" }}
+            >
+              Which child are we setting up?
+            </h1>
+            <p className="mt-3 text-base text-muted-foreground">
+              Each child has their own journey stage and symptom history.
+            </p>
+          </motion.div>
+
+          <motion.div variants={fadeUp} transition={ITEM_TRANSITION} className="space-y-3">
+            {children.map((child) => {
+              const isPicked = pickedChildId === child.id;
+              return (
+                <button
+                  key={child.id}
+                  type="button"
+                  onClick={() => setPickedChildId(child.id)}
+                  className={[
+                    "w-full flex items-center justify-between gap-3 px-5 py-4 rounded-2xl border-2 text-left transition-all",
+                    isPicked
+                      ? "border-primary bg-primary/5"
+                      : "border-border bg-card hover:border-primary/40 hover:bg-primary/[0.03]",
+                  ].join(" ")}
+                  style={isPicked ? { borderColor: "var(--terracotta)" } : undefined}
+                >
+                  <div>
+                    <p
+                      className="font-semibold text-foreground"
+                      style={{ fontFamily: "Fraunces, serif" }}
+                    >
+                      {child.name}
+                    </p>
+                    {child.journey_stage && (
+                      <p className="text-xs text-muted-foreground mt-0.5 capitalize">
+                        Currently: {child.journey_stage.replace("_", " ")}
+                      </p>
+                    )}
+                  </div>
+                  {isPicked && (
+                    <Check className="w-5 h-5 flex-shrink-0" style={{ color: "var(--terracotta)" }} />
+                  )}
+                </button>
+              );
+            })}
+
+            <Link href="/onboarding/add-child">
+              <button
+                type="button"
+                className="w-full flex items-center gap-3 px-5 py-4 rounded-2xl border-2 border-dashed border-border hover:border-primary/40 text-left transition-all"
+              >
+                <UserPlus className="w-5 h-5 text-muted-foreground flex-shrink-0" />
+                <p className="text-sm font-medium text-muted-foreground">Add a new child instead</p>
+              </button>
+            </Link>
+          </motion.div>
+
+          <motion.div variants={fadeUp} transition={ITEM_TRANSITION} className="mt-6">
+            <button
+              type="button"
+              onClick={confirmChildPick}
+              disabled={!pickedChildId}
+              className="w-full py-3 rounded-xl font-semibold text-white transition-opacity disabled:opacity-40"
+              style={{ backgroundColor: "var(--terracotta)" }}
+            >
+              Continue with {children.find((c) => c.id === pickedChildId)?.name ?? "this child"}
+            </button>
+          </motion.div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ── Step 1: Pick journey stage ─────────────────────────────────────────────
   return (
     <div
       className="min-h-screen flex flex-col items-center justify-center px-5 py-14"

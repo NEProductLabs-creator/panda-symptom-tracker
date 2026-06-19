@@ -65,8 +65,9 @@ import OfflineBanner from "@/components/OfflineBanner";
 import { getOnboardingComplete } from "@/hooks/useAppSettings";
 import { useJourneyState } from "@/hooks/useJourneyState";
 import { useChildren } from "@/hooks/useChildren";
-import SetupWizard, { SETUP_WIZARD_FLAG } from "@/components/SetupWizard";
-import { storage } from "@/lib/storage";
+import { useActiveChild } from "@/hooks/useActiveChild";
+import { useChildBaseline } from "@/hooks/useChildBaseline";
+import SetupWizard, { SETUP_WIZARD_FLAG, getWizardKey } from "@/components/SetupWizard";
 
 const queryClient = new QueryClient();
 
@@ -589,11 +590,35 @@ function Router() {
   const { status: termsStatus, recordAgreement } = useTermsStatus();
   const { journeyState, isLoading: journeyStateLoading, isError: journeyStateError } = useJourneyState();
   const { data: children, isLoading: childrenLoading } = useChildren();
+  const activeChild = useActiveChild();
+  const { baseline } = useChildBaseline();
 
-  const [showWizard, setShowWizard] = useState(() => (
-    localStorage.getItem(SETUP_WIZARD_FLAG) !== "1" &&
-    !storage.getChildBaseline()
-  ));
+  // ── Setup wizard — per-child gating ────────────────────────────────────────
+  // Evaluate whether to show the wizard for the active child.
+  // On initial render: synchronous check against the child-scoped key + baseline.
+  // On child switch: useEffect re-evaluates so a newly added child with no
+  // baseline triggers the wizard automatically.
+  const [showWizard, setShowWizard] = useState(() => {
+    if (!activeChild) return false;
+    const key = getWizardKey(activeChild.id);
+    // Migrate legacy global key → per-child key once
+    if (localStorage.getItem(SETUP_WIZARD_FLAG) === "1") {
+      localStorage.setItem(key, "1");
+      localStorage.removeItem(SETUP_WIZARD_FLAG);
+    }
+    return localStorage.getItem(key) !== "1" && !baseline?.childName?.trim();
+  });
+
+  useEffect(() => {
+    if (!activeChild) { setShowWizard(false); return; }
+    const key = getWizardKey(activeChild.id);
+    if (localStorage.getItem(SETUP_WIZARD_FLAG) === "1") {
+      localStorage.setItem(key, "1");
+      localStorage.removeItem(SETUP_WIZARD_FLAG);
+    }
+    setShowWizard(localStorage.getItem(key) !== "1" && !baseline?.childName?.trim());
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeChild?.id, baseline?.childName]);
 
   // Enable PostHog surveys only once the user is authenticated or in demo mode
   useEffect(() => {
@@ -642,6 +667,12 @@ function Router() {
   useEffect(() => {
     if (!isSignedIn) { postLoginLanded.current = false; }
   }, [isSignedIn]);
+  // When the active child switches, reset the landing flag so the new child's
+  // journey_stage drives the next navigation (resolves from activeChild via
+  // useJourneyState, which already reads activeChild.journey_stage).
+  useEffect(() => {
+    postLoginLanded.current = false;
+  }, [activeChild?.id]);
   useEffect(() => {
     if (!isLoaded || !isSignedIn || isDemoMode) return;
     if (childrenLoading || !children?.length) return; // no children yet — gate handles it

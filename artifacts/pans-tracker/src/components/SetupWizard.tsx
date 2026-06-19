@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
+import { useActiveChild } from "@/hooks/useActiveChild";
 import { useMedLibrary } from "@/hooks/useMedLibrary";
-import { storage } from "@/lib/storage";
 import { ActivityLevel, MedLibraryItem, FrequencyOption } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,24 +16,26 @@ import {
 } from "@/components/ui/select";
 import { X, ChevronRight, CheckCircle2, Pill, ArrowRight } from "lucide-react";
 
+/** Legacy global key — kept for migration in App.tsx. */
 export const SETUP_WIZARD_FLAG = "pans_tracker_setup_wizard_done";
+
+/** Per-child wizard-dismissed key. Use this everywhere instead of SETUP_WIZARD_FLAG. */
+export const getWizardKey = (childId: string) => `setupWizard.dismissed.${childId}`;
 
 type Step = 1 | 2 | 3 | 4;
 
 export default function SetupWizard({ onDismiss }: { onDismiss: () => void }) {
-  const { saveBaseline } = useChildBaseline();
+  const { baseline, saveBaseline } = useChildBaseline();
   const { saveMedLibraryItem } = useMedLibrary();
   const [, navigate] = useLocation();
+  const activeChild = useActiveChild();
 
   // If child info was already collected during onboarding, skip step 1
-  const [step, setStep] = useState<Step>(() => {
-    const b = storage.getChildBaseline();
-    return b?.childName?.trim() ? 2 : 1;
-  });
+  const [step, setStep] = useState<Step>(() => baseline?.childName?.trim() ? 2 : 1);
 
   // Step 1 — pre-filled from existing baseline if present
-  const [childName, setChildName] = useState(() => storage.getChildBaseline()?.childName ?? "");
-  const [childAge, setChildAge] = useState(() => storage.getChildBaseline()?.childAge ?? "");
+  const [childName, setChildName] = useState(baseline?.childName ?? "");
+  const [childAge, setChildAge] = useState(baseline?.childAge ?? "");
 
   // Step 2
   const [activityLevel, setActivityLevel] = useState<ActivityLevel>("moderate");
@@ -45,7 +47,7 @@ export default function SetupWizard({ onDismiss }: { onDismiss: () => void }) {
   const [addedMeds, setAddedMeds] = useState<string[]>([]);
 
   function dismiss() {
-    localStorage.setItem(SETUP_WIZARD_FLAG, "1");
+    if (activeChild) localStorage.setItem(getWizardKey(activeChild.id), "1");
     onDismiss();
   }
 
@@ -69,9 +71,8 @@ export default function SetupWizard({ onDismiss }: { onDismiss: () => void }) {
 
   function nextStep2(skip = false) {
     if (!skip) {
-      const current = storage.getChildBaseline();
-      if (current) {
-        saveBaseline({ ...current, activityLevel, lastUpdated: new Date().toISOString() });
+      if (baseline) {
+        saveBaseline({ ...baseline, activityLevel, lastUpdated: new Date().toISOString() });
       } else if (childName.trim()) {
         saveBaseline({
           childName: childName.trim(),
@@ -106,7 +107,7 @@ export default function SetupWizard({ onDismiss }: { onDismiss: () => void }) {
   }
 
   function nextStep3() {
-    localStorage.setItem(SETUP_WIZARD_FLAG, "1");
+    if (activeChild) localStorage.setItem(getWizardKey(activeChild.id), "1");
     setStep(4);
   }
 

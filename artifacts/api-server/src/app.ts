@@ -197,6 +197,19 @@ const notificationsTestLimiter = rateLimit({
   message: { error: "Too many requests — please slow down." },
 });
 
+// Share token lookup — public endpoint (no auth), keyed by IP only.
+// 30 req/min makes enumeration of the 256-bit token space impractical while
+// being invisible to real users who click a share link once.
+const shareLookupLimiter = rateLimit({
+  standardHeaders: "draft-7" as const,
+  legacyHeaders: false,
+  keyGenerator: (req: express.Request): string =>
+    ipKeyGenerator(req.ip ?? req.socket.remoteAddress ?? "unknown"),
+  windowMs: 60 * 1000,
+  limit: 30,
+  message: { error: "Too many requests — please slow down." },
+});
+
 // Push token registration/unregistration — low-frequency but hits Supabase on
 // every call. 20 req/min is generous for normal device registration patterns
 // while preventing token-flooding abuse.
@@ -218,6 +231,7 @@ const notificationsLimiter = rateLimit({
 
 app.use("/api", globalApiLimiter);
 app.use("/api/data", dataLimiter);
+app.use("/api/shares/:token", shareLookupLimiter);
 app.use("/api/shares", dataLimiter);
 app.use("/api/terms/agree", termsLimiter);
 app.use("/api/notifications", notificationsLimiter);

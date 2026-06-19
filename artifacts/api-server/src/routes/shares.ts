@@ -113,13 +113,17 @@ router.get("/:token", async (req, res) => {
     const uid = share.user_id as string;
     const includeNotes = share.include_notes as boolean;
 
-    const [logsRes, ptecRes, medsRes, medLibRes, baselineRes, milestonesRes] =
+    const [logsRes, ptecRes, medsRes, medLibRes, childrenRes, milestonesRes] =
       await Promise.all([
         db.from("symptom_logs").select("data").eq("user_id", uid),
         db.from("ptec_logs").select("data").eq("user_id", uid),
         db.from("medications").select("data").eq("user_id", uid),
         db.from("med_library").select("data").eq("user_id", uid),
-        db.from("child_baseline").select("data").eq("user_id", uid).maybeSingle(),
+        db.from("children")
+          .select("id, name, sort_order, baseline")
+          .eq("user_id", uid)
+          .eq("is_archived", false)
+          .order("sort_order", { ascending: true }),
         db.from("milestones").select("data").eq("user_id", uid),
       ]);
 
@@ -139,7 +143,7 @@ router.get("/:token", async (req, res) => {
       ptecLogs: (ptecRes.data ?? []).map((r) => r.data),
       medications: (medsRes.data ?? []).map((r) => r.data),
       medLibrary: (medLibRes.data ?? []).map((r) => r.data),
-      baseline: baselineRes.data?.data ?? null,
+      baseline: (childrenRes.data?.[0] as { baseline: unknown } | undefined)?.baseline ?? null,
       milestones: (milestonesRes.data ?? []).map((r) => r.data),
       meta: {
         expiresAt: share.expires_at as string,

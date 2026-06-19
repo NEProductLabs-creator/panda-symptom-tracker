@@ -10,7 +10,12 @@ import { useMilestones } from "@/hooks/useMilestones";
 import { usePTECLogs } from "@/hooks/usePTECLogs";
 import { useTriggerLog } from "@/hooks/useTriggerLog";
 import { useChildBaseline } from "@/hooks/useChildBaseline";
+import { useActiveChild, setActiveChild } from "@/hooks/useActiveChild";
+import { useChildren } from "@/hooks/useChildren";
+import { useQueryClient } from "@tanstack/react-query";
+import { Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -30,6 +35,7 @@ import {
   ShieldCheck,
   FileText,
   TableProperties,
+  Baby,
 } from "lucide-react";
 import { MILESTONE_TYPE_LABELS, FREQUENCY_LABELS, TriggerCategory } from "@/lib/types";
 import { PTECLog, SymptomLog, Medication, TriggerEntry, MedLibraryItem } from "@/lib/types";
@@ -476,6 +482,11 @@ export default function ExportData() {
   const { ptecLogs } = usePTECLogs();
   const { entries: triggerEntries } = useTriggerLog();
   const { baseline } = useChildBaseline();
+  const activeChild = useActiveChild();
+  const { data: children = [] } = useChildren();
+  const qc = useQueryClient();
+  const childName = activeChild?.name ?? baseline?.childName?.trim() ?? "";
+  const childAge = baseline?.childAge?.trim() ?? "";
   const { toast } = useToast();
 
   const [activeTab, setActiveTab] = useState<Tab>("pdf");
@@ -650,7 +661,7 @@ export default function ExportData() {
 
   function csvFilename(dataset: string) {
     const first =
-      baseline?.childName?.trim().split(" ")[0]?.toLowerCase() ?? "tracker";
+      (activeChild?.name ?? baseline?.childName)?.trim().split(" ")[0]?.toLowerCase() ?? "tracker";
     return `${first}-${dataset}-${format(new Date(), "yyyy-MM-dd")}.csv`;
   }
 
@@ -715,9 +726,6 @@ export default function ExportData() {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     const margin = 14;
-    const childName = baseline?.childName?.trim() || "";
-    const childAge = baseline?.childAge?.trim() || "";
-
     doc.setFillColor(...HEAD_COLOR);
     doc.rect(0, 0, pageWidth, 36, "F");
     doc.setFont("helvetica", "bold");
@@ -1063,7 +1071,7 @@ export default function ExportData() {
       );
     }
 
-    const safeName = (baseline?.childName?.trim() || "report")
+    const safeName = (childName || "report")
       .toLowerCase()
       .replace(/\s+/g, "-");
     doc.save(`${safeName}-symptom-report-${today}.pdf`);
@@ -1073,8 +1081,8 @@ export default function ExportData() {
 
   function copyToClipboard() {
     const text = buildClipboardText({
-      childName: baseline?.childName?.trim() || "",
-      childAge: baseline?.childAge?.trim() || "",
+      childName,
+      childAge,
       effectiveStart,
       effectiveEnd,
       comparison: periodComparison,
@@ -1153,6 +1161,44 @@ export default function ExportData() {
           </p>
         </div>
       </div>
+
+      {/* Child selector — only when user has multiple children */}
+      {children.length > 1 && (
+        <div className="flex items-center gap-3">
+          <span className="text-sm font-medium text-muted-foreground whitespace-nowrap">Report for</span>
+          <Select
+            value={activeChild?.id ?? ""}
+            onValueChange={(id) => setActiveChild(id, qc)}
+          >
+            <SelectTrigger className="w-52">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {children.map((c) => (
+                <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      )}
+
+      {!activeChild ? (
+        <Card className="border-border shadow-sm">
+          <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Baby className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">No child profile yet</p>
+              <p className="text-sm text-muted-foreground mt-1">Add a child to start generating reports and exporting data.</p>
+            </div>
+            <Link href="/onboarding/add-child">
+              <Button size="sm">Add a child</Button>
+            </Link>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
 
       {/* GDPR / data portability note */}
       <div className="flex items-start gap-3 px-4 py-3.5 rounded-xl border border-border bg-muted/40">
@@ -1538,6 +1584,8 @@ export default function ExportData() {
             </p>
           </div>
         </div>
+      )}
+        </>
       )}
     </div>
   );

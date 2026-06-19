@@ -2,10 +2,12 @@ import { format, subDays } from "date-fns";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedications } from "@/hooks/useMedications";
 import { useLabResults } from "@/hooks/useLabResults";
+import { useActiveChild } from "@/hooks/useActiveChild";
+import { useChildBaseline } from "@/hooks/useChildBaseline";
 import { Medication, MedicationType } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
-import { Printer, ArrowLeft } from "lucide-react";
+import { Printer, ArrowLeft, Baby } from "lucide-react";
 
 const CATEGORY_LABELS: Record<string, string> = {
   ocd: "OCD",
@@ -29,6 +31,9 @@ export default function PrintSummary() {
   const { logs } = useSymptomLogs();
   const { medications } = useMedications();
   const { entries: labEntries } = useLabResults();
+  const activeChild = useActiveChild();
+  const { baseline } = useChildBaseline();
+  const childName = activeChild?.name ?? baseline?.childName?.trim() ?? "";
 
   const today = format(new Date(), "yyyy-MM-dd");
   const thirtyDaysAgo = format(subDays(new Date(), 29), "yyyy-MM-dd");
@@ -83,6 +88,22 @@ export default function PrintSummary() {
       `}</style>
 
       <div className="max-w-4xl mx-auto px-8 py-10">
+        {/* No child empty state */}
+        {!activeChild && (
+          <div className="flex flex-col items-center gap-3 py-16 text-center">
+            <div className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center">
+              <Baby className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <p className="font-semibold text-foreground">No child profile yet</p>
+              <p className="text-sm text-muted-foreground mt-1">Add a child to generate a print summary.</p>
+            </div>
+            <Link href="/onboarding/add-child">
+              <Button size="sm">Add a child</Button>
+            </Link>
+          </div>
+        )}
+
         {/* Header */}
         <div className="border-b border-border pb-6 mb-8">
           <p className="text-sm italic text-muted-foreground mb-1" style={{ fontFamily: "Newsreader, serif", color: "var(--terracotta)" }}>
@@ -91,6 +112,16 @@ export default function PrintSummary() {
           <h1 className="text-3xl font-semibold text-foreground" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.02em", fontWeight: 400 }}>
             PANS &amp; PANDAS Symptom Report
           </h1>
+          {childName && (
+            <p className="text-lg text-foreground mt-1" style={{ fontFamily: "Fraunces, serif", fontWeight: 400 }}>
+              {childName}
+            </p>
+          )}
+          <noscript>
+            <p style={{ fontFamily: "Newsreader, serif", fontSize: "0.875rem", color: "#666" }}>
+              {childName ? `Report generated for ${childName}` : "Report generated from PANS & PANDAS Tracker"}
+            </p>
+          </noscript>
           <p className="text-sm text-muted-foreground mt-2" style={{ fontFamily: "Newsreader, serif" }}>
             Generated {format(new Date(), "MMMM d, yyyy")} &bull; Covering the last 30 days
           </p>

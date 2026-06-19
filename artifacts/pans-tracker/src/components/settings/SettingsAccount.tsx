@@ -15,7 +15,11 @@ import {
   AlertDialogFooter,
 } from "@/components/ui/alert-dialog";
 
+// MAINTENANCE: keep this list in sync with storage.ts and the demo/notification
+// hooks. Every key the app writes to localStorage must appear here so account
+// deletion leaves no trace on this device.
 const LOCAL_STORAGE_KEYS = [
+  // ── Core data (storage.ts) ───────────────────────────────────────────────
   "pans_tracker_symptom_logs",
   "pans_tracker_sb_migrated_v1",
   "pans_tracker_medications",
@@ -31,6 +35,21 @@ const LOCAL_STORAGE_KEYS = [
   "pans_tracker_hopeboard",
   "pans_tracker_settings",
   "pans_tracker_visited",
+  "labResults",
+  // ── Active child ─────────────────────────────────────────────────────────
+  "panstracker.activeChildId",
+  // ── Demo mode (DemoContext / storage.ts) ─────────────────────────────────
+  "pans_tracker_demo_children",
+  "pans_tracker_demo_mode",
+  "pans_tracker_demo_scenario",
+  "pans_tracker_demo_switch_prompt_dismissed",
+  // ── Terms / consent flags ─────────────────────────────────────────────────
+  "pans_terms_pending",
+  "pans_terms_ok",
+  // ── API queue (apiQueue.ts) ───────────────────────────────────────────────
+  "pans_queue_failed",
+  // ── Push notifications ────────────────────────────────────────────────────
+  "push_reminder_time",
 ];
 
 export default function SettingsAccount() {
@@ -63,6 +82,9 @@ export default function SettingsAccount() {
       return;
     }
     LOCAL_STORAGE_KEYS.forEach((k) => localStorage.removeItem(k));
+    // Clear sessionStorage so demo-mode analytics IDs and one-time signup
+    // flags don't survive to the next session.
+    sessionStorage.clear();
     setDeleteOpen(false);
     await signOut();
   }

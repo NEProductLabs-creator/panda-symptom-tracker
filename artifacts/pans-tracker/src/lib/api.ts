@@ -1,6 +1,6 @@
 /**
  * Typed API client for PANS tracker server.
- * Uses Clerk session tokens for authentication.
+ * Uses Supabase session tokens for authentication.
  * All calls are fire-and-forget safe — errors are silently caught by callers.
  */
 
@@ -10,7 +10,13 @@ import type {
   JourneyState, Child, CreateChildInput, UpdateChildInput, LabResult,
 } from './types';
 
-const BASE = '/api/data';
+// On the web build VITE_API_BASE_URL is empty and the Replit Deployments
+// same-origin proxy routes /api/* correctly. On a Capacitor (iOS/Android)
+// native build, set VITE_API_BASE_URL to the full HTTPS URL of the deployed
+// API server (e.g. "https://pans-tracker.replit.app") so that absolute fetch
+// URLs are used — Capacitor origins (capacitor://localhost, https://localhost)
+// cannot rely on same-origin routing.
+const BASE = (import.meta.env.VITE_API_BASE_URL ?? '') + '/api/data';
 
 export function createApiClient(getToken: () => Promise<string | null>) {
   async function req<T>(method: string, path: string, body?: unknown): Promise<T> {

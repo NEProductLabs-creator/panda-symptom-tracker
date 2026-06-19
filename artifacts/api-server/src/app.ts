@@ -10,6 +10,13 @@ import { logger } from "./lib/logger";
 // ── CORS allowlist ────────────────────────────────────────────────────────────
 // Priority: ALLOWED_ORIGINS env var → sensible defaults per environment.
 // In production, the two known domains are always included.
+//
+// The three Capacitor/Ionic pseudo-origins below are always included:
+//   capacitor://localhost  — Capacitor on iOS (WKWebView)
+//   https://localhost      — Capacitor on Android (WebView with HTTPS scheme)
+//   ionic://localhost      — Ionic/Capacitor legacy Android scheme
+// These are the fixed origins the OS assigns to the WebView; they never
+// change and are not user-controlled, so it is safe to allowlist them.
 
 function buildAllowedOrigins(): string[] {
   if (process.env.ALLOWED_ORIGINS) {
@@ -18,7 +25,13 @@ function buildAllowedOrigins(): string[] {
       .filter(Boolean);
   }
 
-  const origins: string[] = ["http://localhost:5173"];
+  const origins: string[] = [
+    "http://localhost:5173",
+    // Capacitor (iOS), Capacitor (Android), Ionic/Capacitor legacy
+    "capacitor://localhost",
+    "https://localhost",
+    "ionic://localhost",
+  ];
 
   // In Replit dev, the preview is served from the Replit proxy domain(s)
   if (process.env.REPLIT_DOMAINS) {
@@ -101,6 +114,8 @@ app.use(
 app.use(
   cors({
     credentials: true,
+    allowedHeaders: ["Authorization", "Content-Type"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     origin(origin, callback) {
       // No origin = server-to-server / curl / same-origin proxy — allow through
       if (!origin || allowedOrigins.includes(origin)) {

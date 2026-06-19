@@ -19,6 +19,7 @@ Before publishing, set these Replit secrets (Secrets tab → Add secret):
 | `VAPID_PRIVATE_KEY` | VAPID private key for web push (base64url) |
 | `VAPID_SUBJECT` | Contact URI for push service, e.g. `mailto:admin@example.com` |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase service-role key for server-side DB access |
+| `VITE_API_BASE_URL` | **Capacitor builds only.** Full HTTPS URL of the deployed API server (e.g. `https://pans-tracker.replit.app`). Empty on web builds — the Replit Deployments same-origin proxy handles `/api/*` routing. Capacitor WebViews run from `capacitor://localhost` or `https://localhost`, so relative `/api/*` fetches would hit the local device rather than the server. |
 
 The **"Reminder: Daily push"** workflow must also be started after deployment. It loops every 60 seconds, checks `push_subscriptions` for matching `reminder_time` values, and sends a "Daily check-in" push to users who haven't logged yet today. VAPID keys can be generated with `npx web-push generate-vapid-keys`.
 

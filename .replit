@@ -20,6 +20,10 @@ author = "agent"
 task = "workflow.run"
 args = "Reminder: Daily push"
 
+[[workflows.workflow.tasks]]
+task = "workflow.run"
+args = "api-server-tests"
+
 [[workflows.workflow]]
 name = "Reminder: Daily push"
 author = "agent"
@@ -30,6 +34,17 @@ args = "while true; do pnpm --filter @workspace/api-server run reminders; sleep 
 
 [workflows.workflow.metadata]
 outputType = "console"
+
+[[workflows.workflow]]
+name = "api-server-tests"
+author = "agent"
+
+[[workflows.workflow.tasks]]
+task = "shell.exec"
+args = "pnpm --filter @workspace/api-server run test"
+
+[workflows.workflow.metadata]
+isValidation = true
 
 [agent]
 stack = "PNPM_WORKSPACE"

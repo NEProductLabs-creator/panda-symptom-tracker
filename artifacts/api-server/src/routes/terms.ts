@@ -1,27 +1,14 @@
 import { Router, Request, Response } from 'express';
-import rateLimit from 'express-rate-limit';
 import { requireSupabase } from '../lib/supabase';
 import { logger, errCode } from '../lib/logger';
 import { ALLOWED_VERSIONS } from '../lib/termsVersion';
 
 const router = Router();
 
-// ── Rate limiter: 10 POSTs per IP per hour ────────────────────────────────────
-// Applied only to the unauthenticated POST /agree endpoint.
-
-const agreeLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10,
-  standardHeaders: true,  // Return rate-limit info in RateLimit-* headers
-  legacyHeaders: false,   // Disable X-RateLimit-* headers
-  message: { error: 'Too many requests. Please try again later.' },
-});
-
 // POST /api/terms/agree
 // Auth-optional: works for demo users (no token) and signed-in users (token present).
-// Clerk middleware is already applied globally so req.auth is populated when a valid
-// token is sent; we just don't *require* it here.
-router.post('/agree', agreeLimiter, async (req: Request, res: Response) => {
+// Rate limiting is handled by termsLimiter in app.ts (10 req / 1 hour, IP+userId key).
+router.post('/agree', async (req: Request, res: Response) => {
   try {
     const db = requireSupabase();
     const userId: string | null = req.userId ?? null;

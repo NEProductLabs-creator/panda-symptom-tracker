@@ -173,7 +173,7 @@ const dataLimiter = rateLimit({
 
 const termsLimiter = rateLimit({
   ...rateLimitDefaults,
-  windowMs: 60 * 1000,
+  windowMs: 60 * 60 * 1000, // 1 hour
   limit: 10,
   message: { error: "Too many requests — please slow down." },
 });

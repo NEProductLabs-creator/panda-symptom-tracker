@@ -75,7 +75,8 @@ export type AnalyticsEvent =
   | 'pwa_install_dismissed'
   | 'push_reminder_enabled_from_nudge'
   | 'push_reminder_nudge_dismissed'
-  | 'csv_exported';
+  | 'csv_exported'
+  | 'onboarding_journey_stage_selected';
 
 export function track(event: AnalyticsEvent, properties?: Record<string, unknown>): void {
   if (!analyticsReady) return;

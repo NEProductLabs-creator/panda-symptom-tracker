@@ -1,0 +1,35 @@
+Build out the /right-now route as a crisis-support pathway for parents in the middle of a first flare.
+
+Right Now landing page is a single calm screen. Heading: "We are right here with you." One short parent-to-parent paragraph below. Then four sub-route cards:
+
+1. "It's the PANDAS, not your child" at /right-now/reframe
+   Three to four short paragraphs in second person to the parent. Explain that severe OCD, rage, and regression during a flare are driven by inflammation in the brain. Reinforce that the child the parent knows is still there. Use soft mist tone for callout quotes.
+
+2. "What to do today" at /right-now/today
+   Checklist for the next 24 hours:
+   - Write down what you are seeing right now (date, time, behaviors)
+   - Take a short video if you can, especially of unusual movements or tics
+   - Note any recent illness, sore throat, or strep exposure in the past four to six weeks
+   - Call your pediatrician tomorrow and ask for a strep test, throat culture, and ASO and Anti-DNase B titers
+   - Tell the pediatrician: "I am concerned about PANS or PANDAS. The change was sudden."
+   Each item is tappable to mark complete. State persists per user per day.
+
+3. "De-escalation in the moment" at /right-now/de-escalation
+   Two collapsible sections.
+   OCD spirals: do not argue with the compulsion, lower the stakes, name the PANDAS out loud, reduce sensory input.
+   Rage episodes: safety first, low stimulation, do not match volume, wait for the wave to pass.
+   Tone is calm and grounded.
+
+4. "Should we go to the ER?" at /right-now/er-guide
+   "Go now if" criteria: suicidal statements with intent, inability to eat or drink for 24 or more hours, severe psychotic symptoms, dangerous self-harm.
+   What to bring: symptom log printout, list of recent illnesses, current medications.
+   What to say at intake: "My child had a sudden neuropsychiatric change. I am concerned about PANS or PANDAS, which can mimic a psychiatric emergency. Please consider an infectious workup including strep titers."
+
+Add a new Supabase table right_now_checklist_state with columns: id (text), user_id (uuid), date (text), action_key (text), completed (boolean), created_at (timestamptz, default now()). Enable RLS with per-user policies. Use this to persist the "What to do today" checklist state.
+
+Track PostHog events:
+- right_now_section_viewed with property section
+- right_now_today_action_completed with property action
+- right_now_er_guide_viewed
+
+Typography on the Right Now pathway should be slightly larger than the Track interface so a parent in panic mode can read easily. Use the warm earth palette. Tone is steady and warm, never alarmed.

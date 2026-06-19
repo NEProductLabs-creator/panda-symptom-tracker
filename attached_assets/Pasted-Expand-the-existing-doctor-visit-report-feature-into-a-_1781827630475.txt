@@ -1,0 +1,35 @@
+Expand the existing doctor-visit report feature into a full advocacy toolkit at /advocate.
+
+Advocate landing page has four cards:
+
+1. "Reports for your appointment" at /advocate/reports
+   The existing doctor-visit report becomes one of three variants. The parent picks an audience before generating:
+   - "First appointment with a clinician who may not know PANS" (default for journey_stage 'exploring')
+     PDF starts with a one-page PANS primer: what PANS and PANDAS are, the sudden-onset hallmark, Swedo and PANS Research Consortium criteria summarized, a citation to PANDAS Network. Then the symptom timeline. Then a "What we are asking for" page listing specific tests and referrals (ASO titer, Anti-DNase B, throat culture, urinalysis, neurology or immunology referral).
+   - "ER visit" (default for 'in_crisis')
+     One to two pages. Top of page reads: "My child had a sudden neuropsychiatric change. I am concerned about PANS or PANDAS. Please consider an infectious workup." Then current symptoms with severity. Then current medications. Then recent illnesses and exposures.
+   - "Follow-up with our PANS provider" (default for 'tracking')
+     The existing doctor-visit report, unchanged in structure.
+   Each variant generates as a PDF using jsPDF. Filename includes the visit date.
+
+   Structure the report generation function so it accepts a childId parameter even though there is one implicit child per user today. This makes the future multi-child migration mechanical.
+
+2. "Scripts for hard conversations" at /advocate/scripts
+   Library of short copyable scripts. Each has a Copy button.
+   - "If your pediatrician dismisses your concerns" ends with "Will you order strep titers and a throat culture today?"
+   - "Requesting a neurology or immunology referral"
+   - "Asking the school for accommodations during a flare"
+   - "Talking to family members who do not believe PANS is real"
+
+3. "School communication templates" at /advocate/school
+   Move the existing school templates here. Content unchanged.
+
+4. "Provider directory" at /advocate/providers
+   Link out to the PANDAS Physicians Network provider directory at https://pandasppn.org/ppnproviders/. Brief explainer that finding a PANS-literate clinician can meaningfully change outcomes.
+
+Default report variant on /advocate/reports is set by the user's journey_stage. The parent can change it before generating.
+
+Track PostHog events:
+- advocate_section_viewed with property section
+- advocate_report_generated with properties variant, journey_stage
+- advocate_script_copied with property script_key

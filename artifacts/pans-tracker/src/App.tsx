@@ -14,6 +14,7 @@ import LogEntry from "@/pages/LogEntry";
 import MedLibrary from "@/pages/MedLibrary";
 import PrintSummary from "@/pages/PrintSummary";
 import ExportData from "@/pages/ExportData";
+import OnboardingStart from "@/pages/OnboardingStart";
 import Intro from "@/pages/Intro";
 import MilestonesPage from "@/pages/Milestones";
 import Sidebar from "@/components/layout/Sidebar";
@@ -38,6 +39,7 @@ import Landing from "@/pages/Landing";
 import InstallPrompt from "@/components/InstallPrompt";
 import OfflineBanner from "@/components/OfflineBanner";
 import { getOnboardingComplete } from "@/hooks/useAppSettings";
+import { useJourneyState } from "@/hooks/useJourneyState";
 import SetupWizard, { SETUP_WIZARD_FLAG } from "@/components/SetupWizard";
 import { storage } from "@/lib/storage";
 
@@ -551,6 +553,7 @@ function Router() {
   const { isDemoMode } = useDemoContext();
   const [location, navigate] = useLocation();
   const { status: termsStatus, recordAgreement } = useTermsStatus();
+  const { journeyState, isLoading: journeyStateLoading, isError: journeyStateError } = useJourneyState();
 
   const [showWizard, setShowWizard] = useState(() => (
     localStorage.getItem(SETUP_WIZARD_FLAG) !== "1" &&
@@ -587,6 +590,17 @@ function Router() {
       navigate("/");
     }
   }, [isSignedIn, isLoaded, isDemoMode, location]);
+
+  // Journey gate: redirect to /onboarding/start if journey_stage is null
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || isDemoMode) return;
+    if (journeyStateLoading || journeyStateError || !journeyState) return;
+    if (journeyState.journey_stage !== null) return;
+    // Already on an onboarding or public route — don't loop
+    const skip = ["/onboarding", "/sign-in", "/sign-up", "/about", "/print"];
+    if (skip.some((r) => location === r || location.startsWith(r + "/"))) return;
+    navigate("/onboarding/start");
+  }, [isLoaded, isSignedIn, isDemoMode, journeyStateLoading, journeyStateError, journeyState, location]);
 
   // Unauthenticated users at root → landing page (show LoadingScreen while Clerk initialises)
   if (!isSignedIn && !isDemoMode && location === "/") {
@@ -632,6 +646,7 @@ function Router() {
         <Route path="/wellbeing" component={WellbeingCheckin} />
         <Route path="/hope" component={HopeBoard} />
         <Route path="/onboarding" component={Onboarding} />
+        <Route path="/onboarding/start" component={OnboardingStart} />
         <Route path="/settings" component={Settings} />
         <Route path="/about" component={Intro} />
         {/* Legacy Supabase auth routes → redirect to Clerk paths */}

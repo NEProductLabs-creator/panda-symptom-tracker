@@ -24,6 +24,7 @@ import {
   Cloud,
   CloudOff,
   Loader2,
+  Compass,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -316,6 +317,15 @@ export default function Sidebar() {
             </button>
           </div>
         )}
+        <Link href="/onboarding/start" onClick={closeMobile}>
+          <button
+            type="button"
+            className="flex items-center gap-2 w-full text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5 rounded-md hover:bg-sidebar-accent"
+          >
+            <Compass className="w-3.5 h-3.5 flex-shrink-0" />
+            Where are you? <span className="opacity-50 ml-0.5">(Change journey)</span>
+          </button>
+        </Link>
         <button
           type="button"
           onClick={() => setFeedbackOpen(true)}

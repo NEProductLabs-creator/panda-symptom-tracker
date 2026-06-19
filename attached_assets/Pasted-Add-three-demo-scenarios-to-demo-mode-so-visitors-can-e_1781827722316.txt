@@ -1,0 +1,34 @@
+Add three demo scenarios to demo mode so visitors can experience each persona pathway with realistic pre-populated data.
+
+After the existing email gate and terms agreement, demo mode lands on a "Pick a demo to explore" screen with three cards:
+
+1. "Just starting out: we think something is wrong" (exploring scenario)
+   Sets journey_stage = 'exploring' on the demo user. Lands on /learn.
+   Seeds one completed parent observation summary with realistic answers:
+   - "What did you notice first?": "Sudden severe OCD about contamination. Started about three weeks ago, almost overnight."
+   - "When did the change start?": "Roughly three weeks ago, about a week after a sore throat at school."
+   - Sudden onset: yes. Recent infection: yes. Severe anxiety: yes. Tics: yes. Handwriting change: not sure.
+   Symptom log: empty. This parent has not started daily logging yet.
+
+2. "In the middle of a first flare" (in_crisis scenario)
+   Sets journey_stage = 'in_crisis' on the demo user. Lands on /right-now.
+   "What to do today" checklist: first two items completed (wrote down what they are seeing, took a video).
+   Symptom log: three days of entries, all within the last week. Values: OCD 8, anxiety 7, rage 6, tics 4, sleep 8 (poor), cognition 7 (impaired). Notes on day one: "First flare. Started Monday. Sore throat last week at school." Notes on day three: "Slightly less rage today but OCD around hand-washing is constant."
+   No reports generated yet.
+
+3. "Tracking a known diagnosis" (tracking scenario)
+   Sets journey_stage = 'tracking' on the demo user. Lands on /dashboard.
+   Uses the existing realistic demo dataset already shipped.
+   Add one previously generated "Follow-up with our PANS provider" report to the report history.
+
+For the exploring and in_crisis scenarios, also seed one "First appointment with a clinician who may not know PANS" report in the Advocate report history so the demo shows the expected output.
+
+Each demo scenario uses its own seed data set so they can be loaded independently. Switching scenarios resets the demo user state to that scenario's seed.
+
+Add a "Try another demo" link in the demo mode menu that returns to the picker.
+
+Track PostHog events:
+- demo_scenario_selected with property scenario
+- demo_scenario_action with properties scenario, action
+
+Match the existing demo mode visual treatment.

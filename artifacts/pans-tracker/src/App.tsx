@@ -15,6 +15,10 @@ import MedLibrary from "@/pages/MedLibrary";
 import PrintSummary from "@/pages/PrintSummary";
 import ExportData from "@/pages/ExportData";
 import OnboardingStart from "@/pages/OnboardingStart";
+import Learn from "@/pages/Learn";
+import RightNow from "@/pages/RightNow";
+import Advocate from "@/pages/Advocate";
+import Reports from "@/pages/Reports";
 import Intro from "@/pages/Intro";
 import MilestonesPage from "@/pages/Milestones";
 import Sidebar from "@/components/layout/Sidebar";
@@ -516,7 +520,7 @@ function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 min-w-0 md:ml-60 min-h-screen">
+      <main className="flex-1 min-w-0 md:ml-60 min-h-screen pb-20 md:pb-0">
         <div
           className="md:hidden"
           style={{ height: "calc(env(safe-area-inset-top) + 3.5rem)" }}
@@ -591,6 +595,22 @@ function Router() {
     }
   }, [isSignedIn, isLoaded, isDemoMode, location]);
 
+  // Post-login landing: send users to their journey section once per session
+  const postLoginLanded = useRef(false);
+  useEffect(() => {
+    if (!isSignedIn) { postLoginLanded.current = false; }
+  }, [isSignedIn]);
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || isDemoMode) return;
+    if (journeyStateLoading || journeyStateError || !journeyState) return;
+    if (journeyState.journey_stage === null) return; // handled by journey gate
+    if (postLoginLanded.current) return;
+    postLoginLanded.current = true;
+    if (journeyState.journey_stage === "exploring") navigate("/learn");
+    else if (journeyState.journey_stage === "in_crisis") navigate("/right-now");
+    // 'tracking' → stays on '/' (dashboard)
+  }, [isLoaded, isSignedIn, isDemoMode, journeyStateLoading, journeyStateError, journeyState]);
+
   // Journey gate: redirect to /onboarding/start if journey_stage is null
   useEffect(() => {
     if (!isLoaded || !isSignedIn || isDemoMode) return;
@@ -645,6 +665,10 @@ function Router() {
         <Route path="/school" component={SchoolHub} />
         <Route path="/wellbeing" component={WellbeingCheckin} />
         <Route path="/hope" component={HopeBoard} />
+        <Route path="/learn" component={Learn} />
+        <Route path="/right-now" component={RightNow} />
+        <Route path="/advocate" component={Advocate} />
+        <Route path="/reports" component={Reports} />
         <Route path="/onboarding" component={Onboarding} />
         <Route path="/onboarding/start" component={OnboardingStart} />
         <Route path="/settings" component={Settings} />

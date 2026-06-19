@@ -3,7 +3,6 @@ import { Link, useLocation } from "wouter";
 import { useUser, useClerk } from "@clerk/react";
 import {
   LayoutDashboard,
-  ClipboardList,
   ClipboardCheck,
   CalendarRange,
   Heart,
@@ -16,7 +15,9 @@ import {
   Flag,
   BookOpen,
   Printer,
-  Home,
+  NotebookPen,
+  LifeBuoy,
+  Megaphone,
   Settings2,
   Menu,
   X,
@@ -49,33 +50,59 @@ interface NavSection {
   children?: NavChild[];
 }
 
-const NAV_SECTIONS: NavSection[] = [
+interface MobileTab {
+  href: string;
+  label: string;
+  icon: React.ElementType;
+  matchPaths: string[];
+}
+
+// Primary top-level nav — the 5 main pathways
+const PRIMARY_NAV: NavSection[] = [
   {
-    href: "/",
-    label: "Home",
-    icon: Home,
+    href: "/learn",
+    label: "Learn",
+    icon: BookOpen,
+  },
+  {
+    href: "/right-now",
+    label: "Right Now",
+    icon: LifeBuoy,
   },
   {
     href: "/log",
-    label: "Log Today",
-    subtitle: "Quick daily symptom check",
-    icon: ClipboardList,
+    label: "Log",
+    subtitle: "Daily symptom entry",
+    icon: NotebookPen,
     children: [
       { href: "/medications", label: "Medications", icon: Pill },
       { href: "/triggers", label: "Triggers", icon: Zap },
     ],
   },
   {
-    href: "/ptec",
-    label: "Weekly PTEC Check-In",
-    subtitle: "PTEC clinical assessment",
-    icon: ClipboardCheck,
+    href: "/export",
+    label: "Report",
+    subtitle: "Doctor-ready summaries",
+    icon: FileText,
+    children: [
+      { href: "/print", label: "Print Summary", icon: Printer },
+      { href: "/school", label: "School Letters", icon: School },
+    ],
   },
   {
-    href: "/timeline",
-    label: "Timeline",
-    subtitle: "Your full symptom history",
-    icon: CalendarRange,
+    href: "/advocate",
+    label: "Advocate",
+    icon: Megaphone,
+  },
+];
+
+// Secondary nav — always accessible, grouped below a divider
+const SECONDARY_NAV: NavSection[] = [
+  {
+    href: "/",
+    label: "Dashboard",
+    subtitle: "30-day trend chart",
+    icon: LayoutDashboard,
   },
   {
     href: "/baseline",
@@ -87,34 +114,51 @@ const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
-    href: "/export",
-    label: "Doctor Ready",
-    subtitle: "Reports for appointments",
-    icon: FileText,
-    children: [
-      { href: "/school", label: "School Letters", icon: School },
-      { href: "/print", label: "Print Summary", icon: Printer },
-    ],
-  },
-  {
     href: "/wellbeing",
     label: "For You",
-    subtitle: "Your wellbeing as a caregiver",
+    subtitle: "Caregiver wellbeing",
     icon: HeartHandshake,
     children: [
       { href: "/hope", label: "Hope Board", icon: Sparkles },
     ],
   },
   {
-    href: "/settings",
-    label: "Settings",
-    icon: Settings2,
+    href: "/ptec",
+    label: "Weekly PTEC",
+    icon: ClipboardCheck,
+  },
+  {
+    href: "/timeline",
+    label: "Timeline",
+    icon: CalendarRange,
   },
 ];
 
-// Which child routes belong to which parent section
+const SETTINGS_SECTION: NavSection = {
+  href: "/settings",
+  label: "Settings",
+  icon: Settings2,
+};
+
+// All sections merged for path-matching utilities
+const ALL_NAV = [...PRIMARY_NAV, ...SECONDARY_NAV, SETTINGS_SECTION];
+
+// Mobile bottom tab bar — 4 tabs; Report + Advocate combine into "Reports"
+const MOBILE_TABS: MobileTab[] = [
+  { href: "/learn", label: "Learn", icon: BookOpen, matchPaths: ["/learn"] },
+  { href: "/right-now", label: "Right Now", icon: LifeBuoy, matchPaths: ["/right-now"] },
+  { href: "/log", label: "Log", icon: NotebookPen, matchPaths: ["/log", "/medications", "/triggers", "/ptec"] },
+  {
+    href: "/reports",
+    label: "Reports",
+    icon: FileText,
+    matchPaths: ["/reports", "/export", "/advocate", "/print", "/school"],
+  },
+];
+
+// Which parent section a given path belongs to (for sub-item highlighting)
 function getSectionForPath(path: string): string {
-  for (const s of NAV_SECTIONS) {
+  for (const s of ALL_NAV) {
     if (s.href === path) return s.href;
     if (s.children?.some((c) => c.href === path)) return s.href;
   }
@@ -235,6 +279,45 @@ function NavItem({
   );
 }
 
+// ─── Mobile bottom tab bar ────────────────────────────────────────────────────
+
+function MobileBottomTabs({ location, onNavigate }: { location: string; onNavigate: () => void }) {
+  return (
+    <nav
+      className="md:hidden fixed bottom-0 left-0 right-0 bg-sidebar border-t border-sidebar-border z-30 flex"
+      style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
+    >
+      {MOBILE_TABS.map((tab) => {
+        const Icon = tab.icon;
+        const isActive = tab.matchPaths.some(
+          (p) => location === p || location.startsWith(p + "/")
+        );
+        return (
+          <Link key={tab.href} href={tab.href} onClick={onNavigate} className="flex-1">
+            <div
+              className={cn(
+                "flex flex-col items-center justify-center py-2.5 gap-1 transition-colors",
+                isActive ? "text-foreground" : "text-muted-foreground"
+              )}
+            >
+              <Icon
+                className="w-5 h-5 flex-shrink-0"
+                style={isActive ? { color: "var(--terracotta)" } : undefined}
+              />
+              <span
+                className={cn("text-[10px] font-medium leading-none", isActive ? "font-semibold" : "")}
+                style={isActive ? { color: "var(--terracotta)" } : undefined}
+              >
+                {tab.label}
+              </span>
+            </div>
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 // ─── Sidebar component ────────────────────────────────────────────────────────
 
 export default function Sidebar() {
@@ -281,9 +364,9 @@ export default function Sidebar() {
         )}
       </Link>
 
-      {/* Nav */}
-      <nav className="flex flex-col gap-1 p-3 flex-1 overflow-y-auto" data-testid="sidebar-nav">
-        {NAV_SECTIONS.map((section) => (
+      {/* Primary nav */}
+      <nav className="flex flex-col gap-1 p-3 overflow-y-auto" data-testid="sidebar-nav">
+        {PRIMARY_NAV.map((section) => (
           <NavItem
             key={section.href}
             section={section}
@@ -291,10 +374,30 @@ export default function Sidebar() {
             onNavigate={closeMobile}
           />
         ))}
+
+        {/* Divider */}
+        <div className="my-2 border-t border-border/60" />
+
+        {/* Secondary nav */}
+        {SECONDARY_NAV.map((section) => (
+          <NavItem
+            key={section.href}
+            section={section}
+            location={location}
+            onNavigate={closeMobile}
+          />
+        ))}
+
+        {/* Settings */}
+        <NavItem
+          section={SETTINGS_SECTION}
+          location={location}
+          onNavigate={closeMobile}
+        />
       </nav>
 
       {/* User menu */}
-      <div className="px-4 py-4 border-t border-border space-y-3">
+      <div className="px-4 py-4 border-t border-border space-y-3 mt-auto">
         {displayName && (
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0">
@@ -347,7 +450,7 @@ export default function Sidebar() {
         {navContent}
       </aside>
 
-      {/* Mobile header — sits at top, pads for Dynamic Island / notch via safe-area-inset-top */}
+      {/* Mobile header */}
       <div
         className="md:hidden fixed top-0 left-0 right-0 bg-sidebar border-b border-sidebar-border z-30"
         style={{ paddingTop: "env(safe-area-inset-top)" }}
@@ -380,6 +483,9 @@ export default function Sidebar() {
           </Button>
         </div>
       </div>
+
+      {/* Mobile bottom tab bar */}
+      <MobileBottomTabs location={location} onNavigate={() => {}} />
 
       {/* Mobile drawer */}
       {mobileOpen && (

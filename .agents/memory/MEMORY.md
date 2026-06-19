@@ -1,1 +1,2 @@
 - [Framer Motion v12 Variants typing](framer-motion-v12-variants.md) — `ease` in Variants must be a typed `Transition` constant, not an inline string or cubic-bezier array.
+- [Navigation architecture](nav-architecture.md) — PRIMARY_NAV (5), SECONDARY_NAV below divider, MOBILE_TABS (4) with matchPaths; post-login landing uses useRef flag + journey_stage.

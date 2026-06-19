@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { requireAuth } from '@clerk/express';
 import { requireSupabase } from '../lib/supabase';
 import { logger, errCode } from '../lib/logger';
+import { safeUpsert } from '../lib/safeUpsert';
 
 const router = Router();
 
@@ -28,17 +29,18 @@ async function getAll(table: string, userId: string): Promise<unknown[]> {
   return (data ?? []).map((r: { data: unknown }) => r.data);
 }
 
+// Returns 'forbidden' when the id exists but is owned by a different user.
+// Route handlers must return 404 on 'forbidden' (don't reveal row existence).
 async function upsertItem(
   table: string,
   userId: string,
   id: string,
   item: unknown,
   extra?: Record<string, unknown>,
-): Promise<void> {
+): Promise<'ok' | 'forbidden'> {
   const db = requireSupabase();
-  const row = { id, user_id: userId, data: item, updated_at: new Date().toISOString(), ...extra };
-  const { error } = await db.from(table).upsert(row);
-  if (error) throw error;
+  const row = { id, user_id: userId, data: item, ...extra };
+  return safeUpsert(db, table, userId, id, row);
 }
 
 async function deleteItem(table: string, userId: string, id: string): Promise<void> {
@@ -66,18 +68,12 @@ router.get('/logs', async (req, res) => {
 router.post('/logs', async (req, res) => {
   try {
     const db = requireSupabase();
+    const userId = uid(req);
     const log = req.body as { id: string; date: string; child_id?: string };
-    const row: Record<string, unknown> = {
-      id: log.id,
-      user_id: uid(req),
-      date: log.date,
-      data: log,
-      updated_at: new Date().toISOString(),
-    };
+    const row: Record<string, unknown> = { id: log.id, user_id: userId, date: log.date, data: log };
     if (log.child_id) row.child_id = log.child_id;
-    // Upsert by id (primary key) so different children can each have a log on the same date
-    const { error } = await db.from('symptom_logs').upsert(row, { onConflict: 'id' });
-    if (error) throw error;
+    const result = await safeUpsert(db, 'symptom_logs', userId, log.id, row);
+    if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /logs'); }
 });
@@ -98,7 +94,8 @@ router.get('/medications', async (req, res) => {
 
 router.post('/medications', async (req, res) => {
   try {
-    await upsertItem('medications', uid(req), req.body.id, req.body);
+    const result = await upsertItem('medications', uid(req), req.body.id, req.body);
+    if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /medications'); }
 });
@@ -117,7 +114,8 @@ router.get('/medlibrary', async (req, res) => {
 
 router.post('/medlibrary', async (req, res) => {
   try {
-    await upsertItem('med_library', uid(req), req.body.id, req.body);
+    const result = await upsertItem('med_library', uid(req), req.body.id, req.body);
+    if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /medlibrary'); }
 });
@@ -136,7 +134,8 @@ router.get('/milestones', async (req, res) => {
 
 router.post('/milestones', async (req, res) => {
   try {
-    await upsertItem('milestones', uid(req), req.body.id, req.body);
+    const result = await upsertItem('milestones', uid(req), req.body.id, req.body);
+    if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /milestones'); }
 });
@@ -182,12 +181,11 @@ router.get('/ptec', async (req, res) => {
 router.post('/ptec', async (req, res) => {
   try {
     const db = requireSupabase();
+    const userId = uid(req);
     const log = req.body as { id: string; weekStartDate: string; child_id?: string };
-    const { error } = await db.from('ptec_logs').upsert(
-      { id: log.id, user_id: uid(req), child_id: log.child_id ?? null, week_start: log.weekStartDate, data: log, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id,child_id,week_start' },
-    );
-    if (error) throw error;
+    const row = { id: log.id, user_id: userId, child_id: log.child_id ?? null, week_start: log.weekStartDate, data: log };
+    const result = await safeUpsert(db, 'ptec_logs', userId, log.id, row);
+    if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /ptec'); }
 });
@@ -206,7 +204,8 @@ router.get('/flares', async (req, res) => {
 
 router.post('/flares', async (req, res) => {
   try {
-    await upsertItem('flare_history', uid(req), req.body.id, req.body);
+    const result = await upsertItem('flare_history', uid(req), req.body.id, req.body);
+    if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /flares'); }
 });
@@ -220,7 +219,8 @@ router.get('/triggers', async (req, res) => {
 
 router.post('/triggers', async (req, res) => {
   try {
-    await upsertItem('trigger_log', uid(req), req.body.id, req.body);
+    const result = await upsertItem('trigger_log', uid(req), req.body.id, req.body);
+    if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /triggers'); }
 });
@@ -239,7 +239,8 @@ router.get('/household', async (req, res) => {
 
 router.post('/household', async (req, res) => {
   try {
-    await upsertItem('household_health', uid(req), req.body.id, req.body);
+    const result = await upsertItem('household_health', uid(req), req.body.id, req.body);
+    if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /household'); }
 });
@@ -259,12 +260,11 @@ router.get('/wellbeing', async (req, res) => {
 router.post('/wellbeing', async (req, res) => {
   try {
     const db = requireSupabase();
+    const userId = uid(req);
     const log = req.body as { id: string; date: string };
-    const { error } = await db.from('wellbeing_logs').upsert(
-      { id: log.id, user_id: uid(req), date: log.date, data: log, updated_at: new Date().toISOString() },
-      { onConflict: 'user_id,date' },
-    );
-    if (error) throw error;
+    const row = { id: log.id, user_id: userId, date: log.date, data: log };
+    const result = await safeUpsert(db, 'wellbeing_logs', userId, log.id, row);
+    if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /wellbeing'); }
 });
@@ -588,7 +588,7 @@ router.post('/labs', async (req, res) => {
     const userId = uid(req);
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const body = req.body as any;
-    const { error } = await db.from('lab_results').upsert({
+    const row = {
       id: body.id,
       user_id: userId,
       child_id: body.child_id,
@@ -599,9 +599,9 @@ router.post('/labs', async (req, res) => {
       reference_range: body.reference_range ?? null,
       lab_name: body.lab_name ?? null,
       notes: body.notes ?? null,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'id' });
-    if (error) throw error;
+    };
+    const result = await safeUpsert(db, 'lab_results', userId, body.id, row);
+    if (result === 'forbidden') { res.status(404).json({ error: 'Not found' }); return; }
     res.status(204).send();
   } catch (e) { err(res, e, 'POST /labs'); }
 });

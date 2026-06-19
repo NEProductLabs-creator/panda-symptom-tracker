@@ -7,19 +7,26 @@ import { mergeById, now } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
+import { useActiveChild } from '@/hooks/useActiveChild';
 import { DEMO_MED_LIBRARY, DEMO_EXPLORING_MED_LIBRARY, DEMO_IN_CRISIS_MED_LIBRARY } from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
 const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'));
+
+function filterByChild(items: MedLibraryItem[], childId: string | null): MedLibraryItem[] {
+  if (!childId) return items;
+  return items.filter((m) => !m.child_id || m.child_id === childId);
+}
 
 export function useMedLibrary() {
   const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
   const { toast } = useToast();
+  const activeChildId = useActiveChild()?.id ?? null;
 
   const [medLibrary, setMedLibrary] = useState<MedLibraryItem[]>(() => {
-    if (!isDemoMode) return storage.getMedLibrary();
+    if (!isDemoMode) return filterByChild(storage.getMedLibrary(), activeChildId);
     const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
     if (scenario === 'exploring') return DEMO_EXPLORING_MED_LIBRARY;
     if (scenario === 'in_crisis') return DEMO_IN_CRISIS_MED_LIBRARY;
@@ -35,9 +42,10 @@ export function useMedLibrary() {
         const local = storage.getMedLibrary();
         const { merged, localOnly } = mergeById(local, serverItems);
         storage.saveMedLibrary(merged);
-        setMedLibrary(merged);
+        setMedLibrary(filterByChild(merged, activeChildId));
         localOnly.forEach((item) => {
-          queueMutation('POST', '/medlibrary', item, getToken, toast);
+          const toSync = activeChildId && !item.child_id ? { ...item, child_id: activeChildId } : item;
+          queueMutation('POST', '/medlibrary', toSync, getToken, toast);
         });
         setLoading(false);
       })
@@ -46,7 +54,7 @@ export function useMedLibrary() {
         toast({ title: 'Could not load latest data. Showing your last saved version.' });
         setLoading(false);
       });
-  }, [userId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, getToken, activeChildId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { refetch(); }, [refetch]);
 
@@ -56,35 +64,51 @@ export function useMedLibrary() {
     return () => document.removeEventListener('pans:foreground', handler);
   }, [refetch]);
 
+  // Re-filter from localStorage immediately when the active child changes.
+  useEffect(() => {
+    if (isDemoMode) return;
+    setMedLibrary(filterByChild(storage.getMedLibrary(), activeChildId));
+  }, [activeChildId, isDemoMode]);
+
   const saveMedLibraryItem = useCallback(
     (item: MedLibraryItem) => {
       if (isDemoMode) { dispatchDemo(); return; }
-      const stamped: MedLibraryItem = { ...item, updatedAt: now() };
+      if (!activeChildId) {
+        console.warn('[useMedLibrary] saveMedLibraryItem called with no active child; queuing without optimistic update');
+        queueMutation('POST', '/medlibrary', { ...item, updatedAt: now() }, getToken, toast);
+        return;
+      }
+      const stamped: MedLibraryItem = { ...item, child_id: activeChildId, updatedAt: now() };
       setMedLibrary((prev) => {
         const existingIdx = prev.findIndex((m) => m.id === stamped.id);
-        const next =
-          existingIdx >= 0
-            ? prev.map((m, i) => (i === existingIdx ? stamped : m))
-            : [...prev, stamped];
-        storage.saveMedLibrary(next);
-        return next;
+        const nextFiltered = existingIdx >= 0
+          ? prev.map((m, i) => (i === existingIdx ? stamped : m))
+          : [...prev, stamped];
+        const all = storage.getMedLibrary();
+        const others = all.filter((m) => m.child_id && m.child_id !== activeChildId);
+        storage.saveMedLibrary([...others, ...nextFiltered]);
+        return nextFiltered;
       });
       queueMutation('POST', '/medlibrary', stamped, getToken, toast);
     },
-    [isDemoMode, getToken, toast],
+    [isDemoMode, activeChildId, getToken, toast],
   );
 
   const deleteMedLibraryItem = useCallback(
     (id: string) => {
       if (isDemoMode) { dispatchDemo(); return; }
       setMedLibrary((prev) => {
-        const next = prev.filter((m) => m.id !== id);
-        storage.saveMedLibrary(next);
-        return next;
+        const nextFiltered = prev.filter((m) => m.id !== id);
+        const all = storage.getMedLibrary();
+        const others = activeChildId
+          ? all.filter((m) => m.child_id && m.child_id !== activeChildId)
+          : [];
+        storage.saveMedLibrary([...others, ...nextFiltered]);
+        return nextFiltered;
       });
       queueMutation('DELETE', `/medlibrary/${id}`, undefined, getToken, toast);
     },
-    [isDemoMode, getToken, toast],
+    [isDemoMode, activeChildId, getToken, toast],
   );
 
   return { medLibrary, loading, saveMedLibraryItem, deleteMedLibraryItem, refetch };

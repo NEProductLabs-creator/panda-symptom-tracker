@@ -7,13 +7,22 @@ import { mergeById, now } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
+import { useActiveChild } from '@/hooks/useActiveChild';
+
+function filterByChild(items: Milestone[], childId: string | null): Milestone[] {
+  if (!childId) return items;
+  return items.filter((m) => !m.child_id || m.child_id === childId);
+}
 
 export function useMilestones() {
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
   const { toast } = useToast();
+  const activeChildId = useActiveChild()?.id ?? null;
 
-  const [milestones, setMilestones] = useState<Milestone[]>(() => storage.getMilestones());
+  const [milestones, setMilestones] = useState<Milestone[]>(() =>
+    filterByChild(storage.getMilestones(), activeChildId),
+  );
   const [loading, setLoading] = useState(false);
 
   const refetch = useCallback(() => {
@@ -24,9 +33,10 @@ export function useMilestones() {
         const local = storage.getMilestones();
         const { merged, localOnly } = mergeById(local, serverItems);
         storage.saveMilestones(merged);
-        setMilestones(merged);
+        setMilestones(filterByChild(merged, activeChildId));
         localOnly.forEach((item) => {
-          queueMutation('POST', '/milestones', item, getToken, toast);
+          const toSync = activeChildId && !item.child_id ? { ...item, child_id: activeChildId } : item;
+          queueMutation('POST', '/milestones', toSync, getToken, toast);
         });
         setLoading(false);
       })
@@ -35,7 +45,7 @@ export function useMilestones() {
         toast({ title: 'Could not load latest data. Showing your last saved version.' });
         setLoading(false);
       });
-  }, [userId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, getToken, activeChildId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { refetch(); }, [refetch]);
 
@@ -45,43 +55,68 @@ export function useMilestones() {
     return () => document.removeEventListener('pans:foreground', handler);
   }, [refetch]);
 
+  // Re-filter from localStorage immediately when the active child changes.
+  useEffect(() => {
+    setMilestones(filterByChild(storage.getMilestones(), activeChildId));
+  }, [activeChildId]);
+
   const addMilestone = useCallback(
     (data: Omit<Milestone, 'id'>) => {
-      const item: Milestone = { ...data, id: crypto.randomUUID(), updatedAt: now() };
+      if (!activeChildId) {
+        console.warn('[useMilestones] addMilestone called with no active child; queuing without optimistic update');
+        const item: Milestone = { ...data, id: crypto.randomUUID(), updatedAt: now() };
+        queueMutation('POST', '/milestones', item, getToken, toast);
+        return item;
+      }
+      const item: Milestone = { ...data, child_id: activeChildId, id: crypto.randomUUID(), updatedAt: now() };
       setMilestones((prev) => {
-        const updated = [...prev, item];
-        storage.saveMilestones(updated);
-        return updated;
+        const nextFiltered = [...prev, item];
+        const all = storage.getMilestones();
+        const others = all.filter((m) => m.child_id && m.child_id !== activeChildId);
+        storage.saveMilestones([...others, ...nextFiltered]);
+        return nextFiltered;
       });
       queueMutation('POST', '/milestones', item, getToken, toast);
       return item;
     },
-    [getToken, toast],
+    [activeChildId, getToken, toast],
   );
 
   const updateMilestone = useCallback(
     (id: string, data: Omit<Milestone, 'id'>) => {
-      const item: Milestone = { ...data, id, updatedAt: now() };
+      if (!activeChildId) {
+        console.warn('[useMilestones] updateMilestone called with no active child; queuing without optimistic update');
+        const item: Milestone = { ...data, id, updatedAt: now() };
+        queueMutation('POST', '/milestones', item, getToken, toast);
+        return;
+      }
+      const item: Milestone = { ...data, child_id: activeChildId, id, updatedAt: now() };
       setMilestones((prev) => {
-        const updated = prev.map((m) => (m.id === id ? item : m));
-        storage.saveMilestones(updated);
-        return updated;
+        const nextFiltered = prev.map((m) => (m.id === id ? item : m));
+        const all = storage.getMilestones();
+        const others = all.filter((m) => m.child_id && m.child_id !== activeChildId);
+        storage.saveMilestones([...others, ...nextFiltered]);
+        return nextFiltered;
       });
       queueMutation('POST', '/milestones', item, getToken, toast);
     },
-    [getToken, toast],
+    [activeChildId, getToken, toast],
   );
 
   const deleteMilestone = useCallback(
     (id: string) => {
       setMilestones((prev) => {
-        const updated = prev.filter((m) => m.id !== id);
-        storage.saveMilestones(updated);
-        return updated;
+        const nextFiltered = prev.filter((m) => m.id !== id);
+        const all = storage.getMilestones();
+        const others = activeChildId
+          ? all.filter((m) => m.child_id && m.child_id !== activeChildId)
+          : [];
+        storage.saveMilestones([...others, ...nextFiltered]);
+        return nextFiltered;
       });
       queueMutation('DELETE', `/milestones/${id}`, undefined, getToken, toast);
     },
-    [getToken, toast],
+    [activeChildId, getToken, toast],
   );
 
   return { milestones, loading, addMilestone, updateMilestone, deleteMilestone, refetch };

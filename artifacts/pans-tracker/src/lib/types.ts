@@ -26,6 +26,7 @@ export type MissedDose = {
 
 export type Medication = {
   id: string;
+  child_id?: string; // child scope — set on all new rows; legacy rows may be undefined
   name: string;
   dose: string;
   frequency?: FrequencyOption;
@@ -52,6 +53,7 @@ export const FREQUENCY_LABELS: Record<FrequencyOption, string> = {
 
 export type MedLibraryItem = {
   id: string;
+  child_id?: string; // child scope — set on all new rows; legacy rows may be undefined
   name: string;
   dosage: string;
   frequency: FrequencyOption;
@@ -69,6 +71,7 @@ export const MILESTONE_TYPE_LABELS: Record<MilestoneType, string> = {
 
 export type Milestone = {
   id: string;
+  child_id?: string; // child scope — set on all new rows; legacy rows may be undefined
   date: string; // YYYY-MM-DD
   title: string;
   type: MilestoneType;
@@ -119,6 +122,7 @@ export type TriggerSeverity = 'low' | 'medium' | 'high';
 
 export type TriggerEntry = {
   id: string;
+  child_id?: string; // child scope — set on all new rows; legacy rows may be undefined
   category: TriggerCategory;
   date: string; // YYYY-MM-DD
   notes: string;

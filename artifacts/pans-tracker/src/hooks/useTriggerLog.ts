@@ -7,14 +7,25 @@ import { mergeById, now } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
+import { useActiveChild } from '@/hooks/useActiveChild';
+
+function filterByChild(items: TriggerEntry[], childId: string | null): TriggerEntry[] {
+  if (!childId) return items;
+  return items.filter((e) => !e.child_id || e.child_id === childId);
+}
+
+function sorted(items: TriggerEntry[]): TriggerEntry[] {
+  return [...items].sort((a, b) => b.date.localeCompare(a.date));
+}
 
 export function useTriggerLog() {
   const { userId, getToken } = useAuth();
   const api = useMemo(() => createApiClient(getToken), [getToken]);
   const { toast } = useToast();
+  const activeChildId = useActiveChild()?.id ?? null;
 
   const [entries, setEntries] = useState<TriggerEntry[]>(() =>
-    storage.getTriggerLog().sort((a, b) => b.date.localeCompare(a.date)),
+    sorted(filterByChild(storage.getTriggerLog(), activeChildId)),
   );
   const [loading, setLoading] = useState(false);
 
@@ -25,11 +36,11 @@ export function useTriggerLog() {
       .then((serverEntries) => {
         const local = storage.getTriggerLog();
         const { merged, localOnly } = mergeById(local, serverEntries);
-        const sorted = [...merged].sort((a, b) => b.date.localeCompare(a.date));
-        storage.saveTriggerLog(sorted);
-        setEntries(sorted);
+        storage.saveTriggerLog(merged);
+        setEntries(sorted(filterByChild(merged, activeChildId)));
         localOnly.forEach((e) => {
-          queueMutation('POST', '/triggers', e, getToken, toast);
+          const toSync = activeChildId && !e.child_id ? { ...e, child_id: activeChildId } : e;
+          queueMutation('POST', '/triggers', toSync, getToken, toast);
         });
         setLoading(false);
       })
@@ -38,7 +49,7 @@ export function useTriggerLog() {
         toast({ title: 'Could not load latest data. Showing your last saved version.' });
         setLoading(false);
       });
-  }, [userId, getToken]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [userId, getToken, activeChildId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { refetch(); }, [refetch]);
 
@@ -48,23 +59,35 @@ export function useTriggerLog() {
     return () => document.removeEventListener('pans:foreground', handler);
   }, [refetch]);
 
+  // Re-filter from localStorage immediately when the active child changes.
+  useEffect(() => {
+    setEntries(sorted(filterByChild(storage.getTriggerLog(), activeChildId)));
+  }, [activeChildId]);
+
   const addEntry = useCallback(
     (entry: TriggerEntry) => {
-      const stamped: TriggerEntry = { ...entry, updatedAt: now() };
+      if (!activeChildId) {
+        console.warn('[useTriggerLog] addEntry called with no active child; queuing without optimistic update');
+        const stamped: TriggerEntry = { ...entry, updatedAt: now() };
+        queueMutation('POST', '/triggers', stamped, getToken, toast);
+        return;
+      }
+      const stamped: TriggerEntry = { ...entry, child_id: activeChildId, updatedAt: now() };
+      // storage.addTriggerEntry appends to the full list; then re-read and filter for display.
       storage.addTriggerEntry(stamped);
-      setEntries(storage.getTriggerLog().sort((a, b) => b.date.localeCompare(a.date)));
+      setEntries(sorted(filterByChild(storage.getTriggerLog(), activeChildId)));
       queueMutation('POST', '/triggers', stamped, getToken, toast);
     },
-    [getToken, toast],
+    [activeChildId, getToken, toast],
   );
 
   const deleteEntry = useCallback(
     (id: string) => {
       storage.deleteTriggerEntry(id);
-      setEntries(storage.getTriggerLog().sort((a, b) => b.date.localeCompare(a.date)));
+      setEntries(sorted(filterByChild(storage.getTriggerLog(), activeChildId)));
       queueMutation('DELETE', `/triggers/${id}`, undefined, getToken, toast);
     },
-    [getToken, toast],
+    [activeChildId, getToken, toast],
   );
 
   return { entries, loading, addEntry, deleteEntry, refetch };

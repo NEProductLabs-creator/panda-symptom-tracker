@@ -57,6 +57,14 @@ logger.info({ allowedOrigins }, "CORS allowlist");
 
 const app: Express = express();
 
+// ── Proxy trust ───────────────────────────────────────────────────────────────
+// Replit's shared reverse proxy injects X-Forwarded-For. Without this setting,
+// express-rate-limit throws ERR_ERL_UNEXPECTED_X_FORWARDED_FOR and falls back
+// to the proxy's IP, making all users share one rate-limit bucket.
+// `1` means trust exactly one hop of proxy (the Replit edge), so req.ip
+// correctly reflects the real client IP.
+app.set("trust proxy", 1);
+
 // ── Request logging ───────────────────────────────────────────────────────────
 
 app.use(

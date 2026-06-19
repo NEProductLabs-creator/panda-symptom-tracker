@@ -44,8 +44,8 @@ END $$;
 -- Step 3: enforce NOT NULL now that every remaining row has a child_id
 ALTER TABLE public.ptec_logs ALTER COLUMN child_id SET NOT NULL;
 
--- Step 4: drop the old single-child unique index
-DROP INDEX IF EXISTS public.ptec_logs_user_week;
+-- Step 4: drop the old single-child unique constraint (and its backing index)
+ALTER TABLE public.ptec_logs DROP CONSTRAINT IF EXISTS ptec_logs_user_week;
 
 -- Step 5: new unique index scoped to (user_id, child_id, week_start)
 CREATE UNIQUE INDEX IF NOT EXISTS ptec_logs_user_child_week

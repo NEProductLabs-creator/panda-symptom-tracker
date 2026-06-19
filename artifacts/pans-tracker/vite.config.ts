@@ -100,6 +100,9 @@ export default defineConfig({
       },
       injectManifest: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff,woff2}"],
+        // Raised from default 2 MiB — large bundles (jsPDF, Recharts) push the
+        // main chunk over 2 MB. 4 MiB gives headroom as features grow.
+        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },
       devOptions: {
         enabled: false,
@@ -130,6 +133,27 @@ export default defineConfig({
   build: {
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return undefined;
+          // PDF generation — jsPDF + autotable are large; lazy-load candidates
+          if (id.includes("jspdf")) return "pdf";
+          // Charts — Recharts pulls in a full D3 subset
+          if (id.includes("recharts") || id.includes("d3-") || id.includes("d3/")) return "charts";
+          // Clerk auth SDK
+          if (id.includes("@clerk")) return "clerk";
+          // Framer Motion animation library
+          if (id.includes("framer-motion")) return "motion";
+          // PostHog analytics
+          if (id.includes("posthog")) return "analytics";
+          // React core — always cached separately
+          if (id.includes("react-dom") || id.includes("/react/")) return "react";
+          // Everything else from node_modules
+          return "vendor";
+        },
+      },
+    },
   },
   server: {
     port,

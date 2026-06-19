@@ -6,6 +6,7 @@ import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
+import { track } from '@/lib/analytics';
 
 export function useMilestones() {
   const { userId, getToken } = useAuth();
@@ -13,9 +14,11 @@ export function useMilestones() {
   const { toast } = useToast();
 
   const [milestones, setMilestones] = useState<Milestone[]>(() => storage.getMilestones());
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
+    setLoading(true);
     api.milestones.getAll()
       .then((serverItems) => {
         const local = storage.getMilestones();
@@ -25,8 +28,13 @@ export function useMilestones() {
         localOnly.forEach((item) => {
           queueMutation('POST', '/milestones', item, getToken, toast);
         });
+        setLoading(false);
       })
-      .catch(() => {});
+      .catch((e) => {
+        track('api_fetch_failed', { hook: 'useMilestones', error: String(e) });
+        toast({ title: 'Could not load latest data. Showing your last saved version.' });
+        setLoading(false);
+      });
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addMilestone = useCallback(
@@ -68,5 +76,5 @@ export function useMilestones() {
     [getToken, toast],
   );
 
-  return { milestones, addMilestone, updateMilestone, deleteMilestone };
+  return { milestones, loading, addMilestone, updateMilestone, deleteMilestone };
 }

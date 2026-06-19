@@ -6,6 +6,7 @@ import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
+import { track } from '@/lib/analytics';
 
 export function useTriggerLog() {
   const { userId, getToken } = useAuth();
@@ -15,9 +16,11 @@ export function useTriggerLog() {
   const [entries, setEntries] = useState<TriggerEntry[]>(() =>
     storage.getTriggerLog().sort((a, b) => b.date.localeCompare(a.date)),
   );
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!userId) return;
+    setLoading(true);
     api.triggers.getAll()
       .then((serverEntries) => {
         const local = storage.getTriggerLog();
@@ -28,8 +31,13 @@ export function useTriggerLog() {
         localOnly.forEach((e) => {
           queueMutation('POST', '/triggers', e, getToken, toast);
         });
+        setLoading(false);
       })
-      .catch(() => {});
+      .catch((e) => {
+        track('api_fetch_failed', { hook: 'useTriggerLog', error: String(e) });
+        toast({ title: 'Could not load latest data. Showing your last saved version.' });
+        setLoading(false);
+      });
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addEntry = useCallback(
@@ -51,5 +59,5 @@ export function useTriggerLog() {
     [getToken, toast],
   );
 
-  return { entries, addEntry, deleteEntry };
+  return { entries, loading, addEntry, deleteEntry };
 }

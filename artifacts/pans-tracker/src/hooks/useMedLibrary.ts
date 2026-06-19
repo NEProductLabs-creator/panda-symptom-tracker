@@ -6,6 +6,7 @@ import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
+import { track } from '@/lib/analytics';
 import { DEMO_MED_LIBRARY, DEMO_EXPLORING_MED_LIBRARY, DEMO_IN_CRISIS_MED_LIBRARY } from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
@@ -24,9 +25,11 @@ export function useMedLibrary() {
     if (scenario === 'in_crisis') return DEMO_IN_CRISIS_MED_LIBRARY;
     return DEMO_MED_LIBRARY;
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!userId || isDemoMode) return;
+    setLoading(true);
     api.medLibrary.getAll()
       .then((serverItems) => {
         const local = storage.getMedLibrary();
@@ -36,8 +39,13 @@ export function useMedLibrary() {
         localOnly.forEach((item) => {
           queueMutation('POST', '/medlibrary', item, getToken, toast);
         });
+        setLoading(false);
       })
-      .catch(() => {});
+      .catch((e) => {
+        track('api_fetch_failed', { hook: 'useMedLibrary', error: String(e) });
+        toast({ title: 'Could not load latest data. Showing your last saved version.' });
+        setLoading(false);
+      });
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveMedLibraryItem = useCallback(
@@ -71,5 +79,5 @@ export function useMedLibrary() {
     [isDemoMode, getToken, toast],
   );
 
-  return { medLibrary, saveMedLibraryItem, deleteMedLibraryItem };
+  return { medLibrary, loading, saveMedLibraryItem, deleteMedLibraryItem };
 }

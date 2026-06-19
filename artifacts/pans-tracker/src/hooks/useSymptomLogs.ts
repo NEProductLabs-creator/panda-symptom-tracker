@@ -40,11 +40,12 @@ export function useSymptomLogs() {
     if (scenario === 'multi_child') return filterByChild(DEMO_MULTI_CHILD_LOGS, activeChildId);
     return DEMO_LOGS;
   });
-  const loading = false;
+  const [loading, setLoading] = useState(false);
 
   // Sync from server when userId first resolves
   useEffect(() => {
     if (!userId || isDemoMode) return;
+    setLoading(true);
     api.logs.getAll()
       .then((serverLogs) => {
         const local = storage.getLogs();
@@ -54,8 +55,13 @@ export function useSymptomLogs() {
         localOnly.forEach((l) => {
           queueMutation('POST', '/logs', l, getToken, toast);
         });
+        setLoading(false);
       })
-      .catch(() => {});
+      .catch((e) => {
+        track('api_fetch_failed', { hook: 'useSymptomLogs', error: String(e) });
+        toast({ title: 'Could not load latest data. Showing your last saved version.' });
+        setLoading(false);
+      });
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Re-filter from localStorage (or demo source) whenever the active child changes

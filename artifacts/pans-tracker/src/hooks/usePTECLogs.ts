@@ -30,9 +30,11 @@ export function usePTECLogs() {
     }
     return storage.getPTECLogs().sort((a, b) => a.weekStartDate.localeCompare(b.weekStartDate));
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!userId || isDemoMode) return;
+    setLoading(true);
     api.ptec.getAll()
       .then((serverLogs) => {
         const local = storage.getPTECLogs();
@@ -43,8 +45,13 @@ export function usePTECLogs() {
         localOnly.forEach((l) => {
           queueMutation('POST', '/ptec', l, getToken, toast);
         });
+        setLoading(false);
       })
-      .catch(() => {});
+      .catch((e) => {
+        track('api_fetch_failed', { hook: 'usePTECLogs', error: String(e) });
+        toast({ title: 'Could not load latest data. Showing your last saved version.' });
+        setLoading(false);
+      });
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addOrUpdateLog = useCallback(
@@ -91,5 +98,5 @@ export function usePTECLogs() {
     [ptecLogs],
   );
 
-  return { ptecLogs, addOrUpdateLog, deleteLog, getLogForWeek };
+  return { ptecLogs, loading, addOrUpdateLog, deleteLog, getLogForWeek };
 }

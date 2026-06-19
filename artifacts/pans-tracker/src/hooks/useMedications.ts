@@ -6,6 +6,7 @@ import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
+import { track } from '@/lib/analytics';
 import { DEMO_MEDICATIONS, DEMO_IN_CRISIS_MEDICATIONS, DEMO_EXPLORING_MEDICATIONS } from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
@@ -24,9 +25,11 @@ export function useMedications() {
     if (scenario === 'in_crisis') return DEMO_IN_CRISIS_MEDICATIONS;
     return DEMO_MEDICATIONS;
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!userId || isDemoMode) return;
+    setLoading(true);
     api.medications.getAll()
       .then((serverMeds) => {
         const local = storage.getMedications();
@@ -36,8 +39,13 @@ export function useMedications() {
         localOnly.forEach((m) => {
           queueMutation('POST', '/medications', m, getToken, toast);
         });
+        setLoading(false);
       })
-      .catch(() => {});
+      .catch((e) => {
+        track('api_fetch_failed', { hook: 'useMedications', error: String(e) });
+        toast({ title: 'Could not load latest data. Showing your last saved version.' });
+        setLoading(false);
+      });
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const addMedication = useCallback(
@@ -83,7 +91,6 @@ export function useMedications() {
         storage.saveMedications(next);
         return next;
       });
-      // Read fresh from storage (written synchronously above)
       const updated = storage.getMedications().find((m) => m.id === medId);
       if (updated) {
         queueMutation('POST', '/medications', updated, getToken, toast);
@@ -104,7 +111,6 @@ export function useMedications() {
         storage.saveMedications(next);
         return next;
       });
-      // Read fresh from storage (written synchronously above)
       const updated = storage.getMedications().find((m) => m.id === medId);
       if (updated) {
         queueMutation('POST', '/medications', updated, getToken, toast);
@@ -113,5 +119,5 @@ export function useMedications() {
     [isDemoMode, getToken, toast],
   );
 
-  return { medications, addMedication, deleteMedication, addMissedDose, deleteMissedDose };
+  return { medications, loading, addMedication, deleteMedication, addMissedDose, deleteMissedDose };
 }

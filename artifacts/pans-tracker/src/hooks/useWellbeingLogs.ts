@@ -5,6 +5,7 @@ import { createApiClient } from '@/lib/api';
 import { mergeById, now } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
+import { track } from '@/lib/analytics';
 import { DEMO_WELLBEING_LOGS } from '@/lib/demoData';
 import { DEMO_KEY } from '@/contexts/DemoContext';
 
@@ -33,9 +34,11 @@ export function useWellbeingLogs() {
   const [logs, setLogs] = useState<WellbeingLog[]>(() =>
     isDemoMode ? DEMO_WELLBEING_LOGS : loadLogs(),
   );
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!userId || isDemoMode) return;
+    setLoading(true);
     api.wellbeing.getAll()
       .then((serverLogs) => {
         const local = loadLogs();
@@ -45,8 +48,13 @@ export function useWellbeingLogs() {
         localOnly.forEach((l) => {
           queueMutation('POST', '/wellbeing', l, getToken, toast);
         });
+        setLoading(false);
       })
-      .catch(() => {});
+      .catch((e) => {
+        track('api_fetch_failed', { hook: 'useWellbeingLogs', error: String(e) });
+        toast({ title: 'Could not load latest data. Showing your last saved version.' });
+        setLoading(false);
+      });
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const upsertLog = useCallback(
@@ -68,7 +76,6 @@ export function useWellbeingLogs() {
         persistLogs(next);
         return next;
       });
-      // Read saved item from storage (written synchronously above)
       const saved = loadLogs().find((l) => l.date === entry.date);
       if (saved) {
         queueMutation('POST', '/wellbeing', saved, getToken, toast);
@@ -90,5 +97,5 @@ export function useWellbeingLogs() {
     [isDemoMode, getToken, toast],
   );
 
-  return { logs, upsertLog, deleteLog };
+  return { logs, loading, upsertLog, deleteLog };
 }

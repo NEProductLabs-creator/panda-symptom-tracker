@@ -6,6 +6,7 @@ import { createApiClient } from '@/lib/api';
 import { mergeSingleton } from '@/lib/syncUtils';
 import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
+import { track } from '@/lib/analytics';
 import { DEMO_BASELINE, DEMO_EXPLORING_BASELINE, DEMO_IN_CRISIS_BASELINE } from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
@@ -22,9 +23,11 @@ export function useChildBaseline() {
     if (scenario === 'in_crisis') return DEMO_IN_CRISIS_BASELINE;
     return DEMO_BASELINE;
   });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (!userId || isDemoMode) return;
+    setLoading(true);
     api.baseline.get()
       .then((serverBaseline) => {
         const local = storage.getChildBaseline();
@@ -36,8 +39,13 @@ export function useChildBaseline() {
         if (pushToServer && winner) {
           queueMutation('PUT', '/baseline', winner, getToken, toast);
         }
+        setLoading(false);
       })
-      .catch(() => {});
+      .catch((e) => {
+        track('api_fetch_failed', { hook: 'useChildBaseline', error: String(e) });
+        toast({ title: 'Could not load latest data. Showing your last saved version.' });
+        setLoading(false);
+      });
   }, [userId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const saveBaseline = useCallback(
@@ -56,5 +64,5 @@ export function useChildBaseline() {
     setBaseline(null);
   }, [isDemoMode]);
 
-  return { baseline, saveBaseline, clearBaseline };
+  return { baseline, loading, saveBaseline, clearBaseline };
 }

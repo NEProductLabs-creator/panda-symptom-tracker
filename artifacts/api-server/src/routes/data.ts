@@ -672,8 +672,10 @@ router.delete('/all', async (req, res) => {
   const db = requireSupabase();
   const userId = uid(req);
 
-  const tables = [
-    'children',
+  // Delete child-scoped and user-scoped tables first (parallel), then delete
+  // children last so the ON DELETE CASCADE FKs fire for any rows not covered
+  // by an explicit user_id filter above (e.g. rows with only a child_id col).
+  const nonChildTables = [
     'symptom_logs',
     'medications',
     'med_library',
@@ -693,16 +695,22 @@ router.delete('/all', async (req, res) => {
     'user_terms',
   ];
 
-  const errors = (
+  const nonChildErrors = (
     await Promise.all(
-      tables.map((table) =>
+      nonChildTables.map((table) =>
         db.from(table).delete().eq('user_id', userId).then(({ error }) => error ?? null),
       ),
     )
   ).filter(Boolean);
 
-  if (errors.length > 0) {
-    return err(res, errors[0], 'DELETE /all');
+  if (nonChildErrors.length > 0) {
+    return err(res, nonChildErrors[0], 'DELETE /all');
+  }
+
+  // Delete children last — cascades any remaining child-scoped rows.
+  const { error: childrenError } = await db.from('children').delete().eq('user_id', userId);
+  if (childrenError) {
+    return err(res, childrenError, 'DELETE /all (children)');
   }
 
   res.status(204).send();

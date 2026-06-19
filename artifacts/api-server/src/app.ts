@@ -164,6 +164,18 @@ const rateLimitDefaults = {
   keyGenerator: makeKeyGenerator(),
 };
 
+// Broad catch-all: protects any route that doesn't have a tighter per-route
+// limiter. Mounted at /api before all other limiters so newly added routes are
+// covered automatically. Per-route limiters stack on top (they run first for
+// their prefix and are always tighter, so the global cap is effectively
+// invisible to those routes under normal traffic).
+const globalApiLimiter = rateLimit({
+  ...rateLimitDefaults,
+  windowMs: 60 * 1000,
+  limit: 200,
+  message: { error: "Too many requests — please slow down." },
+});
+
 const dataLimiter = rateLimit({
   ...rateLimitDefaults,
   windowMs: 60 * 1000,
@@ -204,6 +216,7 @@ const notificationsLimiter = rateLimit({
   message: { error: "Too many requests — please slow down." },
 });
 
+app.use("/api", globalApiLimiter);
 app.use("/api/data", dataLimiter);
 app.use("/api/shares", dataLimiter);
 app.use("/api/terms/agree", termsLimiter);

@@ -606,7 +606,7 @@ function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background">
       <Sidebar />
-      <main className="flex-1 min-w-0 md:ml-60 min-h-screen pb-20 md:pb-0">
+      <main className="flex-1 min-w-0 md:ml-60 min-h-screen pb-20 md:pb-0" style={{ paddingRight: "env(safe-area-inset-right)" }}>
         <div
           className="md:hidden"
           style={{ height: "calc(env(safe-area-inset-top) + 3.5rem)" }}

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { useDemoContext } from "@/contexts/DemoContext";
 import { track } from "@/lib/analytics";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { isNative } from "@/lib/platform";
 
 const VISIT_COUNT_KEY = "pwa_visit_count";
 const DISMISSED_UNTIL_KEY = "pwa_install_dismissed_until";
@@ -41,6 +42,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function InstallPrompt() {
+  const native = isNative();
   const { isDemoMode } = useDemoContext();
   const push = usePushNotifications();
 
@@ -56,7 +58,7 @@ export default function InstallPrompt() {
 
   // ── Install prompt logic ──────────────────────────────────────────────────
   useEffect(() => {
-    if (isDemoMode) return;
+    if (native || isDemoMode) return;
 
     const iosDevice = isIOS();
     setIos(iosDevice);
@@ -89,7 +91,7 @@ export default function InstallPrompt() {
 
   // ── Reminder nudge logic ─────────────────────────────────────────────────
   useEffect(() => {
-    if (isDemoMode) return;
+    if (native || isDemoMode) return;
     if (!isInStandaloneMode()) return; // Only show after install
     if (!push.isSupported) return;
     if (push.isEnabled) return; // Already subscribed
@@ -147,10 +149,13 @@ export default function InstallPrompt() {
 
   // ── Render ────────────────────────────────────────────────────────────────
 
+  // No PWA install or VAPID nudge inside the native Capacitor app
+  if (native) return null;
+
   // Post-install reminder nudge (higher priority than install prompt)
   if (showReminderNudge) {
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-[60] border-t border-border bg-background/95 backdrop-blur-sm shadow-lg px-4 py-3">
+      <div className="fixed bottom-0 left-0 right-0 z-[60] border-t border-border bg-background/95 backdrop-blur-sm shadow-lg px-4 pt-3" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}>
         <div className="flex items-start gap-3 max-w-lg mx-auto">
           <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
             <Bell className="w-4 h-4 text-white" />
@@ -199,7 +204,7 @@ export default function InstallPrompt() {
 
   // Install prompt
   return (
-    <div className="fixed bottom-0 left-0 right-0 z-[60] border-t border-border bg-background/95 backdrop-blur-sm shadow-lg px-4 py-3">
+    <div className="fixed bottom-0 left-0 right-0 z-[60] border-t border-border bg-background/95 backdrop-blur-sm shadow-lg px-4 pt-3" style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.75rem)" }}>
       <div className="flex items-start gap-3 max-w-lg mx-auto">
         <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center flex-shrink-0 mt-0.5">
           <Download className="w-4 h-4 text-white" />

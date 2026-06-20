@@ -2,39 +2,58 @@
  * Generates an Apple Sign In client secret JWT for use in Supabase.
  *
  * Usage:
- *   1. Set APPLE_P8_KEY as a Replit secret (paste the full .p8 file content)
+ *   1. Set APPLE_P8_KEY as a Replit secret (full .p8 file contents)
  *   2. pnpm --filter @workspace/scripts run generate-apple-secret
  *
- * Paste the output JWT into:
+ * Paste the output into:
  *   Supabase → Authentication → Providers → Apple → Secret Key
  */
 
-import { createSign } from "crypto";
+import { createPrivateKey, createSign } from "crypto";
 
 const TEAM_ID = "4MK37978QL";
 const KEY_ID = "76785K67F7";
 const CLIENT_ID = "com.panssymptomtracker.web";
 const AUD = "https://appleid.apple.com";
 
-let privateKey = process.env.APPLE_P8_KEY ?? "";
+let raw = process.env.APPLE_P8_KEY ?? "";
 
-if (!privateKey) {
+if (!raw) {
   console.error("❌  APPLE_P8_KEY secret is not set.");
   console.error("    Add it in the Replit Secrets tab, then rerun.");
   process.exit(1);
 }
 
-// Replit sometimes stores multi-line secrets with literal \\n — normalize them.
-privateKey = privateKey.replace(/\\n/g, "\n");
+// Normalise line endings — Replit may store multi-line secrets with literal \\n
+raw = raw.replace(/\\n/g, "\n").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
 
-// Verify it looks like a PEM key before trying to sign.
-if (!privateKey.includes("-----BEGIN")) {
-  console.error("❌  APPLE_P8_KEY does not look like a PEM private key.");
+// If the value is raw base64 (no PEM headers) wrap it ourselves.
+// Some copy-paste flows strip the header/footer lines.
+let pem: string;
+if (raw.startsWith("-----")) {
+  pem = raw;
+} else {
+  // Assume raw base64 — add standard PKCS#8 PEM envelope
+  const body = raw.replace(/\s+/g, "").match(/.{1,64}/g)?.join("\n") ?? raw;
+  pem = `-----BEGIN PRIVATE KEY-----\n${body}\n-----END PRIVATE KEY-----`;
+}
+
+// Parse the key first so we get a clear error before attempting to sign.
+let keyObject: ReturnType<typeof createPrivateKey>;
+try {
+  keyObject = createPrivateKey({ key: pem, format: "pem" });
+} catch (err) {
+  console.error("\n❌  Could not parse the private key.");
+  console.error("    Error:", (err as Error).message);
+  console.error("\n    Key starts with:", pem.slice(0, 80));
   console.error(
-    "    Make sure you pasted the full .p8 file contents including the",
+    "\n    Make sure APPLE_P8_KEY contains the AuthKey_76785K67F7.p8 file contents.",
   );
   console.error(
-    '    "-----BEGIN PRIVATE KEY-----" and "-----END PRIVATE KEY-----" lines.',
+    "    Open the .p8 file in a text editor and paste everything including the",
+  );
+  console.error(
+    '    "-----BEGIN PRIVATE KEY-----" and "-----END PRIVATE KEY-----" lines.\n',
   );
   process.exit(1);
 }
@@ -42,36 +61,25 @@ if (!privateKey.includes("-----BEGIN")) {
 const now = Math.floor(Date.now() / 1000);
 const exp = now + 60 * 60 * 24 * 180; // 180 days
 
-const header = Buffer.from(
-  JSON.stringify({ alg: "ES256", kid: KEY_ID }),
-).toString("base64url");
-
+const header = Buffer.from(JSON.stringify({ alg: "ES256", kid: KEY_ID })).toString("base64url");
 const payload = Buffer.from(
   JSON.stringify({ iss: TEAM_ID, iat: now, exp, aud: AUD, sub: CLIENT_ID }),
 ).toString("base64url");
-
 const signingInput = `${header}.${payload}`;
 
 try {
   const sign = createSign("SHA256");
   sign.update(signingInput);
   sign.end();
-  const signature = sign.sign(privateKey, "base64url");
+  // ieee-p1363 produces the raw r||s format required by JWT ES256
+  const signature = sign.sign({ key: keyObject, dsaEncoding: "ieee-p1363" }, "base64url");
   const jwt = `${signingInput}.${signature}`;
 
   console.log("\n✅  Apple client secret JWT (valid 180 days):\n");
   console.log(jwt);
-  console.log(
-    "\nPaste this into: Supabase → Authentication → Providers → Apple → Secret Key\n",
-  );
-  console.log(
-    "Then delete the APPLE_P8_KEY secret from Replit — it is no longer needed.\n",
-  );
+  console.log("\nPaste into: Supabase → Authentication → Providers → Apple → Secret Key\n");
+  console.log("Then delete the APPLE_P8_KEY secret from Replit — it is no longer needed.\n");
 } catch (err) {
-  console.error("\n❌  Failed to sign the JWT:");
-  console.error(err);
-  console.error(
-    "\n    Make sure APPLE_P8_KEY contains the correct AuthKey_76785K67F7.p8 contents.",
-  );
+  console.error("\n❌  Signing failed:", (err as Error).message);
   process.exit(1);
 }

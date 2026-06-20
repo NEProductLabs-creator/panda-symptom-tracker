@@ -836,52 +836,52 @@ function Router() {
       {showWizard && !isWizardRoute && !isDemoMode && (
         <SetupWizard onDismiss={() => setShowWizard(false)} />
       )}
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/log" component={LogEntry} />
-        <Route path="/library" component={MedLibrary} />
-        <Route path="/print" component={PrintSummary} />
-        <Suspense fallback={<div className="p-6">Loading…</div>}>
+      <Suspense fallback={<div className="p-6">Loading…</div>}>
+        <Switch>
+          <Route path="/" component={Dashboard} />
+          <Route path="/log" component={LogEntry} />
+          <Route path="/library" component={MedLibrary} />
+          <Route path="/print" component={PrintSummary} />
           <Route path="/export" component={ExportData} />
-        </Suspense>
-        <Route path="/milestones" component={MilestonesPage} />
-        <Route path="/ptec" component={PTECCheckin} />
-        <Route path="/timeline" component={Timeline} />
-        <Route path="/baseline" component={Baseline} />
-        <Route path="/triggers" component={TriggerLogPage} />
-        <Route path="/medications" component={Medications} />
-        <Route path="/labs" component={Labs} />
-        <Route path="/school" component={SchoolHub} />
-        <Route path="/wellbeing" component={WellbeingCheckin} />
-        <Route path="/hope" component={HopeBoard} />
-        <Route path="/learn" component={Learn} />
-        <Route path="/learn/overview" component={LearnOverview} />
-        <Route path="/learn/sudden-onset" component={LearnSuddenOnset} />
-        <Route path="/learn/criteria" component={LearnCriteria} />
-        <Route path="/learn/red-flags" component={LearnRedFlags} />
-        <Route path="/learn/glossary" component={LearnGlossary} />
-        <Route path="/learn/find-provider" component={LearnFindProvider} />
-        <Route path="/learn/self-check" component={LearnSelfCheck} />
-        <Route path="/right-now" component={RightNow} />
-        <Route path="/right-now/reframe" component={RightNowReframe} />
-        <Route path="/right-now/today" component={RightNowToday} />
-        <Route path="/right-now/de-escalation" component={RightNowDeEscalation} />
-        <Route path="/right-now/er-guide" component={RightNowERGuide} />
-        <Route path="/advocate" component={Advocate} />
-        <Route path="/demo/pick" component={DemoPicker} />
-        <Route path="/advocate/reports" component={AdvocateReports} />
-        <Route path="/advocate/scripts" component={AdvocateScripts} />
-        <Route path="/advocate/school" component={AdvocateSchool} />
-        <Route path="/advocate/providers" component={AdvocateProviders} />
-        <Route path="/reports" component={Reports} />
-        <Route path="/onboarding" component={Onboarding} />
-        <Route path="/onboarding/add-child" component={OnboardingAddChild} />
-        <Route path="/onboarding/start" component={OnboardingStart} />
-        <Route path="/settings" component={Settings} />
-        <Route path="/settings/children" component={SettingsChildren} />
-        <Route path="/about" component={Intro} />
-        <Route component={NotFound} />
-      </Switch>
+          <Route path="/milestones" component={MilestonesPage} />
+          <Route path="/ptec" component={PTECCheckin} />
+          <Route path="/timeline" component={Timeline} />
+          <Route path="/baseline" component={Baseline} />
+          <Route path="/triggers" component={TriggerLogPage} />
+          <Route path="/medications" component={Medications} />
+          <Route path="/labs" component={Labs} />
+          <Route path="/school" component={SchoolHub} />
+          <Route path="/wellbeing" component={WellbeingCheckin} />
+          <Route path="/hope" component={HopeBoard} />
+          <Route path="/learn" component={Learn} />
+          <Route path="/learn/overview" component={LearnOverview} />
+          <Route path="/learn/sudden-onset" component={LearnSuddenOnset} />
+          <Route path="/learn/criteria" component={LearnCriteria} />
+          <Route path="/learn/red-flags" component={LearnRedFlags} />
+          <Route path="/learn/glossary" component={LearnGlossary} />
+          <Route path="/learn/find-provider" component={LearnFindProvider} />
+          <Route path="/learn/self-check" component={LearnSelfCheck} />
+          <Route path="/right-now" component={RightNow} />
+          <Route path="/right-now/reframe" component={RightNowReframe} />
+          <Route path="/right-now/today" component={RightNowToday} />
+          <Route path="/right-now/de-escalation" component={RightNowDeEscalation} />
+          <Route path="/right-now/er-guide" component={RightNowERGuide} />
+          <Route path="/advocate" component={Advocate} />
+          <Route path="/demo/pick" component={DemoPicker} />
+          <Route path="/advocate/reports" component={AdvocateReports} />
+          <Route path="/advocate/scripts" component={AdvocateScripts} />
+          <Route path="/advocate/school" component={AdvocateSchool} />
+          <Route path="/advocate/providers" component={AdvocateProviders} />
+          <Route path="/reports" component={Reports} />
+          <Route path="/onboarding" component={Onboarding} />
+          <Route path="/onboarding/add-child" component={OnboardingAddChild} />
+          <Route path="/onboarding/start" component={OnboardingStart} />
+          <Route path="/settings" component={Settings} />
+          <Route path="/settings/children" component={SettingsChildren} />
+          <Route path="/about" component={Intro} />
+          <Route component={NotFound} />
+        </Switch>
+      </Suspense>
     </Layout>
   );
 }

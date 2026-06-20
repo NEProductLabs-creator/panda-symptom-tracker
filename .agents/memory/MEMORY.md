@@ -5,3 +5,4 @@
 - [Real Supabase JWT for tests](supabase-real-jwt-for-testing.md) — when admin/anon/email-confirm all block you, SQL-insert a confirmed auth.users row (empty-string token cols) + identity, then password-login.
 - [Symptom logs child scoping](symptom-logs-child-scoping.md) — writes must merge filtered state with other children's localStorage data or data is silently wiped.
 - [Terms gate post-signup](terms-gate-post-signup.md) — record T&C in useTermsStatus (no time gate; Supabase email-confirm delays the session) and clear the pending key only after server success.
+- [runtimeErrorOverlay must be dev-only](runtime-error-overlay-prod.md) — including it in prod builds silently swallows React render errors → white page with no console output.

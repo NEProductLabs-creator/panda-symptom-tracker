@@ -34,7 +34,7 @@ export default defineConfig({
   plugins: [
     react(),
     tailwindcss({ optimize: false }),
-    runtimeErrorOverlay(),
+    ...(process.env.NODE_ENV !== "production" ? [runtimeErrorOverlay()] : []),
     VitePWA({
       strategies: "injectManifest",
       srcDir: "src",

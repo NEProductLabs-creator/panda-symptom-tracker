@@ -13,6 +13,11 @@ self.addEventListener("activate", (event) =>
   event.waitUntil(self.clients.claim()),
 );
 
+// Allow the page to trigger a SW update (e.g. after detecting a new version).
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") self.skipWaiting();
+});
+
 // ── Precaching ────────────────────────────────────────────────────────────────
 cleanupOutdatedCaches();
 precacheAndRoute(self.__WB_MANIFEST);

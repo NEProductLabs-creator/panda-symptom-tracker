@@ -129,8 +129,13 @@ export default defineConfig({
           if (id.includes("framer-motion")) return "motion";
           // PostHog analytics
           if (id.includes("posthog")) return "analytics";
-          // React core — always cached separately
-          if (id.includes("react-dom") || id.includes("/react/")) return "react";
+          // React core — always cached separately (include scheduler to avoid duplicate instances)
+          if (
+            id.includes("/react-dom/") ||
+            id.includes("/react/") ||
+            id.includes("/scheduler/") ||
+            id.includes("/react-is/")
+          ) return "react";
           // Everything else from node_modules
           return "vendor";
         },

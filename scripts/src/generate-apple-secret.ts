@@ -27,16 +27,16 @@ if (!raw) {
 // Normalise line endings — Replit may store multi-line secrets with literal \\n
 raw = raw.replace(/\\n/g, "\n").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
 
-// If the value is raw base64 (no PEM headers) wrap it ourselves.
-// Some copy-paste flows strip the header/footer lines.
-let pem: string;
-if (raw.startsWith("-----")) {
-  pem = raw;
-} else {
-  // Assume raw base64 — add standard PKCS#8 PEM envelope
-  const body = raw.replace(/\s+/g, "").match(/.{1,64}/g)?.join("\n") ?? raw;
-  pem = `-----BEGIN PRIVATE KEY-----\n${body}\n-----END PRIVATE KEY-----`;
-}
+// Extract the raw base64 body — strip PEM headers/footers and all whitespace,
+// then re-wrap cleanly. This handles the common case where Replit collapses
+// the header and key body onto the same line when saving a multi-line secret.
+const base64Body = raw
+  .replace(/-----BEGIN[^-]+-----/g, "")
+  .replace(/-----END[^-]+-----/g, "")
+  .replace(/\s+/g, "");
+
+const wrappedBody = base64Body.match(/.{1,64}/g)?.join("\n") ?? base64Body;
+const pem = `-----BEGIN PRIVATE KEY-----\n${wrappedBody}\n-----END PRIVATE KEY-----`;
 
 // Parse the key first so we get a clear error before attempting to sign.
 let keyObject: ReturnType<typeof createPrivateKey>;

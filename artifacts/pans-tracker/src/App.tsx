@@ -141,27 +141,36 @@ function AppleIcon() {
 
 function AppleButton({ label }: { label: string }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   async function handleClick() {
     setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
+    setError(null);
+    const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "apple",
       options: {
         redirectTo: authCallbackUrl(),
         scopes: "name email",
       },
     });
-    if (error) setLoading(false); // on success the browser redirects away
+    if (oauthError) {
+      setError(oauthError.message);
+      setLoading(false);
+    }
+    // on success the browser navigates away — no cleanup needed
   }
   return (
-    <button
-      type="button"
-      onClick={handleClick}
-      disabled={loading}
-      className="w-full h-11 rounded-lg bg-[#000] hover:bg-[#1a1a1a] transition-colors text-white flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-60"
-    >
-      <AppleIcon />
-      {loading ? "Redirecting…" : label}
-    </button>
+    <div className="w-full space-y-1">
+      <button
+        type="button"
+        onClick={handleClick}
+        disabled={loading}
+        className="w-full h-11 rounded-lg bg-[#000] hover:bg-[#1a1a1a] transition-colors text-white flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-60"
+      >
+        <AppleIcon />
+        {loading ? "Redirecting…" : label}
+      </button>
+      {error && <p className="text-xs text-destructive text-center">{error}</p>}
+    </div>
   );
 }
 
@@ -885,10 +894,34 @@ function Router() {
 function AuthCallback() {
   const [, navigate] = useLocation();
   const { loading, session } = useAuthContext();
+
+  // Parse OAuth error params from the URL hash that Supabase appends on failure.
+  const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  const oauthError = hashParams.get("error_description") ?? hashParams.get("error") ?? null;
+
   useEffect(() => {
+    if (oauthError) return; // stay on this page to show the error
     if (loading) return;
     navigate(session ? "/" : "/sign-in", { replace: true });
-  }, [loading, session, navigate]);
+  }, [loading, session, navigate, oauthError]);
+
+  if (oauthError) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-6">
+        <div className="max-w-sm w-full text-center space-y-4">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+            <span className="text-destructive text-xl">!</span>
+          </div>
+          <h2 className="text-lg font-semibold">Sign-in failed</h2>
+          <p className="text-sm text-muted-foreground">{decodeURIComponent(oauthError.replace(/\+/g, " "))}</p>
+          <a href="/sign-in" className="block mt-4 text-sm text-primary underline underline-offset-4">
+            Back to sign in
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   return <LoadingScreen />;
 }
 

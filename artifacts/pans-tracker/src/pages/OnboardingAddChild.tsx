@@ -238,6 +238,20 @@ export default function OnboardingAddChild() {
               {isPending ? "Saving…" : "Continue →"}
             </button>
           </motion.div>
+
+          {/* Skip */}
+          <motion.div variants={fadeUp} transition={ITEM_TRANSITION} className="mt-4 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                track("onboarding_add_child_skipped");
+                navigate("/");
+              }}
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Skip for now
+            </button>
+          </motion.div>
         </form>
       </motion.div>
     </div>

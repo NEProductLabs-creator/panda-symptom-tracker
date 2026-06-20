@@ -290,6 +290,7 @@ export default function Dashboard() {
   const [tipDismissed, setTipDismissed] = useState(
     () => localStorage.getItem("tip.addSecondChild.dismissed") === "1"
   );
+  const [noChildBannerDismissed, setNoChildBannerDismissed] = useState(false);
 
   // Once Supabase data loads, pre-fill the form with today's existing entry (if any)
   const formInitialized = useRef(false);
@@ -429,6 +430,27 @@ export default function Dashboard() {
 
       {/* How It Works modal */}
       {showHowItWorks && <HowItWorksModal onClose={() => setShowHowItWorks(false)} />}
+
+      {/* No-child prompt banner */}
+      {children !== undefined && children.length === 0 && !noChildBannerDismissed && (
+        <div className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 text-amber-800 text-sm font-medium rounded-lg">
+          <span className="flex-1">Add your child to start tracking symptoms</span>
+          <Link
+            href="/onboarding/add-child"
+            className="shrink-0 px-3 py-1.5 rounded-md bg-amber-800 text-white text-xs font-semibold hover:bg-amber-900 transition-colors"
+          >
+            Add Child
+          </Link>
+          <button
+            type="button"
+            onClick={() => setNoChildBannerDismissed(true)}
+            aria-label="Dismiss"
+            className="shrink-0 text-amber-600 hover:text-amber-800 transition-colors leading-none"
+          >
+            ✕
+          </button>
+        </div>
+      )}
 
       {/* Editorial page header */}
       <div className="flex items-start justify-between gap-4 pt-1 pb-2">

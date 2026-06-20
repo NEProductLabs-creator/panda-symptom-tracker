@@ -790,22 +790,27 @@ function Router() {
     // 'tracking' → stays on '/' (dashboard)
   }, [isLoaded, isSignedIn, isDemoMode, childrenLoading, children, journeyStateLoading, journeyStateError, journeyState]);
 
-  // Onboarding gate: per-child journey gating
-  // 1. No children yet → /onboarding/add-child
-  // 2. Active child has no journey_stage → /onboarding/start
+  // Onboarding gate: journey stage must be chosen before anything else.
+  // Once a stage is chosen, only tracking users are gated to add a child.
+  // Exploring / in_crisis users can proceed without one.
   useEffect(() => {
     if (!isLoaded || !isSignedIn || isDemoMode) return;
     if (childrenLoading) return;
     // Already on an onboarding or public route — don't loop
     const skip = ["/onboarding", "/sign-in", "/sign-up", "/about", "/print"];
     if (skip.some((r) => location === r || location.startsWith(r + "/"))) return;
-    if (!children?.length) {
+    // Wait for journey state to resolve
+    if (journeyStateLoading || journeyStateError) return;
+    // No journey stage yet → pick one first (regardless of children)
+    if (!journeyState || journeyState.journey_stage === null) {
+      navigate("/onboarding/start");
+      return;
+    }
+    // Tracking users need at least one child to use the tracker
+    if (journeyState.journey_stage === "tracking" && !children?.length) {
       navigate("/onboarding/add-child");
       return;
     }
-    if (journeyStateLoading || journeyStateError || !journeyState) return;
-    if (journeyState.journey_stage !== null) return;
-    navigate("/onboarding/start");
   }, [isLoaded, isSignedIn, isDemoMode, childrenLoading, children, journeyStateLoading, journeyStateError, journeyState, location]);
 
   // Unauthenticated users at root → landing page (show LoadingScreen while Clerk initialises)

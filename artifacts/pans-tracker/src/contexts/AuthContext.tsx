@@ -34,10 +34,20 @@ export interface AppUser {
 function toAppUser(u: SupabaseUser | null): AppUser | null {
   if (!u) return null;
   const meta = (u.user_metadata ?? {}) as Record<string, unknown>;
-  const fullName =
+
+  // Apple only sends the user's name on the FIRST sign-in. Cache it in
+  // localStorage so subsequent sign-ins still surface the name.
+  const nameKey = `pans_user_name_${u.id}`;
+  let fullName =
     (meta.full_name as string | undefined) ??
     (meta.name as string | undefined) ??
     null;
+  if (fullName) {
+    try { localStorage.setItem(nameKey, fullName); } catch { /* quota */ }
+  } else {
+    try { fullName = localStorage.getItem(nameKey); } catch { /* blocked */ }
+  }
+
   const imageUrl =
     (meta.avatar_url as string | undefined) ??
     (meta.picture as string | undefined) ??
@@ -45,7 +55,7 @@ function toAppUser(u: SupabaseUser | null): AppUser | null {
   return {
     id: u.id,
     email: u.email ?? null,
-    fullName,
+    fullName: fullName ?? null,
     imageUrl,
     createdAt: u.created_at ? new Date(u.created_at) : null,
   };

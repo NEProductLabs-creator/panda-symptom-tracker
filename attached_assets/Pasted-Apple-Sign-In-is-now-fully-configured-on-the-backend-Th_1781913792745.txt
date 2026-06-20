@@ -1,0 +1,39 @@
+Apple Sign-In is now fully configured on the backend. The Apple provider is enabled in Supabase Auth with a valid client secret JWT, the Services ID com.panssymptomtracker.web is registered, and the callback URL is wired up in both Apple Developer and Supabase. The only remaining work is wiring up our frontend Apple button, which is currently rendered but grayed out / disabled.
+
+Please do the following:
+
+1. Find the Apple Sign-In button in our sign-in and sign-up screens. It's likely disabled, marked as "coming soon", or has an onClick that's a no-op or shows a toast. Remove whatever is disabling it (the disabled prop, the opacity styling, the placeholder onClick, any "coming soon" badge or tooltip).
+
+2. Wire its onClick to:
+
+   await supabase.auth.signInWithOAuth({
+     provider: 'apple',
+     options: {
+       redirectTo: `${window.location.origin}/auth/callback`,
+       scopes: 'name email',
+     },
+   });
+
+   Use whatever supabase client instance the existing Google button uses. Mirror the Google button's loading state, error handling, and analytics tracking exactly.
+
+3. Confirm /auth/callback (or whatever route handles the OAuth code exchange for Google) does not need provider-specific logic for Apple. Supabase handles the token exchange the same way for both providers, so this route should already work. If it has any provider-specific branching, add an Apple branch that mirrors Google.
+
+4. Update the users table sync logic (wherever we upsert a row after a successful auth event) to handle Apple's quirks:
+   - Apple only returns the user's full name on the FIRST sign-in, never on subsequent sign-ins. Capture it from the session's user_metadata on first login and persist it. On later logins, do NOT overwrite an existing name with null or undefined.
+   - Apple email may be a private relay address ending in @privaterelay.appleid.com. Store it as-is. Do not treat it as invalid.
+   - The Supabase auth user's id is what we should use as the foreign key, same as Google.
+
+5. Make sure the Apple button appears on both sign-in AND sign-up screens, in the same position and styling as Google.
+
+6. Update demo mode: the Apple button should be visible in demo mode just like Google, even if non-functional in demo. Parents previewing the app should see Apple as an option.
+
+7. Test end to end on the deployed Replit app (pans-tracker.replit.app):
+   - Click Apple button on sign-in screen
+   - Get redirected to appleid.apple.com
+   - Sign in with a real Apple ID
+   - Get redirected back to /auth/callback
+   - Land on the dashboard with a session
+   - Verify a row was created in our users table with the right id, email, and name (on first login)
+   - Sign out and sign in again with the same Apple ID, verify the name is still there and was not wiped
+
+Do not change anything about Google sign-in, email sign-in, or any other auth path.

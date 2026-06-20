@@ -7,7 +7,7 @@ import { AuthProvider, useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { openExternal } from "@/lib/platform";
 import { Toaster } from "@/components/ui/toaster";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Activity } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
@@ -140,23 +140,28 @@ function AppleIcon() {
 }
 
 function AppleButton({ label }: { label: string }) {
+  const [loading, setLoading] = useState(false);
+  async function handleClick() {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "apple",
+      options: {
+        redirectTo: authCallbackUrl(),
+        scopes: "name email",
+      },
+    });
+    if (error) setLoading(false); // on success the browser redirects away
+  }
   return (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        {/* span wrapper needed: tooltip doesn't fire on disabled buttons directly */}
-        <span className="block w-full cursor-not-allowed">
-          <button
-            type="button"
-            disabled
-            className="w-full h-11 rounded-lg bg-[#000] text-white flex items-center justify-center gap-2 text-sm font-medium opacity-40 pointer-events-none"
-          >
-            <AppleIcon />
-            {label}
-          </button>
-        </span>
-      </TooltipTrigger>
-      <TooltipContent side="top">Coming soon</TooltipContent>
-    </Tooltip>
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={loading}
+      className="w-full h-11 rounded-lg bg-[#000] hover:bg-[#1a1a1a] transition-colors text-white flex items-center justify-center gap-2 text-sm font-medium disabled:opacity-60"
+    >
+      <AppleIcon />
+      {loading ? "Redirecting…" : label}
+    </button>
   );
 }
 

@@ -6,3 +6,4 @@
 - [Symptom logs child scoping](symptom-logs-child-scoping.md) — writes must merge filtered state with other children's localStorage data or data is silently wiped.
 - [Terms gate post-signup](terms-gate-post-signup.md) — record T&C in useTermsStatus (no time gate; Supabase email-confirm delays the session) and clear the pending key only after server success.
 - [runtimeErrorOverlay must be dev-only](runtime-error-overlay-prod.md) — including it in prod builds silently swallows React render errors → white page with no console output.
+- [Production build gotchas](production-build-gotchas.md) — PORT/BASE_PATH must have defaults (not throws); manualChunks react rule must use anchored path segments to keep scheduler co-bundled with React.

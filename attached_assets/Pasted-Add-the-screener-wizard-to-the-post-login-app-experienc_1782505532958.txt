@@ -1,0 +1,79 @@
+Add the screener wizard to the post-login app experience for the 
+PANS/PANDAS Companion app.
+
+Supabase schema additions (run as a migration):
+
+CREATE TABLE screener_results (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id uuid NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  child_id uuid REFERENCES children(id) ON DELETE CASCADE,
+  answers jsonb NOT NULL,
+  result_bucket text NOT NULL CHECK (result_bucket IN 
+    ('strong_match','partial_match','no_match')),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
+);
+
+CREATE INDEX screener_results_user_id_idx ON screener_results(user_id);
+CREATE INDEX screener_results_child_id_idx ON screener_results(child_id);
+
+ALTER TABLE screener_results ENABLE ROW LEVEL SECURITY;
+CREATE POLICY "Users can read their own screener results"
+  ON screener_results FOR SELECT USING (user_id = auth.uid());
+CREATE POLICY "Users can insert their own screener results"
+  ON screener_results FOR INSERT WITH CHECK (user_id = auth.uid());
+CREATE POLICY "Users can update their own screener results"
+  ON screener_results FOR UPDATE USING (user_id = auth.uid());
+
+(Adjust auth.uid() to the appropriate Clerk-to-Supabase user mapping 
+if Clerk is still the auth provider. If Supabase Auth is in use, 
+auth.uid() works directly.)
+
+Create a new authenticated route /app/screener (adjust prefix to match 
+the project's authenticated routes):
+- Renders the ScreenerWizard component in mode="authenticated"
+- Wrapped in the standard authenticated layout (sidebar, in-app nav)
+- Requires a selected child. If multiple children exist, show a child 
+  selector at the top: "Who is this screener for?" If only one child, 
+  use that child automatically.
+
+Autosave behavior:
+- On each step completion, upsert the in-progress answers to 
+  screener_results with a draft flag, OR just hold in component state 
+  and write once on completion. Pick the simpler one (write once on 
+  completion) unless the project already has a draft pattern.
+
+On wizard completion:
+- Insert a new row into screener_results with user_id, child_id, 
+  answers, and result_bucket.
+- Navigate to /app/screener/results/:id passing the new row id.
+
+Entry points inside the app:
+1. New-user onboarding: after signup and child creation, prompt 
+   "Take our 2-minute screener to see if your child's symptoms fit 
+   the PANS/PANDAS pattern. You can do this later from the Care Hub."
+   Buttons: "Take screener now", "Maybe later".
+2. Home screen card: if the selected child has no screener result, 
+   show a card "Could this be PANS or PANDAS? Take the screener 
+   (2 min)" with a "Start" button.
+3. Care Hub: add a permanent tile "PANS/PANDAS screener" that opens 
+   the wizard. If a result already exists, the tile shows the last 
+   result bucket and a "Retake" option.
+4. Child profile page: show "Screening history" section listing all 
+   screener_results rows for that child with date and result bucket. 
+   Each row links to /app/screener/results/:id (read-only view).
+
+Analytics events:
+- screener_started (mode: "authenticated", entry_point: "onboarding" 
+  | "home_card" | "care_hub" | "child_profile")
+- screener_step_completed (step number, mode)
+- screener_completed (result_bucket, mode)
+- screener_retaken (previous_result_bucket, new_result_bucket)
+
+Demo mode: the demo child should already have one completed 
+screener_results row with a strong_match result and realistic but 
+fictional answers (sudden onset, OCD + food restriction, anxiety + 
+sleep + handwriting + tics, recent strep in sibling, no other 
+diagnoses).
+
+Do not build the results page in this prompt. That is the next prompt.

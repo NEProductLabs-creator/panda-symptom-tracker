@@ -81,6 +81,26 @@ export default function Landing() {
         </div>
       </section>
 
+      {/* ── SCREENER CTA ── */}
+      <section className="lp-screener lp-container">
+        <div className="lp-screener-inner">
+          <div className="lp-screener-label">Free diagnostic screener</div>
+          <h2 className="lp-screener-heading">Could this be PANS or PANDAS?</h2>
+          <p className="lp-screener-sub">
+            A free 2-minute screener based on the PANDAS Physicians Network diagnostic
+            criteria. Get a printable summary you can bring to your child's doctor.
+          </p>
+          <a
+            href="/screener"
+            className="lp-btn-primary"
+            onClick={() => track("screener_landing_cta_clicked")}
+          >
+            Start the screener
+          </a>
+          <p className="lp-screener-reassurance">No account required. Your answers stay private.</p>
+        </div>
+      </section>
+
       {/* ── LETTER / STORY ── */}
       <section className="lp-letter" id="story">
         <div className="lp-letter-inner">

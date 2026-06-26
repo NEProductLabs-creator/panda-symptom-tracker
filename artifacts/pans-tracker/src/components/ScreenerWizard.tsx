@@ -25,6 +25,8 @@ interface ScreenerWizardProps {
   mode: "anonymous" | "authenticated";
   onComplete: (answers: ScreenerAnswers, resultBucket: ResultBucket) => void;
   initialAnswers?: Partial<ScreenerAnswers>;
+  initialStep?: number;
+  onStepChange?: (completedStep: number) => void;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
@@ -519,8 +521,8 @@ function StepReview({ a, onEdit }: { a: ScreenerAnswers; onEdit: (step: number) 
 
 // ─── Main component ───────────────────────────────────────────────────────────
 
-export default function ScreenerWizard({ mode, onComplete, initialAnswers }: ScreenerWizardProps) {
-  const [step, setStep] = useState(0);
+export default function ScreenerWizard({ mode, onComplete, initialAnswers, initialStep, onStepChange }: ScreenerWizardProps) {
+  const [step, setStep] = useState(initialStep ?? 0);
   const [answers, setAnswers] = useState<ScreenerAnswers>(() => {
     if (initialAnswers) return { ...EMPTY_ANSWERS, ...initialAnswers };
     try {
@@ -551,7 +553,10 @@ export default function ScreenerWizard({ mode, onComplete, initialAnswers }: Scr
   }, [answers, mode, step]);
 
   function handleNext() {
-    if (step < TOTAL_STEPS - 1) setStep((s) => s + 1);
+    if (step < TOTAL_STEPS - 1) {
+      onStepChange?.(step);
+      setStep((s) => s + 1);
+    }
   }
 
   function handleBack() {

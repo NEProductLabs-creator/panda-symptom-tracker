@@ -61,6 +61,8 @@ import { CURRENT_TERMS_VERSION } from "@/lib/termsVersion";
 import { DemoProvider, DemoBanner, useDemoContext } from "@/contexts/DemoContext";
 import DemoPicker from "@/pages/DemoPicker";
 import Landing from "@/pages/Landing";
+import ScreenerPage from "@/pages/ScreenerPage";
+import ScreenerResults from "@/pages/ScreenerResults";
 import InstallPrompt from "@/components/InstallPrompt";
 import OfflineBanner from "@/components/OfflineBanner";
 import { getOnboardingComplete } from "@/hooks/useAppSettings";
@@ -946,6 +948,9 @@ function AppProviders() {
               <Route path="/sign-up" component={SignUpPage} />
               {/* OAuth / email-confirmation redirect target */}
               <Route path="/auth/callback" component={AuthCallback} />
+              {/* Public screener — no auth required */}
+              <Route path="/screener/results" component={ScreenerResults} />
+              <Route path="/screener" component={ScreenerPage} />
               {/* Public pages — no auth required */}
               <Route path="/privacy" component={Privacy} />
               <Route path="/terms" component={Terms} />

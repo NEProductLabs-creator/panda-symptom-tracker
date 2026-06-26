@@ -122,8 +122,14 @@ export default function OnboardingStart() {
       stage: option.stage,
       child_id: activeChild?.id ?? null,
     });
-    setPendingDestination(option.destination);
-    setStep("screener-prompt");
+    if (option.stage === "exploring") {
+      track("onboarding_screener_offered", { stage: option.stage });
+      setPendingDestination(option.destination);
+      setStep("screener-prompt");
+    } else {
+      track("onboarding_screener_skipped_by_stage", { stage: option.stage });
+      navigate(option.destination);
+    }
   }
 
   // ── Step 0: Pick child (multi-child only) ─────────────────────────────────

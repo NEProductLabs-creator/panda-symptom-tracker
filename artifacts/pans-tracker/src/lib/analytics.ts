@@ -80,6 +80,8 @@ export type AnalyticsEvent =
   | 'push_reminder_nudge_dismissed'
   | 'csv_exported'
   | 'onboarding_journey_stage_selected'
+  | 'onboarding_screener_offered'
+  | 'onboarding_screener_skipped_by_stage'
   | 'onboarding_add_child_skipped'
   | 'screener_landing_cta_clicked'
   | 'screener_started'

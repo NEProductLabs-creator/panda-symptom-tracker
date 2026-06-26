@@ -89,8 +89,9 @@ function DraftPrompt({
 export default function ScreenerPage() {
   const [, navigate] = useLocation();
 
-  const isDemo =
-    new URLSearchParams(window.location.search).get("demo") === "1";
+  const params = new URLSearchParams(window.location.search);
+  const isDemo = params.get("demo") === "1";
+  const stepParam = params.has("step") ? Number(params.get("step")) : undefined;
 
   // Evaluate draft once on mount (before any renders change sessionStorage)
   const [draftPresent] = useState(() => !isDemo && hasDraft());
@@ -182,7 +183,7 @@ export default function ScreenerPage() {
             onComplete={handleComplete}
             onStepChange={handleStepChange}
             initialAnswers={isDemo ? DEMO_ANSWERS : undefined}
-            initialStep={isDemo ? 5 : undefined}
+            initialStep={isDemo ? 5 : stepParam}
           />
         )}
       </main>

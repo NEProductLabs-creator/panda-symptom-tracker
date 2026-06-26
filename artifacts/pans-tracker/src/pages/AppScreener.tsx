@@ -20,6 +20,7 @@ export default function AppScreener() {
 
   const params = new URLSearchParams(window.location.search);
   const entryPoint = params.get("from") ?? "in_app";
+  const stepParam = params.has("step") ? Number(params.get("step")) : undefined;
 
   useEffect(() => {
     track("screener_started", { mode: "authenticated", entry_point: entryPoint });
@@ -117,6 +118,7 @@ export default function AppScreener() {
         mode="authenticated"
         onComplete={handleComplete}
         onStepChange={handleStepChange}
+        initialStep={stepParam}
       />
     </div>
   );

@@ -1,0 +1,113 @@
+Implement the client-side PDF export for the screener results page.
+
+Install @react-pdf/renderer if not already in the project.
+
+Create components/ScreenerPDF.tsx that exports a Document component 
+accepting:
+- answers (the full wizard answers object)
+- resultBucket
+- mode ("anonymous" | "authenticated")
+- childName (optional, only set in authenticated mode or via the 
+  anonymous expander)
+- childDob (optional, only set in authenticated mode or via the 
+  anonymous expander)
+- recentTracking (optional, authenticated mode only): { 
+    avgSeverity: number, severeDays: number, topCategories: string[] 
+  }
+
+PDF layout: single letter-size page (8.5 x 11), clinical/professional 
+look, small app logo and name in the top right corner.
+
+Sections in order:
+
+1. Header:
+   PANS/PANDAS Parent Screening Summary
+   Generated [date] via PANS/PANDAS Companion
+   Based on PANDAS Physicians Network (PPN) diagnostic criteria
+
+2. Patient block (left-aligned, label + value per line):
+   - Authenticated or anonymous with name provided:
+     Child's name: [first name]
+     Date of birth: [date]
+     Age at symptom onset: [age]
+     Date symptoms began: [date or "approximately [X] weeks ago"]
+     Screening result: [Strong match / Partial match / No match]
+   - Anonymous without name:
+     Child's age at symptom onset: [age]
+     Date symptoms began: [date or "approximately [X] weeks ago"]
+     Screening result: [Strong match / Partial match / No match]
+
+3. Onset section:
+   - Onset pattern: Sudden (within days) / Gradual / Unclear
+   - Trigger or illness in the weeks prior: bullet list of selected 
+     items from step 4, or "None reported"
+   - Other household members ill at the time: Yes / No / Not sure
+
+4. Core symptoms section (PPN requires at least one):
+   - Checkbox [X] or [ ] for OCD-like behaviors, with parent's free-text 
+     description on the next line if provided
+   - Checkbox [X] or [ ] for severely restricted food intake, with 
+     parent's free-text description on the next line if provided
+
+5. Accompanying symptoms section (PPN requires at least two):
+   List all 10 with [X] or [ ] reflecting selections.
+
+6. Recent symptom tracking section (authenticated mode only, and only 
+   if recentTracking is provided and has at least one logged day):
+   Average daily severity (last 14 days): [X.X / 10]
+   Days with severe symptoms (8+): [X]
+   Most affected categories: [top 3 from topCategories]
+   If no tracking data, omit this section entirely.
+
+7. Other conditions / diagnoses:
+   Display the free-text answer from step 5, or "None reported".
+
+8. Footer:
+   REFERENCE
+   PPN Diagnostic Flowchart: pandasppn.org/flowchart
+   PPN Practitioner Directory: pandasppn.org/practitioners
+
+   This summary was generated from a parent's responses to a screening 
+   questionnaire. It is not a diagnosis. Clinical evaluation is 
+   required.
+
+Generation and download:
+- All PDF generation must run client-side using @react-pdf/renderer's 
+  PDFDownloadLink or pdf() function. Verify there is no server round 
+  trip when the user clicks Download.
+- Filename:
+  - Anonymous without name: pans-screening-[YYYY-MM-DD].pdf
+  - With name: pans-screening-[childFirstName-lowercased]-[YYYY-MM-DD].pdf
+- The PDF must trigger an immediate download, not open in a new tab.
+
+Critical privacy requirements for the anonymous flow:
+- Add a comment at the top of ScreenerPDF.tsx:
+  // ANONYMOUS PDF: This module runs entirely in the browser. The 
+  // childName and childDob props, when set via the anonymous results 
+  // page expander, must not be transmitted to the server or included 
+  // in any analytics event payload. Verify in DevTools Network tab 
+  // that downloading the PDF produces zero outbound requests 
+  // containing these values.
+- Confirm the pdf_download_clicked analytics event includes only the 
+  booleans included_name and included_dob, never the actual values.
+
+Demo data:
+- In demo mode, the demo child's screener PDF should populate with the 
+  fictional name and DOB already set on the demo child record.
+
+Wire-up:
+- Replace the placeholder Download button on the results page with 
+  PDFDownloadLink (or a button that calls pdf() and triggers a 
+  download).
+- The button label is "Download PDF for your doctor". Show a brief 
+  loading state while the PDF generates.
+
+Verification step to perform after build:
+1. Open /screener anonymously on the live preview.
+2. Fill in the wizard, reach the results page.
+3. Open the expander and enter a fake name and DOB.
+4. Open DevTools Network tab and clear it.
+5. Click Download.
+6. Confirm zero outbound network requests are made during PDF 
+   generation. If any request is made carrying the name or DOB, the 
+   implementation is wrong and must be fixed before merging.

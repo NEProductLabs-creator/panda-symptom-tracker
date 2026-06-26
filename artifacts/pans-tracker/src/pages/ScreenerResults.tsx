@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import { Link } from "wouter";
 import { SCREENER_RESULT_KEY, type ScreenerResult } from "./ScreenerPage";
+import ScreenerResultsPage from "@/components/ScreenerResultsPage";
 
 export default function ScreenerResults() {
   const [result, setResult] = useState<ScreenerResult | null>(null);
+  const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     try {
       const raw = sessionStorage.getItem(SCREENER_RESULT_KEY);
       if (raw) setResult(JSON.parse(raw) as ScreenerResult);
     } catch {}
+    setLoaded(true);
   }, []);
 
   return (
@@ -40,52 +43,15 @@ export default function ScreenerResults() {
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto px-5 py-10 space-y-8">
-        {result ? (
-          <>
-            <div className="space-y-2">
-              <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-                Screener results
-              </p>
-              <h1
-                className="text-3xl font-semibold text-foreground"
-                style={{ fontFamily: "Fraunces, Georgia, serif" }}
-              >
-                {result.resultBucket === "strong_match" && "Symptoms are consistent with PANS/PANDAS"}
-                {result.resultBucket === "partial_match" && "Some symptoms align with PANS/PANDAS"}
-                {result.resultBucket === "no_match" && "Symptoms don't clearly match PANS/PANDAS"}
-              </h1>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                This is a preliminary screening tool, not a medical diagnosis. Please share
-                these results with your child's doctor.
-              </p>
-            </div>
-
-            {/* Raw answers — placeholder until results page is built */}
-            <div className="rounded-xl border border-border bg-card p-5 space-y-4">
-              <h2 className="text-sm font-semibold text-foreground">Your answers (raw)</h2>
-              <pre className="text-xs text-muted-foreground overflow-x-auto whitespace-pre-wrap break-words leading-relaxed">
-                {JSON.stringify(result.answers, null, 2)}
-              </pre>
-            </div>
-
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/sign-up"
-                className="inline-flex h-11 items-center rounded-xl bg-primary px-5 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
-              >
-                Create free account to track symptoms
-              </Link>
-              <Link
-                href="/screener"
-                className="inline-flex h-11 items-center rounded-xl border border-border bg-background px-5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Retake screener
-              </Link>
-            </div>
-          </>
+      <main>
+        {!loaded ? null : result ? (
+          <ScreenerResultsPage
+            answers={result.answers}
+            resultBucket={result.resultBucket}
+            mode="anonymous"
+          />
         ) : (
-          <div className="space-y-4 text-center py-20">
+          <div className="max-w-2xl mx-auto px-5 py-20 text-center space-y-4">
             <p className="text-muted-foreground">No screener results found.</p>
             <Link
               href="/screener"
@@ -97,12 +63,9 @@ export default function ScreenerResults() {
         )}
       </main>
 
-      <footer className="border-t border-border/40 mt-16">
+      <footer className="border-t border-border/40 mt-8">
         <div className="max-w-2xl mx-auto px-5 py-6 flex flex-wrap gap-4 items-center justify-between text-xs text-muted-foreground">
-          <p>
-            This screener is for informational purposes only and is not a
-            medical diagnosis.
-          </p>
+          <p>This screener is for informational purposes only and is not a medical diagnosis.</p>
           <div className="flex gap-4">
             <Link href="/privacy" className="hover:text-foreground transition-colors">
               Privacy

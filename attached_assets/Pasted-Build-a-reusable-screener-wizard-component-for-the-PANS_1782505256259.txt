@@ -1,0 +1,107 @@
+Build a reusable screener wizard component for the PANS/PANDAS Companion 
+app at components/ScreenerWizard.tsx (or .jsx, match the project).
+
+The component must work in two modes controlled by a prop:
+- mode="anonymous" (no auth, no database writes, sessionStorage only)
+- mode="authenticated" (signed-in user, will be wired to Supabase in 
+  the post-login prompt)
+
+The component accepts:
+- mode: "anonymous" | "authenticated"
+- onComplete: (answers, resultBucket) => void
+- initialAnswers (optional): for resuming or demo mode
+
+UI requirements:
+- Persistent yellow banner at the top of every step: warning icon + 
+  "This is a screening tool, not a medical diagnosis. Only a licensed 
+  healthcare provider can diagnose PANS or PANDAS."
+- Progress bar showing current step out of 6
+- Back and Next buttons. Back is disabled on step 1. Next is disabled 
+  until the step's required fields are filled.
+- Match the existing design system (typography, colors, button styles, 
+  spacing).
+- Mobile-first, responsive.
+
+Six steps with the following questions:
+
+Step 1: Onset
+- "How old was your child when symptoms started?" (number input, 1-25)
+- "Did the symptoms appear suddenly, within a few days?" (radio: Yes / 
+  No / Not sure)
+- "When did symptoms begin?" (date picker, optional, defaults to blank)
+
+Step 2: Core symptoms (at least one required to proceed)
+- "Has your child developed sudden OCD-like behaviors such as intrusive 
+  thoughts, repeated rituals, or contamination fears?" (Yes / No)
+  - If Yes, show optional textarea: "Briefly describe what you have 
+    seen."
+- "Has your child suddenly refused food or severely restricted eating?" 
+  (Yes / No)
+  - If Yes, show optional textarea: "Briefly describe."
+- Validation: at least one must be Yes to proceed. If both No, show 
+  helper text: "PANS and PANDAS diagnostic criteria require at least 
+  one of these core symptoms. You can still complete the screener."
+
+Step 3: Accompanying symptoms (checklist, multi-select)
+Display as a clean grid of checkboxes with brief plain-language 
+descriptions:
+- Anxiety (new or sharply worsened)
+- Emotional lability or depression
+- Irritability, aggression, or oppositional behavior
+- Behavioral or developmental regression (acting younger)
+- School performance dropped suddenly
+- Sensory issues (sound, light, touch sensitivity) or motor changes
+- Sleep disturbance
+- Urinary frequency or bedwetting (new)
+- Handwriting changes
+- Tics (motor or vocal)
+
+Step 4: Recent illness or infection
+- "In the weeks before symptoms started, did your child or anyone in 
+  your household have any of the following?" (multi-select checkbox 
+  list)
+  - Strep throat (confirmed by test)
+  - Sore throat
+  - Scarlet fever
+  - Sinus infection
+  - Ear infection
+  - Flu
+  - COVID
+  - Mycoplasma / walking pneumonia
+  - Other illness (with textarea)
+  - None that we noticed
+- "Was anyone in the household sick around that time?" (Yes / No / 
+  Not sure)
+
+Step 5: Other diagnoses
+- "Has your child been diagnosed with any condition that could explain 
+  these symptoms (for example Tourette's, Sydenham chorea, lupus, 
+  autism, OCD, anxiety disorder)?" (Yes / No)
+  - If Yes, optional textarea: "Which one(s)?"
+
+Step 6: Review
+- Read-only summary of all answers grouped by section
+- Edit links beside each section that jump back to that step
+- "See my results" button (calls onComplete with answers and the 
+  calculated result bucket)
+
+Result bucket calculation (run when "See my results" is clicked):
+- strong_match: sudden onset is Yes AND at least 1 core symptom Yes 
+  AND at least 2 accompanying symptoms checked AND no clear 
+  alternative diagnosis
+- partial_match: some but not all of the strong_match conditions are 
+  met
+- no_match: sudden onset is No or Not sure AND zero core symptoms AND 
+  fewer than 2 accompanying symptoms
+
+State handling:
+- In anonymous mode, persist answers in sessionStorage under key 
+  "screener_draft" on every change so a refresh doesn't lose progress.
+- In authenticated mode, persist to sessionStorage AND emit progress 
+  events the parent can hook into for Supabase autosave.
+
+Do not include any treatment information anywhere in the wizard. Treatment 
+is for clinicians only.
+
+Do not implement the results page or PDF in this prompt. That is the 
+next prompts. Just call onComplete with the data.

@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { track } from "@/lib/analytics";
 import type { ScreenerAnswers, ResultBucket } from "@/lib/types";
+import { generateScreenerPDF } from "@/components/ScreenerPDF";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -219,6 +220,7 @@ export default function ScreenerResultsPage({ answers, resultBucket, mode, child
   const [pdfExpanded, setPdfExpanded] = useState(false);
   const [pdfChildName, setPdfChildName] = useState("");
   const [pdfDob, setPdfDob] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
 
   useEffect(() => {
     track("results_page_viewed", { result_bucket: resultBucket, mode });
@@ -234,21 +236,28 @@ export default function ScreenerResultsPage({ answers, resultBucket, mode, child
     navigate(dest);
   }
 
-  function handlePdfDownload() {
+  async function handlePdfDownload() {
+    if (isGenerating) return;
+    setIsGenerating(true);
     track("pdf_download_clicked", {
       result_bucket: resultBucket,
       mode,
-      included_name: pdfChildName.trim().length > 0,
+      // Booleans only — the actual values never appear in analytics payloads
+      included_name: mode === "anonymous" ? pdfChildName.trim().length > 0 : !!(childName),
       included_dob: pdfDob.length > 0,
     });
-    // PDF generation comes in the next prompt — log the payload for the generator
-    // eslint-disable-next-line no-console
-    console.log("[PDF payload]", {
-      resultBucket,
+    // Let the loading state render before the synchronous PDF build
+    await new Promise<void>((r) => setTimeout(r, 60));
+    generateScreenerPDF({
       answers,
-      childName: pdfChildName.trim() || null,
-      dateOfBirth: pdfDob || null,
+      resultBucket,
+      mode,
+      // Anonymous: use expander values (never sent to server)
+      // Authenticated: use the child name prop (no DOB in the child record)
+      childName: mode === "anonymous" ? (pdfChildName.trim() || undefined) : (childName || undefined),
+      childDob: pdfDob || undefined,
     });
+    setIsGenerating(false);
   }
 
   const criteria = resultBucket !== "no_match" ? computeCriteria(answers, resultBucket) : null;
@@ -580,11 +589,21 @@ export default function ScreenerResultsPage({ answers, resultBucket, mode, child
         <button
           type="button"
           onClick={handlePdfDownload}
-          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white transition-opacity hover:opacity-90 active:opacity-80"
+          disabled={isGenerating}
+          className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl font-semibold text-white transition-opacity hover:opacity-90 active:opacity-80 disabled:opacity-60 disabled:cursor-wait"
           style={{ backgroundColor: "var(--terracotta)" }}
         >
-          <Download className="w-4 h-4" />
-          Download PDF for your doctor
+          {isGenerating ? (
+            <>
+              <span className="w-4 h-4 rounded-full border-2 border-white/40 border-t-white animate-spin" />
+              Generating PDF…
+            </>
+          ) : (
+            <>
+              <Download className="w-4 h-4" />
+              Download PDF for your doctor
+            </>
+          )}
         </button>
       </div>
 

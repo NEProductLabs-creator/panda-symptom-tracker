@@ -66,7 +66,9 @@ export function useJourneyState() {
       isLoading: false,
       isError: false,
       setJourneyStage: (_stage: JourneyStage) => {},
+      setJourneyStageAsync: async (_stage: JourneyStage) => {},
       completeOnboarding: () => {},
+      completeOnboardingAsync: async () => {},
       isSettingStage: false,
       isCompletingOnboarding: false,
     };
@@ -89,7 +91,9 @@ export function useJourneyState() {
     isLoading: query.isLoading,
     isError: query.isError,
     setJourneyStage: (stage: JourneyStage) => stageMutation.mutate(stage),
+    setJourneyStageAsync: (stage: JourneyStage) => stageMutation.mutateAsync(stage),
     completeOnboarding: () => onboardingMutation.mutate(),
+    completeOnboardingAsync: () => onboardingMutation.mutateAsync(),
     isSettingStage: stageMutation.isPending,
     isCompletingOnboarding: onboardingMutation.isPending,
   };

@@ -6,8 +6,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import { track } from "@/lib/analytics";
 import { useJourneyState } from "@/hooks/useJourneyState";
 import { useActiveChild, setActiveChild } from "@/hooks/useActiveChild";
-import { useChildren } from "@/hooks/useChildren";
-import type { JourneyStage } from "@/lib/types";
+import { useChildren, CHILDREN_QUERY_KEY } from "@/hooks/useChildren";
+import { useToast } from "@/hooks/use-toast";
+import type { Child, JourneyStage } from "@/lib/types";
 
 // ─── Animation variants ───────────────────────────────────────────────────────
 
@@ -66,10 +67,11 @@ const OPTIONS: JourneyOption[] = [
 
 export default function OnboardingStart() {
   const [, navigate] = useLocation();
-  const { setJourneyStage, completeOnboarding, isSettingStage } = useJourneyState();
+  const { setJourneyStageAsync, completeOnboardingAsync, isSettingStage } = useJourneyState();
   const activeChild = useActiveChild();
   const { data: children = [] } = useChildren();
   const qc = useQueryClient();
+  const { toast } = useToast();
   const [selected, setSelected] = useState<JourneyStage | null>(null);
 
   // Step "pick-child" is prepended when the user has multiple children so they
@@ -91,11 +93,31 @@ export default function OnboardingStart() {
     setStep("pick-stage");
   }
 
-  function handleSelect(option: JourneyOption) {
+  async function handleSelect(option: JourneyOption) {
     if (isSettingStage || selected !== null) return;
     setSelected(option.stage);
-    setJourneyStage(option.stage);
-    completeOnboarding();
+    try {
+      await setJourneyStageAsync(option.stage);
+      await completeOnboardingAsync();
+    } catch (err) {
+      console.error("onboarding_stage_save_failed", err);
+      toast({
+        title: "Could not save your selection. Please try again.",
+        variant: "destructive",
+      });
+      setSelected(null);
+      return;
+    }
+    // Optimistically update the children cache so the onboarding gate in
+    // App.tsx sees the new journey_stage immediately, before the invalidation
+    // refetch returns.
+    qc.setQueryData<Child[]>(CHILDREN_QUERY_KEY, (prev) =>
+      prev?.map((c) =>
+        c.id === activeChild?.id
+          ? { ...c, journey_stage: option.stage, journey_stage_set_at: new Date().toISOString() }
+          : c
+      )
+    );
     track("onboarding_journey_stage_selected", {
       stage: option.stage,
       child_id: activeChild?.id ?? null,

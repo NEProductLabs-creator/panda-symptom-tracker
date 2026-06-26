@@ -1,0 +1,18 @@
+In artifacts/pans-tracker/src/pages/OnboardingStart.tsx, fix the race condition that causes the onboarding gate in App.tsx to bounce users back to /onboarding/start after they click "Skip for now" on the screener prompt.
+
+Root cause: handleSelect calls setJourneyStage() and completeOnboarding() as fire-and-forget mutations, then immediately advances to the screener-prompt step. If the user clicks "Skip for now" before the journey_stage write to Supabase completes, the gate in App.tsx sees journey_stage === null and redirects them back to /onboarding/start, looping.
+
+Changes:
+
+1. In artifacts/pans-tracker/src/hooks/useJourneyState.ts:
+   - Expose mutateAsync versions of both mutations. Return setJourneyStageAsync (returns the promise from stageMutation.mutateAsync) and completeOnboardingAsync (returns the promise from onboardingMutation.mutateAsync), alongside the existing fire-and-forget versions so nothing else breaks.
+
+2. In artifacts/pans-tracker/src/pages/OnboardingStart.tsx:
+   - Change handleSelect to async.
+   - Await setJourneyStageAsync(option.stage) and completeOnboardingAsync() before calling setPendingDestination and setStep("screener-prompt").
+   - While awaiting, keep isSettingStage true and disable the option buttons (the existing isSettingStage check already gates this).
+   - If either mutation throws, show a toast using the existing useToast pattern (see SettingsNotifications.tsx for the import) with a message like "Could not save your selection. Please try again." and do not advance to the screener-prompt step.
+
+3. Also as a safety net, in the same handleSelect (after both awaits resolve), optimistically update the children query cache so the gate has the new journey_stage immediately even if the refetch hasn't returned yet. Use qc.setQueryData with CHILDREN_QUERY_KEY (already imported as useChildren's key, expose it from useChildren if not already) to update the active child's journey_stage in place.
+
+Do not change the destination logic or the screener-prompt UI.

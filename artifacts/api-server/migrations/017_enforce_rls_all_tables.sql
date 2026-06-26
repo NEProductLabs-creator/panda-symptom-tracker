@@ -61,10 +61,9 @@ $$;
 -- Run this after applying the migration to check the result.
 SELECT
   t.tablename,
-  t.rowsecurity,
-  t.forcerowsecurity
+  c.relrowsecurity      AS rowsecurity,
+  c.relforcerowsecurity AS forcerowsecurity
 FROM pg_tables t
-JOIN pg_class c
-  ON c.relname = t.tablename
+JOIN pg_class c ON c.relname = t.tablename
 WHERE t.schemaname = 'public'
 ORDER BY t.tablename;

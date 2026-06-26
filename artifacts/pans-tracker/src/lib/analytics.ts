@@ -85,6 +85,7 @@ export type AnalyticsEvent =
   | 'screener_started'
   | 'screener_step_completed'
   | 'screener_completed'
+  | 'screener_save_failed'
   | 'screener_abandoned'
   | 'screener_retaken'
   | 'results_page_viewed'

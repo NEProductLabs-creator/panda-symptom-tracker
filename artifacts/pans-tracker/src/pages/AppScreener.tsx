@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "wouter";
+import { useToast } from "@/hooks/use-toast";
 import { useQueryClient } from "@tanstack/react-query";
 import ScreenerWizard from "@/components/ScreenerWizard";
 import { useActiveChild, setActiveChild } from "@/hooks/useActiveChild";
@@ -11,6 +12,7 @@ import type { ScreenerAnswers, ResultBucket } from "@/lib/types";
 
 export default function AppScreener() {
   const [, navigate] = useLocation();
+  const { toast } = useToast();
   const qc = useQueryClient();
   const activeChild = useActiveChild();
   const { data: children = [] } = useChildren();
@@ -51,8 +53,13 @@ export default function AppScreener() {
         resultBucket,
       });
       navigate(`/screener/results/${record.id}`);
-    } catch {
-      navigate("/screener");
+    } catch (error) {
+      console.error("screener_save_failed", { error, mode: "authenticated" });
+      track("screener_save_failed", { error: String(error), mode: "authenticated" });
+      toast({
+        title: "Could not save your screener. Please try again.",
+        variant: "destructive",
+      });
     }
   }
 

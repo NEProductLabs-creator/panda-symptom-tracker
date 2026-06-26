@@ -63,6 +63,8 @@ import DemoPicker from "@/pages/DemoPicker";
 import Landing from "@/pages/Landing";
 import ScreenerPage from "@/pages/ScreenerPage";
 import ScreenerResults from "@/pages/ScreenerResults";
+import AppScreener from "@/pages/AppScreener";
+import AppScreenerResult from "@/pages/AppScreenerResult";
 import InstallPrompt from "@/components/InstallPrompt";
 import OfflineBanner from "@/components/OfflineBanner";
 import { getOnboardingComplete } from "@/hooks/useAppSettings";
@@ -688,7 +690,7 @@ function SupabaseCacheInvalidator() {
 
 // ─── Router ────────────────────────────────────────────────────────────────────
 
-const NO_WIZARD_ROUTES = ["/sign-in", "/sign-up", "/onboarding", "/print", "/about"];
+const NO_WIZARD_ROUTES = ["/sign-in", "/sign-up", "/onboarding", "/print", "/about", "/screener"];
 
 function Router() {
   const { isSignedIn, isLoaded } = useUser();
@@ -748,7 +750,7 @@ function Router() {
   useEffect(() => {
     if (!isLoaded && !isDemoMode) return;
 
-    const publicPrefixes = ["/sign-in", "/sign-up", "/about", "/print"];
+    const publicPrefixes = ["/sign-in", "/sign-up", "/about", "/print", "/screener"];
     const isPublic = publicPrefixes.some(
       (r) => location === r || location.startsWith(r + "/"),
     );
@@ -799,7 +801,7 @@ function Router() {
     if (!isLoaded || !isSignedIn || isDemoMode) return;
     if (childrenLoading) return;
     // Already on an onboarding or public route — don't loop
-    const skip = ["/onboarding", "/sign-in", "/sign-up", "/about", "/print"];
+    const skip = ["/onboarding", "/sign-in", "/sign-up", "/about", "/print", "/screener"];
     if (skip.some((r) => location === r || location.startsWith(r + "/"))) return;
     // Wait for journey state to resolve
     if (journeyStateLoading || journeyStateError) return;
@@ -821,9 +823,16 @@ function Router() {
     return <Landing />;
   }
 
+  // Unauthenticated users at /screener/* → public screener pages (no Layout/sidebar)
+  if (!isSignedIn && !isDemoMode && location.startsWith("/screener")) {
+    if (!isLoaded) return <LoadingScreen />;
+    if (location === "/screener/results") return <ScreenerResults />;
+    return <ScreenerPage />;
+  }
+
   if (!isLoaded && !isDemoMode) return <LoadingScreen />;
 
-  const publicPrefixes = ["/sign-in", "/sign-up", "/about", "/print"];
+  const publicPrefixes = ["/sign-in", "/sign-up", "/about", "/print", "/screener"];
   const isPublic = publicPrefixes.some(
     (r) => location === r || location.startsWith(r + "/"),
   );
@@ -886,6 +895,8 @@ function Router() {
           <Route path="/settings" component={Settings} />
           <Route path="/settings/children" component={SettingsChildren} />
           <Route path="/about" component={Intro} />
+          <Route path="/screener/results/:id" component={AppScreenerResult} />
+          <Route path="/screener" component={AppScreener} />
           <Route component={NotFound} />
         </Switch>
       </Suspense>
@@ -949,8 +960,6 @@ function AppProviders() {
               {/* OAuth / email-confirmation redirect target */}
               <Route path="/auth/callback" component={AuthCallback} />
               {/* Public screener — no auth required */}
-              <Route path="/screener/results" component={ScreenerResults} />
-              <Route path="/screener" component={ScreenerPage} />
               {/* Public pages — no auth required */}
               <Route path="/privacy" component={Privacy} />
               <Route path="/terms" component={Terms} />

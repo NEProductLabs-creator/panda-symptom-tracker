@@ -256,3 +256,33 @@ export type LabResult = {
   notes?: string;
   updatedAt?: string; // ISO timestamp — used for last-write-wins sync merge
 };
+
+// ── Screener ─────────────────────────────────────────────────────────────────
+
+export interface ScreenerAnswers {
+  ageAtOnset: string;
+  suddenOnset: "yes" | "no" | "not_sure" | "";
+  symptomStartDate: string;
+  ocdSymptoms: "yes" | "no" | "";
+  ocdDescription: string;
+  foodRestriction: "yes" | "no" | "";
+  foodDescription: string;
+  accompanyingSymptoms: string[];
+  illnesses: string[];
+  otherIllnessDescription: string;
+  householdSick: "yes" | "no" | "not_sure" | "";
+  alternativeDiagnosis: "yes" | "no" | "";
+  alternativeDiagnosisDescription: string;
+}
+
+export type ResultBucket = "strong_match" | "partial_match" | "no_match";
+
+export type ScreenerResultRecord = {
+  id: string;
+  user_id: string;
+  child_id: string | null;
+  answers: ScreenerAnswers;
+  result_bucket: ResultBucket;
+  created_at: string;
+  updated_at: string;
+};

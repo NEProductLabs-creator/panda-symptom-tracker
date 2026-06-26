@@ -819,4 +819,66 @@ router.delete('/all', async (req, res) => {
   res.status(204).send();
 });
 
+// ── Screener Results ────────────────────────────────────────────────────────
+
+router.get('/screener-results', async (req, res) => {
+  try {
+    const db = requireSupabase();
+    const userId = uid(req);
+    const childId = req.query.child_id as string | undefined;
+    let query = db
+      .from('screener_results')
+      .select('id, child_id, answers, result_bucket, created_at, updated_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+    if (childId) query = query.eq('child_id', childId);
+    const { data, error } = await query;
+    if (error) throw error;
+    res.json(data ?? []);
+  } catch (e) {
+    err(res, e, 'GET /screener-results');
+  }
+});
+
+router.post('/screener-results', async (req, res) => {
+  try {
+    const db = requireSupabase();
+    const userId = uid(req);
+    const { child_id, answers, result_bucket } = req.body as {
+      child_id?: string | null;
+      answers: unknown;
+      result_bucket: string;
+    };
+    const { data, error } = await db
+      .from('screener_results')
+      .insert({ user_id: userId, child_id: child_id ?? null, answers, result_bucket })
+      .select('id, child_id, result_bucket, created_at')
+      .single();
+    if (error) throw error;
+    res.status(201).json(data);
+  } catch (e) {
+    err(res, e, 'POST /screener-results');
+  }
+});
+
+router.get('/screener-results/:id', async (req, res) => {
+  try {
+    const db = requireSupabase();
+    const { data, error } = await db
+      .from('screener_results')
+      .select('id, child_id, answers, result_bucket, created_at, updated_at')
+      .eq('id', req.params.id)
+      .eq('user_id', uid(req))
+      .maybeSingle();
+    if (error) throw error;
+    if (!data) {
+      res.status(404).json({ error: 'Not found' });
+      return;
+    }
+    res.json(data);
+  } catch (e) {
+    err(res, e, 'GET /screener-results/:id');
+  }
+});
+
 export default router;

@@ -86,6 +86,7 @@ export type AnalyticsEvent =
   | 'screener_step_completed'
   | 'screener_completed'
   | 'screener_abandoned'
+  | 'screener_retaken'
   | 'learn_section_viewed'
   | 'learn_self_check_started'
   | 'learn_self_check_completed'

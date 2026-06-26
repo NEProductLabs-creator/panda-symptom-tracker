@@ -9,6 +9,7 @@ import { useChildBaseline } from "@/hooks/useChildBaseline";
 import { usePTECLogs } from "@/hooks/usePTECLogs";
 import { useChildren } from "@/hooks/useChildren";
 import { useActiveChild } from "@/hooks/useActiveChild";
+import { useScreenerResults } from "@/hooks/useScreenerResults";
 import { track } from "@/lib/analytics";
 import { CATEGORIES, getScoreColor } from "@/components/charts/SymptomChart";
 const SymptomChart = lazy(() => import("@/components/charts/SymptomChart"));
@@ -277,6 +278,10 @@ export default function Dashboard() {
   const { ptecLogs } = usePTECLogs();
   const { data: children } = useChildren();
   const activeChild = useActiveChild();
+  const { data: screenerResults = [] } = useScreenerResults(activeChild?.id ?? null);
+  const [screenerCardDismissed, setScreenerCardDismissed] = useState(
+    () => localStorage.getItem("tip.screenerCard.dismissed") === "1",
+  );
   const { toast } = useToast();
 
   const existingToday = logs.find((l) => l.date === today);
@@ -529,6 +534,49 @@ export default function Dashboard() {
             }}
             className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
             aria-label="Dismiss"
+          >
+            <X className="w-3.5 h-3.5" />
+          </button>
+        </div>
+      )}
+
+      {/* Screener prompt — shown when the active child has no screener result yet */}
+      {activeChild && !screenerCardDismissed && screenerResults.length === 0 && (
+        <div
+          className="relative flex items-start gap-3 rounded-xl border px-4 py-3"
+          style={{
+            borderColor: "color-mix(in srgb, var(--terracotta) 30%, transparent)",
+            backgroundColor: "color-mix(in srgb, var(--terracotta) 5%, transparent)",
+          }}
+        >
+          <ClipboardCheck
+            className="w-4 h-4 mt-0.5 flex-shrink-0"
+            style={{ color: "var(--terracotta)" }}
+          />
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-foreground leading-snug">
+              Could this be PANS or PANDAS?
+            </p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Take our 2-minute screener to see if {activeChild.name}&apos;s symptoms fit the
+              pattern.{" "}
+              <Link
+                href="/screener?from=home_card"
+                className="font-medium underline underline-offset-2"
+                style={{ color: "var(--terracotta)" }}
+              >
+                Take the screener →
+              </Link>
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              localStorage.setItem("tip.screenerCard.dismissed", "1");
+              setScreenerCardDismissed(true);
+            }}
+            className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Dismiss screener prompt"
           >
             <X className="w-3.5 h-3.5" />
           </button>

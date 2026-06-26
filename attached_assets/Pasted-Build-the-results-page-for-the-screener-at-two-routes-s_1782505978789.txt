@@ -1,0 +1,110 @@
+Build the results page for the screener at two routes:
+
+- /screener/results (anonymous, reads from React Router state or 
+  sessionStorage)
+- /app/screener/results/:id (authenticated, reads from Supabase by id)
+
+Both routes render the same ResultsPage component. The component 
+accepts answers and resultBucket as props, and a mode prop matching 
+the wizard's modes.
+
+Layout (same structure for all three result buckets):
+
+1. Persistent top banner: yellow background, warning icon, text "This 
+   is a screening tool, not a medical diagnosis. Only a licensed 
+   healthcare provider can diagnose PANS or PANDAS."
+
+2. Title and subtitle, vary by bucket:
+
+   strong_match:
+   - Title: "Your answers match the pattern doctors look for in PANS 
+     or PANDAS."
+   - Subtitle: "We strongly recommend bringing this summary to your 
+     child's doctor. If your pediatrician is not familiar with PANS or 
+     PANDAS, the PPN practitioner directory can help you find one who 
+     is."
+
+   partial_match:
+   - Title: "Some features match, others don't."
+   - Subtitle: "Worth a conversation with your pediatrician, especially 
+     if symptoms get worse."
+
+   no_match:
+   - Title: "These symptoms don't fit the typical PANS/PANDAS picture."
+   - Subtitle: "That doesn't mean nothing is wrong. If you're worried, 
+     talk to your pediatrician."
+
+3. Section "What you told us": a formatted summary table of the 
+   parent's answers grouped by Onset, Core symptoms, Other symptoms, 
+   Recent illness, Other diagnoses. Each section has an "Edit" link 
+   that opens the wizard back at that step.
+
+4. Section "Why this matches" (strong_match only) or "What matched 
+   and what didn't" (partial_match only). Omit entirely for no_match. 
+   Three to four plain-language bullets explaining which criteria 
+   were and weren't met.
+
+5. Section "What to do next": numbered action list, varies by bucket.
+
+   strong_match:
+   1. Download the PDF and bring it to your child's next appointment.
+   2. If you don't have an appointment, schedule one this week.
+   3. Find a PANS/PANDAS-aware doctor in the PPN directory.
+   4. Track daily symptoms in the app so your doctor sees a timeline.
+   5. Visit the Care Hub for what to expect and questions to ask.
+
+   partial_match:
+   1. Download the PDF and keep it for reference.
+   2. Watch for new symptoms or worsening over the next few weeks.
+   3. If concerned, schedule a pediatrician visit.
+   4. Track daily symptoms in the app to build a clear picture.
+
+   no_match:
+   1. Explore other resources in the Care Hub.
+   2. If you're concerned, talk to your pediatrician.
+
+6. CTAs at the bottom:
+   - Primary: "Download PDF for your doctor"
+   - For anonymous mode only, a second primary: "Save and track over 
+     time" linking to the signup flow. Card copy above the button: 
+     "Save this to your child's profile so you can track symptoms 
+     over time and update this screening as things change. Free, 
+     takes 30 seconds."
+   - Secondary link: "Find a PANS/PANDAS specialist" linking to 
+     https://www.pandasppn.org/practitioners
+   - Tertiary: "Retake screener" (calls back to /screener or 
+     /app/screener)
+
+7. Optional expander (anonymous mode only), placed just above the 
+   Download PDF button:
+   - Toggle label: "Add child's name and date of birth to the PDF"
+   - When expanded, two fields: child's first name (text, optional) 
+     and date of birth (date picker, optional)
+   - Small helper text under the fields: "This stays on your device. 
+     We don't receive or store this information."
+   - CRITICAL: these fields must never leave the browser. No fetch, 
+     no POST, no analytics payload, no logging may include these 
+     values. They are passed directly into the client-side PDF 
+     generator in the next prompt.
+
+8. Footer line:
+   - Authenticated mode: "You can retake this screener anytime as 
+     symptoms change. Your answers are saved to [child name]'s 
+     profile."
+   - Anonymous mode: "You can retake this screener anytime. Your 
+     answers are not stored on our servers."
+
+Analytics events (no personal data in payloads):
+- results_page_viewed (result_bucket, mode)
+- edit_section_clicked (section, mode)
+- pdf_download_clicked (result_bucket, mode, included_name boolean, 
+  included_dob boolean) - the booleans only, never the values
+- signup_cta_clicked_from_results (anonymous only)
+- find_specialist_clicked
+
+Do not include any treatment information anywhere on the page. The 
+words antibiotic, steroid, IVIG, plasmapheresis, and NSAID should not 
+appear.
+
+PDF generation is the next prompt. For now the Download button can 
+console.log the payload it would pass to the generator.

@@ -8,6 +8,7 @@ import type {
   SymptomLog, Medication, MedLibraryItem, Milestone, ChildBaseline,
   PTECLog, FlareEvent, TriggerEntry, HouseholdIllness, WellbeingLog,
   JourneyState, Child, CreateChildInput, UpdateChildInput, LabResult,
+  ScreenerResultRecord, ScreenerAnswers,
 } from './types';
 
 // On the web build VITE_API_BASE_URL is empty and the Replit Deployments
@@ -150,6 +151,28 @@ export function createApiClient(getToken: () => Promise<string | null>) {
       household?: HouseholdIllness[];
       wellbeing?: WellbeingLog[];
     }) => req<{ ok: boolean; errors: string[] }>('POST', '/sync', payload),
+
+    // ── Screener Results ─────────────────────────────────────────────────────
+    screenerResults: {
+      getAll: (childId?: string) =>
+        req<ScreenerResultRecord[]>(
+          'GET',
+          childId
+            ? `/screener-results?child_id=${encodeURIComponent(childId)}`
+            : '/screener-results',
+        ),
+      getById: (id: string) => req<ScreenerResultRecord>('GET', `/screener-results/${id}`),
+      create: (body: {
+        child_id: string | null;
+        answers: ScreenerAnswers;
+        result_bucket: string;
+      }) =>
+        req<{ id: string; child_id: string | null; result_bucket: string; created_at: string }>(
+          'POST',
+          '/screener-results',
+          body,
+        ),
+    },
   };
 }
 

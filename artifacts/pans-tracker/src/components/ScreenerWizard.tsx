@@ -1,25 +1,8 @@
 import { useState, useEffect, useCallback } from "react";
 import { AlertTriangle, CheckCircle2 } from "lucide-react";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export type ResultBucket = "strong_match" | "partial_match" | "no_match";
-
-export interface ScreenerAnswers {
-  ageAtOnset: string;
-  suddenOnset: "yes" | "no" | "not_sure" | "";
-  symptomStartDate: string;
-  ocdSymptoms: "yes" | "no" | "";
-  ocdDescription: string;
-  foodRestriction: "yes" | "no" | "";
-  foodDescription: string;
-  accompanyingSymptoms: string[];
-  illnesses: string[];
-  otherIllnessDescription: string;
-  householdSick: "yes" | "no" | "not_sure" | "";
-  alternativeDiagnosis: "yes" | "no" | "";
-  alternativeDiagnosisDescription: string;
-}
+import type { ScreenerAnswers, ResultBucket } from "@/lib/types";
+export type { ScreenerAnswers, ResultBucket };
 
 interface ScreenerWizardProps {
   mode: "anonymous" | "authenticated";

@@ -960,3 +960,45 @@ export const DEMO_LAB_RESULTS: LabResult[] = [
     updatedAt: "2026-01-21T12:00:00.000Z",
   },
 ];
+
+// ── Demo Screener Results ─────────────────────────────────────────────────────
+
+export const DEMO_SCREENER_RESULTS: Array<{
+  id: string;
+  user_id: string;
+  child_id: string | null;
+  answers: Record<string, unknown>;
+  result_bucket: string;
+  created_at: string;
+  updated_at: string;
+}> = [
+  {
+    id: "demo-screener-1",
+    user_id: "demo",
+    child_id: "demo-child-avery",
+    answers: {
+      ageAtOnset: "9",
+      suddenOnset: "yes",
+      symptomStartDate: "2025-10-01",
+      ocdSymptoms: "yes",
+      ocdDescription: "Repeated hand washing, contamination fears, checking rituals",
+      foodRestriction: "yes",
+      foodDescription: "Refuses most foods — only eating 4–5 safe foods",
+      accompanyingSymptoms: [
+        "Anxiety (new or sharply worsened)",
+        "Irritability, aggression, or oppositional behavior",
+        "Sleep disturbance",
+        "Handwriting deterioration or loss of fine motor skills",
+        "Tics (motor or vocal, new or worsened)",
+      ],
+      illnesses: ["Strep throat (in a sibling or household member)"],
+      otherIllnessDescription: "",
+      householdSick: "yes",
+      alternativeDiagnosis: "no",
+      alternativeDiagnosisDescription: "",
+    },
+    result_bucket: "strong_match",
+    created_at: "2025-10-10T08:00:00.000Z",
+    updated_at: "2025-10-10T08:00:00.000Z",
+  },
+];

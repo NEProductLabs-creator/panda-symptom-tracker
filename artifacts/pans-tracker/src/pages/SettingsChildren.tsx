@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useLocation } from "wouter";
+import { useLocation, Link } from "wouter";
 import {
   Users, Plus, Pencil, Archive, RotateCcw, ChevronDown, ChevronRight, X, Save,
+  ClipboardCheck,
 } from "lucide-react";
-import { differenceInYears, differenceInMonths, parseISO } from "date-fns";
+import { differenceInYears, differenceInMonths, parseISO, format } from "date-fns";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useAllChildren,
@@ -12,6 +13,7 @@ import {
   useUnarchiveChild,
 } from "@/hooks/useChildren";
 import { useActiveChild, setActiveChild } from "@/hooks/useActiveChild";
+import { useScreenerResults } from "@/hooks/useScreenerResults";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -341,6 +343,7 @@ export default function SettingsChildren() {
   const { toast } = useToast();
   const { data: allChildren, isLoading } = useAllChildren();
   const activeChild = useActiveChild();
+  const { data: screenerHistory = [] } = useScreenerResults();
   const { mutateAsync: archiveChild, isPending: archiving } = useArchiveChild();
   const { mutateAsync: unarchiveChild, isPending: unarchiving } = useUnarchiveChild();
 
@@ -482,6 +485,67 @@ export default function SettingsChildren() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Screening history */}
+      {activeChild && (
+        <SectionCard icon={ClipboardCheck} title="Screening history">
+          {screenerHistory.length > 0 ? (
+            <div className="space-y-2">
+              {screenerHistory.map((result) => {
+                const bucketLabel =
+                  result.result_bucket === "strong_match"
+                    ? "Strong match"
+                    : result.result_bucket === "partial_match"
+                      ? "Partial match"
+                      : "Low match";
+                return (
+                  <div
+                    key={result.id}
+                    className="flex items-center justify-between gap-3 py-2 border-b border-border/30 last:border-0"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-foreground">{bucketLabel}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(new Date(result.created_at), "MMM d, yyyy")}
+                      </p>
+                    </div>
+                    <Link href={`/screener/results/${result.id}`}>
+                      <span
+                        className="text-xs font-medium underline underline-offset-2 cursor-pointer"
+                        style={{ color: "var(--terracotta)" }}
+                      >
+                        View →
+                      </span>
+                    </Link>
+                  </div>
+                );
+              })}
+              <Link href="/screener?from=child_profile">
+                <button
+                  type="button"
+                  className="mt-2 text-xs font-medium underline underline-offset-2"
+                  style={{ color: "var(--terracotta)" }}
+                >
+                  Take screener again
+                </button>
+              </Link>
+            </div>
+          ) : (
+            <div>
+              <p className="text-sm text-muted-foreground mb-3">No screener results yet.</p>
+              <Link href="/screener?from=child_profile">
+                <button
+                  type="button"
+                  className="text-xs font-medium underline underline-offset-2"
+                  style={{ color: "var(--terracotta)" }}
+                >
+                  Take the screener →
+                </button>
+              </Link>
+            </div>
+          )}
+        </SectionCard>
       )}
 
       {/* Edit dialog */}

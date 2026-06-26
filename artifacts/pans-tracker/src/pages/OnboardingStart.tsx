@@ -75,10 +75,11 @@ export default function OnboardingStart() {
   // Step "pick-child" is prepended when the user has multiple children so they
   // can confirm (or change) which child they're setting up before picking a stage.
   const isMultiChild = children.length > 1;
-  const [step, setStep] = useState<"pick-child" | "pick-stage">(
+  const [step, setStep] = useState<"pick-child" | "pick-stage" | "screener-prompt">(
     isMultiChild ? "pick-child" : "pick-stage"
   );
   const [pickedChildId, setPickedChildId] = useState(activeChild?.id ?? "");
+  const [pendingDestination, setPendingDestination] = useState<string | null>(null);
 
   // childName reflects the active child (may update after setActiveChild fires)
   const childName = activeChild?.name ?? null;
@@ -93,14 +94,14 @@ export default function OnboardingStart() {
   function handleSelect(option: JourneyOption) {
     if (isSettingStage || selected !== null) return;
     setSelected(option.stage);
-    // Optimistic navigation — both mutations fire in background
     setJourneyStage(option.stage);
     completeOnboarding();
     track("onboarding_journey_stage_selected", {
       stage: option.stage,
       child_id: activeChild?.id ?? null,
     });
-    navigate(option.destination);
+    setPendingDestination(option.destination);
+    setStep("screener-prompt");
   }
 
   // ── Step 0: Pick child (multi-child only) ─────────────────────────────────
@@ -184,6 +185,55 @@ export default function OnboardingStart() {
               style={{ backgroundColor: "var(--terracotta)" }}
             >
               Continue with {children.find((c) => c.id === pickedChildId)?.name ?? "this child"}
+            </button>
+          </motion.div>
+        </motion.div>
+      </div>
+    );
+  }
+
+  // ── Screener prompt (after stage picked) ──────────────────────────────────
+  if (step === "screener-prompt" && pendingDestination) {
+    return (
+      <div
+        className="min-h-screen flex flex-col items-center justify-center px-5 py-14"
+        style={{ backgroundColor: "hsl(var(--background))" }}
+      >
+        <motion.div
+          className="w-full max-w-lg"
+          variants={container}
+          initial="hidden"
+          animate="show"
+        >
+          <motion.div variants={fadeUp} transition={ITEM_TRANSITION} className="text-center mb-8">
+            <h1
+              className="text-2xl sm:text-3xl font-bold text-foreground leading-tight"
+              style={{ fontFamily: "Fraunces, serif" }}
+            >
+              One optional next step
+            </h1>
+            <p className="mt-3 text-base text-muted-foreground max-w-sm mx-auto">
+              Take our 2-minute screener to see if{" "}
+              {childName ? `${childName}'s` : "your child's"} symptoms fit the PANS/PANDAS pattern.
+              You can always do this later from the sidebar.
+            </p>
+          </motion.div>
+
+          <motion.div variants={fadeUp} transition={ITEM_TRANSITION} className="space-y-3">
+            <button
+              type="button"
+              onClick={() => navigate("/screener?from=onboarding")}
+              className="w-full py-3.5 rounded-xl font-semibold text-white transition-opacity active:opacity-80"
+              style={{ backgroundColor: "var(--terracotta)" }}
+            >
+              Take the screener now
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate(pendingDestination)}
+              className="w-full py-3.5 rounded-xl font-semibold border border-border text-foreground hover:bg-accent transition-colors"
+            >
+              Skip for now
             </button>
           </motion.div>
         </motion.div>

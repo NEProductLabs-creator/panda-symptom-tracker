@@ -115,6 +115,7 @@ const SECONDARY_NAV: NavSection[] = [
     children: [
       { href: "/milestones", label: "Milestones", icon: Flag },
       { href: "/library", label: "Med Library", icon: BookOpen },
+      { href: "/screener", label: "Screener", icon: ClipboardCheck },
     ],
   },
   {

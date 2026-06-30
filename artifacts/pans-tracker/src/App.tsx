@@ -7,6 +7,7 @@ import { AuthProvider, useAuthContext } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabaseClient";
 import { openExternal } from "@/lib/platform";
 import { Toaster } from "@/components/ui/toaster";
+import { useToast } from "@/hooks/use-toast";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   Dialog,
@@ -382,6 +383,16 @@ function CredentialsForm({ mode }: { mode: "sign-in" | "sign-up" }) {
             required
           />
         </div>
+        {mode === "sign-in" && (
+          <div className="flex justify-end -mt-1">
+            <Link
+              href="/auth/forgot-password"
+              className="text-xs text-muted-foreground hover:text-primary hover:underline transition-colors"
+            >
+              Forgot password?
+            </Link>
+          </div>
+        )}
         {error && <p className="text-xs text-destructive">{error}</p>}
         {info && <p className="text-xs text-emerald-600">{info}</p>}
         <button
@@ -770,6 +781,344 @@ function SignUpPage() {
   );
 }
 
+// ─── Forgot-password request page ─────────────────────────────────────────────
+
+function ForgotPasswordPage() {
+  const [, navigate] = useLocation();
+  const { isDemoMode } = useDemoContext();
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    if (isDemoMode) {
+      toast({ title: "Password reset is disabled in demo mode." });
+      navigate("/");
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function startCooldown() {
+    setCooldown(30);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setCooldown((c) => {
+        if (c <= 1) {
+          clearInterval(cooldownRef.current!);
+          cooldownRef.current = null;
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (submitting || cooldown > 0) return;
+    setSubmitting(true);
+    try {
+      await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}${basePath}/auth/reset-password`,
+      });
+    } catch {
+      // Never reveal whether the email exists — always show success
+    } finally {
+      setSubmitting(false);
+      setSubmitted(true);
+      startCooldown();
+    }
+  }
+
+  if (isDemoMode) return null;
+
+  return (
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-8 gap-4">
+      <div className="bg-white rounded-2xl w-[440px] max-w-full shadow-lg p-8 space-y-5">
+        <div className="text-center space-y-1">
+          <h1
+            className="text-foreground font-bold text-xl"
+            style={{ fontFamily: "'Newsreader', Georgia, serif" }}
+          >
+            Reset your password
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Enter your email and we'll send you a reset link.
+          </p>
+        </div>
+
+        {submitted ? (
+          <div role="status" className="rounded-lg bg-emerald-50 border border-emerald-200 p-4 space-y-3">
+            <p className="text-sm font-semibold text-emerald-900">Check your inbox</p>
+            <p className="text-sm text-emerald-800">
+              If an account exists for that email, we just sent a reset link.
+              Check your inbox and spam folder.
+            </p>
+            {cooldown > 0 ? (
+              <p className="text-xs text-emerald-700">You can send another in {cooldown}s</p>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setSubmitted(false)}
+                className="text-xs font-semibold text-emerald-700 hover:underline"
+              >
+                Send again
+              </button>
+            )}
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-1.5">
+              <label
+                htmlFor="reset-email"
+                className="text-xs font-semibold uppercase tracking-wide text-foreground"
+              >
+                Email
+              </label>
+              <input
+                id="reset-email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@example.com"
+                className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+                inputMode="email"
+                autoComplete="email"
+                autoCapitalize="none"
+                spellCheck={false}
+                autoFocus
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={submitting || cooldown > 0}
+              className="w-full h-11 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
+            >
+              {submitting
+                ? "Sending…"
+                : cooldown > 0
+                  ? `Try again in ${cooldown}s`
+                  : "Send reset link"}
+            </button>
+          </form>
+        )}
+
+        <p className="text-center text-xs text-muted-foreground">
+          <Link href="/sign-in" className="text-primary hover:underline font-medium">
+            ← Back to sign in
+          </Link>
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── Password reset completion page ───────────────────────────────────────────
+
+function ResetPasswordPage() {
+  const [, navigate] = useLocation();
+  const { isDemoMode } = useDemoContext();
+  const { toast } = useToast();
+  // null = loading/checking, true = recovery session active, false = expired/invalid
+  const [sessionReady, setSessionReady] = useState<boolean | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    if (isDemoMode) {
+      toast({ title: "Password reset is disabled in demo mode." });
+      navigate("/");
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (isDemoMode) return;
+
+    const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    const tokenType = hashParams.get("type");
+
+    if (tokenType !== "recovery") {
+      // No recovery token in URL — expired, reused, or navigated here directly
+      setSessionReady(false);
+      return;
+    }
+
+    // Supabase (detectSessionInUrl: true) exchanges the recovery token and fires
+    // PASSWORD_RECOVERY. Listen for the event and also check the current session
+    // in case it already fired before this component mounted.
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") {
+        setSessionReady(true);
+      }
+    });
+    void supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) setSessionReady(true);
+    });
+    // Fallback: if the event never fires (invalid/expired token), show expired UI
+    const timer = setTimeout(() => {
+      setSessionReady((prev) => (prev === null ? false : prev));
+    }, 3000);
+    return () => {
+      subscription.unsubscribe();
+      clearTimeout(timer);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError("");
+    if (newPassword.length < 8) {
+      setError("Password must be at least 8 characters.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError("Passwords don't match. Please try again.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const { error: updateError } = await supabase.auth.updateUser({ password: newPassword });
+      if (updateError) {
+        setError(updateError.message);
+        setSubmitting(false);
+        return;
+      }
+      setSuccess(true);
+      setTimeout(() => navigate("/"), 1500);
+    } catch {
+      setError("Something went wrong. Please try again.");
+      setSubmitting(false);
+    }
+  }
+
+  if (isDemoMode) return null;
+
+  if (sessionReady === null) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-background">
+        <p className="text-sm text-muted-foreground animate-pulse">Verifying reset link…</p>
+      </div>
+    );
+  }
+
+  if (!sessionReady) {
+    return (
+      <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-8">
+        <div className="bg-white rounded-2xl w-[440px] max-w-full shadow-lg p-8 text-center space-y-5">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+            <span className="text-destructive text-xl" aria-hidden="true">!</span>
+          </div>
+          <div className="space-y-2">
+            <h1 className="text-lg font-semibold text-foreground">Link expired or already used</h1>
+            <p role="status" className="text-sm text-muted-foreground">
+              This reset link has expired or was already used. Request a new one.
+            </p>
+          </div>
+          <Link
+            href="/auth/forgot-password"
+            className="flex items-center justify-center w-full h-11 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
+          >
+            Request a new reset link
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (success) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-background px-4">
+        <div className="bg-white rounded-2xl w-[440px] max-w-full shadow-lg p-8 text-center space-y-4">
+          <div className="w-12 h-12 rounded-full bg-emerald-100 flex items-center justify-center mx-auto">
+            <span className="text-emerald-600 text-xl" aria-hidden="true">✓</span>
+          </div>
+          <p role="status" className="text-base font-semibold text-foreground">
+            Password updated. You're signed in.
+          </p>
+          <p className="text-sm text-muted-foreground">Taking you to the dashboard…</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-[100dvh] flex-col items-center justify-center bg-background px-4 py-8">
+      <div className="bg-white rounded-2xl w-[440px] max-w-full shadow-lg p-8 space-y-5">
+        <div className="text-center space-y-1">
+          <h1
+            className="text-foreground font-bold text-xl"
+            style={{ fontFamily: "'Newsreader', Georgia, serif" }}
+          >
+            Set a new password
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            Choose something strong — at least 8 characters.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-1.5">
+            <label
+              htmlFor="new-password"
+              className="text-xs font-semibold uppercase tracking-wide text-foreground"
+            >
+              New password
+            </label>
+            <input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              autoComplete="new-password"
+              autoFocus
+              required
+              minLength={8}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label
+              htmlFor="confirm-password"
+              className="text-xs font-semibold uppercase tracking-wide text-foreground"
+            >
+              Confirm password
+            </label>
+            <input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="••••••••"
+              className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+              autoComplete="new-password"
+              required
+            />
+          </div>
+          {error && (
+            <p role="alert" className="text-xs text-destructive">
+              {error}
+            </p>
+          )}
+          <button
+            type="submit"
+            disabled={submitting}
+            className="w-full h-11 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
+          >
+            {submitting ? "Updating…" : "Update password"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ─── PostHog identity + signup detection ──────────────────────────────────────
 
 function PostHogSync() {
@@ -1112,6 +1461,9 @@ function AppProviders() {
             <Switch>
               <Route path="/sign-in" component={SignInPage} />
               <Route path="/sign-up" component={SignUpPage} />
+              {/* Password reset flow */}
+              <Route path="/auth/forgot-password" component={ForgotPasswordPage} />
+              <Route path="/auth/reset-password" component={ResetPasswordPage} />
               {/* OAuth / email-confirmation redirect target */}
               <Route path="/auth/callback" component={AuthCallback} />
               {/* Public screener — no auth required */}

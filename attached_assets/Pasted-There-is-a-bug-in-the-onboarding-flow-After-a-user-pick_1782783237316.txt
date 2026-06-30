@@ -1,0 +1,52 @@
+There is a bug in the onboarding flow. After a user picks a journey stage and clicks "Skip for now" on the screener prompt, they get bounced back to /onboarding/start instead of landing on their destination (/learn, /right-now, or /).
+
+Root cause: in src/pages/OnboardingStart.tsx, handleSelect() calls setJourneyStage() and completeOnboarding() as fire-and-forget mutations, then immediately renders the screener-prompt step. When the user clicks Skip and navigation occurs, the onboarding gate effect in src/App.tsx (around line 797-818) still reads journey_stage === null from cached data and re-routes them to /onboarding/start. The mutations have not yet completed and invalidated the cache.
+
+Fix in src/pages/OnboardingStart.tsx:
+
+1. Change useJourneyState() to expose the mutations as mutateAsync versions (or expose a separate setJourneyStageAsync and completeOnboardingAsync that return promises). Edit src/hooks/useJourneyState.ts to add:
+   setJourneyStageAsync: (stage: JourneyStage) => stageMutation.mutateAsync(stage),
+   completeOnboardingAsync: () => onboardingMutation.mutateAsync(),
+
+2. In OnboardingStart's handleSelect(), make the function async and await BOTH mutations before transitioning to the screener-prompt step:
+   async function handleSelect(option) {
+     if (isSettingStage || selected !== null) return;
+     setSelected(option.stage);
+     try {
+       await Promise.all([
+         setJourneyStageAsync(option.stage),
+         completeOnboardingAsync(),
+       ]);
+     } catch (err) {
+       // Re-enable the cards and surface a toast so the user can retry.
+       setSelected(null);
+       toast.error("Couldn't save your selection. Please try again.");
+       return;
+     }
+     track("onboarding_journey_stage_selected", { stage: option.stage, child_id: activeChild?.id ?? null });
+     setPendingDestination(option.destination);
+     setStep("screener-prompt");
+   }
+
+3. Also await query invalidation completion before navigating. After the mutations succeed, the React Query cache invalidation is fire-and-forget. To be safe, in the mutations' onSuccess in useJourneyState.ts, change invalidate() to:
+   const invalidate = async () => {
+     await Promise.all([
+       qc.invalidateQueries({ queryKey: JOURNEY_STATE_KEY }),
+       qc.invalidateQueries({ queryKey: CHILDREN_QUERY_KEY }),
+     ]);
+   };
+   React Query will treat the returned promise from onSuccess as part of the mutation lifecycle, so mutateAsync will only resolve after invalidation completes.
+
+4. Show a loading state on the journey cards while the mutations are pending. The `disabled={!isIdle}` logic is already there but the visual feedback is just opacity. Add a small spinner inside the selected card so users know something is happening.
+
+5. ADDITIONAL SAFETY: in src/App.tsx, the onboarding gate effect (around line 797-818) should not redirect while ANY journey mutation is in flight. Pull isSettingStage and isCompletingOnboarding out of useJourneyState() and add this guard at the top of the gate effect:
+   if (isSettingStage || isCompletingOnboarding) return;
+   This prevents future race conditions if any other screen mutates these values.
+
+Test the full flow for all three options:
+- Exploring → click "Skip for now" → must land on /learn and stay there
+- In crisis → click "Skip for now" → must land on /right-now and stay there
+- Tracking → click "Skip for now" → if children exist must land on /, if not must land on /onboarding/add-child
+- Also test "Take the screener now" path to make sure that still works.
+
+Make sure demo mode is not affected (the demo override in useJourneyState already returns no-op mutations, so the async versions need to also resolve immediately in demo mode).

@@ -1201,7 +1201,13 @@ function Router() {
   const { isDemoMode } = useDemoContext();
   const [location, navigate] = useLocation();
   const { status: termsStatus, recordAgreement } = useTermsStatus();
-  const { journeyState, isLoading: journeyStateLoading, isError: journeyStateError } = useJourneyState();
+  const {
+    journeyState,
+    isLoading: journeyStateLoading,
+    isError: journeyStateError,
+    isSettingStage,
+    isCompletingOnboarding,
+  } = useJourneyState();
   const { data: children, isLoading: childrenLoading } = useChildren();
   const activeChild = useActiveChild();
   const { baseline } = useChildBaseline();
@@ -1304,6 +1310,10 @@ function Router() {
   useEffect(() => {
     if (!isLoaded || !isSignedIn || isDemoMode) return;
     if (childrenLoading) return;
+    // Don't redirect while a journey mutation is in-flight — the optimistic
+    // cache update may not have landed yet, which would cause a false redirect
+    // back to /onboarding/start.
+    if (isSettingStage || isCompletingOnboarding) return;
     // Already on an onboarding or public route — don't loop
     const skip = ["/onboarding", "/sign-in", "/sign-up", "/about", "/print", "/screener"];
     if (skip.some((r) => location === r || location.startsWith(r + "/"))) return;
@@ -1319,7 +1329,7 @@ function Router() {
       navigate("/onboarding/add-child");
       return;
     }
-  }, [isLoaded, isSignedIn, isDemoMode, childrenLoading, children, journeyStateLoading, journeyStateError, journeyState, location]);
+  }, [isLoaded, isSignedIn, isDemoMode, childrenLoading, children, journeyStateLoading, journeyStateError, journeyState, isSettingStage, isCompletingOnboarding, location]);
 
   // Unauthenticated users at root → landing page (show LoadingScreen while Clerk initialises)
   if (!isSignedIn && !isDemoMode && location === "/") {

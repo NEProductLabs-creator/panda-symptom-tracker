@@ -22,9 +22,11 @@ export function useJourneyState() {
     ? (localStorage.getItem(DEMO_SCENARIO_KEY) as 'exploring' | 'in_crisis' | 'tracking' | null)
     : null;
 
-  const invalidate = () => {
-    qc.invalidateQueries({ queryKey: JOURNEY_STATE_KEY });
-    qc.invalidateQueries({ queryKey: CHILDREN_QUERY_KEY });
+  const invalidate = async () => {
+    await Promise.all([
+      qc.invalidateQueries({ queryKey: JOURNEY_STATE_KEY }),
+      qc.invalidateQueries({ queryKey: CHILDREN_QUERY_KEY }),
+    ]);
   };
 
   // ── Fetch onboarding state from user_journey_state (legacy read-only) ────────

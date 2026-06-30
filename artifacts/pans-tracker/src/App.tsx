@@ -522,26 +522,7 @@ function SignInPage() {
             <span className="text-xs text-muted-foreground">or</span>
             <div className="h-px bg-border flex-1" />
           </div>
-          {authMethod === "otp" ? (
-            <OtpFlow mode="sign-in" onBack={() => setAuthMethod("password")} />
-          ) : (
-            <>
-              <CredentialsForm mode="sign-in" />
-              <div className="flex items-center gap-3">
-                <div className="h-px bg-border flex-1" />
-                <span className="text-xs text-muted-foreground">or</span>
-                <div className="h-px bg-border flex-1" />
-              </div>
-              <button
-                type="button"
-                onClick={() => setAuthMethod("otp")}
-                className="w-full h-11 rounded-lg border border-border bg-white text-sm font-medium text-foreground hover:bg-accent transition-colors flex items-center justify-center gap-2"
-              >
-                <Mail className="w-4 h-4 text-muted-foreground" aria-hidden />
-                Email me a sign-in code
-              </button>
-            </>
-          )}
+          <CredentialsForm mode="sign-in" />
         </div>
       )}
 
@@ -732,26 +713,7 @@ function SignUpPage() {
             <span className="text-xs text-muted-foreground">or</span>
             <div className="h-px bg-border flex-1" />
           </div>
-          {authMethod === "otp" ? (
-            <OtpFlow mode="sign-up" onBack={() => setAuthMethod("password")} />
-          ) : (
-            <>
-              <CredentialsForm mode="sign-up" />
-              <div className="flex items-center gap-3">
-                <div className="h-px bg-border flex-1" />
-                <span className="text-xs text-muted-foreground">or</span>
-                <div className="h-px bg-border flex-1" />
-              </div>
-              <button
-                type="button"
-                onClick={() => setAuthMethod("otp")}
-                className="w-full h-11 rounded-lg border border-border bg-white text-sm font-medium text-foreground hover:bg-accent transition-colors flex items-center justify-center gap-2"
-              >
-                <Mail className="w-4 h-4 text-muted-foreground" aria-hidden />
-                Email me a sign-in code
-              </button>
-            </>
-          )}
+          <CredentialsForm mode="sign-up" />
           <p className="text-center text-xs text-muted-foreground">
             Already have an account?{" "}
             <Link href="/sign-in" className="text-primary hover:underline">Sign in</Link>

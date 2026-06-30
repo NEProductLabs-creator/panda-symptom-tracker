@@ -8,6 +8,13 @@ import { supabase } from "@/lib/supabaseClient";
 import { openExternal } from "@/lib/platform";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { Activity } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
@@ -186,6 +193,45 @@ function CredentialsForm({ mode }: { mode: "sign-in" | "sign-up" }) {
   const [info, setInfo] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // sign-up: duplicate-email modal
+  const [showResendModal, setShowResendModal] = useState(false);
+  // sign-in: "email not confirmed" inline offer
+  const [unconfirmedEmail, setUnconfirmedEmail] = useState<string | null>(null);
+  // shared resend state
+  const [resending, setResending] = useState(false);
+  const [resendDone, setResendDone] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const cooldownRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  function startCooldown() {
+    setCooldown(30);
+    if (cooldownRef.current) clearInterval(cooldownRef.current);
+    cooldownRef.current = setInterval(() => {
+      setCooldown((c) => {
+        if (c <= 1) {
+          clearInterval(cooldownRef.current!);
+          cooldownRef.current = null;
+          return 0;
+        }
+        return c - 1;
+      });
+    }, 1000);
+  }
+
+  async function doResend(emailAddr: string) {
+    if (resending || cooldown > 0) return;
+    setResending(true);
+    try {
+      await supabase.auth.resend({ type: "signup", email: emailAddr });
+      setResendDone(true);
+      startCooldown();
+    } catch {
+      // Supabase may rate-limit silently — ignore
+    } finally {
+      setResending(false);
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (submitting) return;
@@ -207,6 +253,12 @@ function CredentialsForm({ mode }: { mode: "sign-in" | "sign-up" }) {
           password,
         });
         if (signInError) {
+          // Detect unconfirmed email — offer resend instead of a raw error
+          if (signInError.message.toLowerCase().includes("email not confirmed")) {
+            setUnconfirmedEmail(email);
+            setSubmitting(false);
+            return;
+          }
           setError(signInError.message);
           setSubmitting(false);
           return;
@@ -220,6 +272,13 @@ function CredentialsForm({ mode }: { mode: "sign-in" | "sign-up" }) {
         });
         if (signUpError) {
           setError(signUpError.message);
+          setSubmitting(false);
+          return;
+        }
+        // Supabase returns 200 with an empty identities array when the email is
+        // already registered (anti-enumeration measure). Show resend modal.
+        if (data.user && (data.user.identities ?? []).length === 0) {
+          setShowResendModal(true);
           setSubmitting(false);
           return;
         }
@@ -238,57 +297,153 @@ function CredentialsForm({ mode }: { mode: "sign-in" | "sign-up" }) {
     }
   }
 
+  // ── Sign-in: unconfirmed email — show resend offer inline ─────────────────
+  if (unconfirmedEmail) {
+    return (
+      <div className="space-y-3">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 space-y-3">
+          <p className="text-sm font-semibold text-amber-900">Email not confirmed yet</p>
+          <p className="text-xs text-amber-800">
+            We sent a confirmation link to{" "}
+            <span className="font-semibold">{unconfirmedEmail}</span>.
+            Check your inbox (and spam folder), or get a fresh link below.
+          </p>
+          {resendDone ? (
+            <p className="text-xs font-semibold text-emerald-700">
+              ✓ Verification link sent! Check your inbox.
+            </p>
+          ) : (
+            <button
+              type="button"
+              disabled={resending || cooldown > 0}
+              onClick={() => doResend(unconfirmedEmail)}
+              className="w-full py-2 rounded-lg text-xs font-semibold bg-amber-700 text-white transition-opacity disabled:opacity-50"
+            >
+              {resending
+                ? "Sending…"
+                : cooldown > 0
+                  ? `Resend in ${cooldown}s`
+                  : "Resend verification email"}
+            </button>
+          )}
+        </div>
+        <button
+          type="button"
+          onClick={() => { setUnconfirmedEmail(null); setResendDone(false); setCooldown(0); }}
+          className="w-full text-xs text-muted-foreground hover:underline"
+        >
+          ← Back to sign in
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-3">
-      <div className="space-y-1.5">
-        <label className="text-xs font-semibold uppercase tracking-wide text-foreground" htmlFor="auth-email">
-          Email
-        </label>
-        <input
-          id="auth-email"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="you@example.com"
-          className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-          inputMode="email"
-          autoComplete="email"
-          autoCapitalize="none"
-          spellCheck={false}
-          required
-        />
-      </div>
-      <div className="space-y-1.5">
-        <label className="text-xs font-semibold uppercase tracking-wide text-foreground" htmlFor="auth-password">
-          Password
-        </label>
-        <input
-          id="auth-password"
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="••••••••"
-          className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
-          autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
-          required
-        />
-      </div>
-      {error && <p className="text-xs text-destructive">{error}</p>}
-      {info && <p className="text-xs text-emerald-600">{info}</p>}
-      <button
-        type="submit"
-        disabled={submitting}
-        className="w-full h-11 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
-      >
-        {submitting
-          ? mode === "sign-in"
-            ? "Signing in…"
-            : "Creating account…"
-          : mode === "sign-in"
-            ? "Sign in"
-            : "Create account"}
-      </button>
-    </form>
+    <>
+      <form onSubmit={handleSubmit} className="space-y-3">
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-foreground" htmlFor="auth-email">
+            Email
+          </label>
+          <input
+            id="auth-email"
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@example.com"
+            className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            inputMode="email"
+            autoComplete="email"
+            autoCapitalize="none"
+            spellCheck={false}
+            required
+          />
+          {mode === "sign-up" && (
+            <p className="text-xs text-muted-foreground">
+              Already have an account?{" "}
+              <Link href="/sign-in" className="text-primary hover:underline font-medium">
+                Sign in
+              </Link>
+            </p>
+          )}
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-xs font-semibold uppercase tracking-wide text-foreground" htmlFor="auth-password">
+            Password
+          </label>
+          <input
+            id="auth-password"
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="••••••••"
+            className="w-full h-11 rounded-lg border border-border bg-white px-3 text-sm outline-none focus:ring-2 focus:ring-ring"
+            autoComplete={mode === "sign-in" ? "current-password" : "new-password"}
+            required
+          />
+        </div>
+        {error && <p className="text-xs text-destructive">{error}</p>}
+        {info && <p className="text-xs text-emerald-600">{info}</p>}
+        <button
+          type="submit"
+          disabled={submitting}
+          className="w-full h-11 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
+        >
+          {submitting
+            ? mode === "sign-in"
+              ? "Signing in…"
+              : "Creating account…"
+            : mode === "sign-in"
+              ? "Sign in"
+              : "Create account"}
+        </button>
+      </form>
+
+      {/* Duplicate-email modal (sign-up only) */}
+      <Dialog open={showResendModal} onOpenChange={(open) => { setShowResendModal(open); if (!open) { setResendDone(false); setCooldown(0); } }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Looks like you already have an account</DialogTitle>
+            <DialogDescription>
+              We found an existing account for{" "}
+              <span className="font-semibold text-foreground">{email}</span>.
+              We'll send you a fresh verification link — check your inbox after
+              clicking below.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-1">
+            {resendDone ? (
+              <p className="text-sm font-semibold text-emerald-700 text-center">
+                ✓ Verification link sent! Check your inbox.
+              </p>
+            ) : (
+              <button
+                type="button"
+                disabled={resending || cooldown > 0}
+                onClick={() => doResend(email)}
+                className="w-full h-10 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors disabled:opacity-60"
+              >
+                {resending
+                  ? "Sending…"
+                  : cooldown > 0
+                    ? `Resend in ${cooldown}s`
+                    : "Send verification link"}
+              </button>
+            )}
+            <p className="text-center text-xs text-muted-foreground">
+              Know your password?{" "}
+              <Link
+                href="/sign-in"
+                onClick={() => setShowResendModal(false)}
+                className="text-primary hover:underline font-medium"
+              >
+                Sign in instead
+              </Link>
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

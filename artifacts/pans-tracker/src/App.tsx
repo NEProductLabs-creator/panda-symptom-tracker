@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { openExternal } from "@/lib/platform";
 import { Toaster } from "@/components/ui/toaster";
 import { useToast } from "@/hooks/use-toast";
+import { OtpFlow } from "@/components/OtpFlow";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import {
   Dialog,
@@ -16,7 +17,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Activity } from "lucide-react";
+import { Activity, Mail } from "lucide-react";
 import NotFound from "@/pages/not-found";
 import Dashboard from "@/pages/Dashboard";
 import LogEntry from "@/pages/LogEntry";
@@ -467,6 +468,7 @@ function SignInPage() {
   const [emailError, setEmailError] = useState('');
   const [demoAgreed, setDemoAgreed] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [authMethod, setAuthMethod] = useState<"password" | "otp">("password");
 
   function handleDemoClick() {
     track('demo_viewed');
@@ -520,7 +522,26 @@ function SignInPage() {
             <span className="text-xs text-muted-foreground">or</span>
             <div className="h-px bg-border flex-1" />
           </div>
-          <CredentialsForm mode="sign-in" />
+          {authMethod === "otp" ? (
+            <OtpFlow mode="sign-in" onBack={() => setAuthMethod("password")} />
+          ) : (
+            <>
+              <CredentialsForm mode="sign-in" />
+              <div className="flex items-center gap-3">
+                <div className="h-px bg-border flex-1" />
+                <span className="text-xs text-muted-foreground">or</span>
+                <div className="h-px bg-border flex-1" />
+              </div>
+              <button
+                type="button"
+                onClick={() => setAuthMethod("otp")}
+                className="w-full h-11 rounded-lg border border-border bg-white text-sm font-medium text-foreground hover:bg-accent transition-colors flex items-center justify-center gap-2"
+              >
+                <Mail className="w-4 h-4 text-muted-foreground" aria-hidden />
+                Email me a sign-in code
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -667,6 +688,7 @@ function SignInPage() {
 
 function SignUpPage() {
   const [agreed, setAgreed] = useState(false);
+  const [authMethod, setAuthMethod] = useState<"password" | "otp">("password");
 
   // Skip the terms pre-step when the user already agreed (flag survives in
   // localStorage across a full-page Google OAuth redirect).
@@ -710,7 +732,26 @@ function SignUpPage() {
             <span className="text-xs text-muted-foreground">or</span>
             <div className="h-px bg-border flex-1" />
           </div>
-          <CredentialsForm mode="sign-up" />
+          {authMethod === "otp" ? (
+            <OtpFlow mode="sign-up" onBack={() => setAuthMethod("password")} />
+          ) : (
+            <>
+              <CredentialsForm mode="sign-up" />
+              <div className="flex items-center gap-3">
+                <div className="h-px bg-border flex-1" />
+                <span className="text-xs text-muted-foreground">or</span>
+                <div className="h-px bg-border flex-1" />
+              </div>
+              <button
+                type="button"
+                onClick={() => setAuthMethod("otp")}
+                className="w-full h-11 rounded-lg border border-border bg-white text-sm font-medium text-foreground hover:bg-accent transition-colors flex items-center justify-center gap-2"
+              >
+                <Mail className="w-4 h-4 text-muted-foreground" aria-hidden />
+                Email me a sign-in code
+              </button>
+            </>
+          )}
           <p className="text-center text-xs text-muted-foreground">
             Already have an account?{" "}
             <Link href="/sign-in" className="text-primary hover:underline">Sign in</Link>

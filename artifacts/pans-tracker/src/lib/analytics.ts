@@ -118,7 +118,10 @@ export type AnalyticsEvent =
   | 'add_child_tip_clicked'
   | 'add_child_tip_dismissed'
   | 'settings_children_clicked'
-  | 'add_child_from_onboarding';
+  | 'add_child_from_onboarding'
+  | 'otp_code_requested'
+  | 'otp_code_verified'
+  | 'otp_code_failed';
 
 export function track(event: AnalyticsEvent, properties?: Record<string, unknown>): void {
   if (!analyticsReady) return;

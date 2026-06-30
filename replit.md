@@ -128,6 +128,18 @@ The JWKS-based JWT verification and OAuth flow depend on dashboard settings (use
 2. **Redirect URL allowlist** — add the app origin(s) + `/auth/callback` (dev `${REPLIT_DEV_DOMAIN}` and the production domain) under Authentication → URL Configuration → Redirect URLs.
 3. **Google provider** — enable Google under Authentication → Providers and supply the OAuth client ID/secret for Google sign-in to work.
 
+## Supabase dashboard — email templates (not in code)
+
+Two email templates must be configured in the Supabase dashboard (Authentication → Email Templates):
+
+**OTP / Magic Link (sign-in with code):**
+- Subject: `Your PANS/PANDAS Companion sign-in code`
+- Body: `Your code is {{ .Token }}. It expires in 1 hour. If you did not request this, you can safely ignore this email.`
+
+**Reset Password:**
+- Update branding to say "PANS/PANDAS Companion" instead of "Supabase".
+- Confirm the CTA button uses `{{ .ConfirmationURL }}` as the href — this is the default and must not be changed.
+
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details

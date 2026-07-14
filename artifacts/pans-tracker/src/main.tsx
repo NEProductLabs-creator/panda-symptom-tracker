@@ -33,6 +33,9 @@ class RootErrorBoundary extends Component<
 }
 
 async function main() {
+  const { registerDeepLinkListener } = await import("./lib/deepLinks");
+  registerDeepLinkListener();
+
   const analyticsModule = await import("./lib/analytics");
   if (localStorage.getItem(analyticsModule.ANALYTICS_CONSENT_KEY) === "1") {
     analyticsModule.initAnalytics();

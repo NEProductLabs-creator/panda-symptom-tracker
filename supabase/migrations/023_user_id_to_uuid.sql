@@ -29,7 +29,7 @@ TRUNCATE TABLE
   public.trigger_log,
   public.push_subscriptions_native,
   public.terms_agreements,
-  public.terms_status,
+  public.user_terms,
   public.parent_observation_summaries,
   public.right_now_checklist_state,
   public.lab_results,
@@ -55,12 +55,12 @@ ALTER TABLE public.user_journey_state
   ADD CONSTRAINT user_journey_state_user_id_fk
   FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
--- terms_status
-ALTER TABLE public.terms_status DROP CONSTRAINT terms_status_pkey;
-ALTER TABLE public.terms_status ALTER COLUMN user_id TYPE UUID USING user_id::uuid;
-ALTER TABLE public.terms_status ADD PRIMARY KEY (user_id);
-ALTER TABLE public.terms_status
-  ADD CONSTRAINT terms_status_user_id_fk
+-- user_terms
+ALTER TABLE public.user_terms DROP CONSTRAINT user_terms_pkey;
+ALTER TABLE public.user_terms ALTER COLUMN user_id TYPE UUID USING user_id::uuid;
+ALTER TABLE public.user_terms ADD PRIMARY KEY (user_id);
+ALTER TABLE public.user_terms
+  ADD CONSTRAINT user_terms_user_id_fk
   FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE;
 
 -- ── 3. Tables with user_id as NOT NULL (non-PK) column ───────────────────────

@@ -104,6 +104,116 @@ describe('shareLookupLimiter — threshold (30 req/min)', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Suite 3: child-scoped data filtering
+// A share scoped to child A must not include child B's medications.
+// ---------------------------------------------------------------------------
+
+describe('GET /:token — child-scoped medications', () => {
+  let app: Application;
+
+  const FUTURE = new Date(Date.now() + 86_400_000).toISOString();
+  const SHARE_TOKEN = 'b'.repeat(64);
+  const CHILD_A_ID = 'child-a-id';
+  const CHILD_B_ID = 'child-b-id';
+  const USER_ID = 'user-1';
+
+  const shareRow = {
+    token: SHARE_TOKEN,
+    user_id: USER_ID,
+    expires_at: FUTURE,
+    include_notes: true,
+    revoked: false,
+    child_id: CHILD_A_ID,
+  };
+
+  const childrenRows = [
+    { id: CHILD_A_ID, name: 'Alice', baseline: null },
+    { id: CHILD_B_ID, name: 'Bob', baseline: null },
+  ];
+
+  const medA = { id: 'med-a', name: 'Augmentin', child_id: CHILD_A_ID };
+  const medB = { id: 'med-b', name: 'Azithromycin', child_id: CHILD_B_ID };
+
+  beforeAll(async () => {
+    vi.resetModules();
+
+    vi.doMock('../lib/supabase.js', () => {
+      const makeChain = (table: string) => {
+        const filters: Record<string, string> = {};
+
+        const chain: Record<string, unknown> = {};
+
+        chain.select = () => chain;
+        chain.eq = (col: string, val: string) => {
+          filters[String(col)] = String(val);
+          return chain;
+        };
+        chain.order = () => chain;
+        chain.limit = () => chain;
+
+        // Terminal: single-row lookup (shares table only)
+        chain.maybeSingle = () => {
+          if (table === 'shares') {
+            return Promise.resolve({ data: shareRow, error: null });
+          }
+          return Promise.resolve({ data: null, error: null });
+        };
+
+        // Terminal: array query — called when the chain is awaited directly.
+        // JavaScript calls .then() on a thenable in await / Promise.all.
+        chain.then = (
+          resolve: (v: { data: unknown[]; error: null }) => unknown,
+          reject: (e: unknown) => unknown,
+        ) => {
+          let data: unknown[] = [];
+
+          if (table === 'children') {
+            data = childrenRows;
+          } else if (table === 'medications') {
+            if (filters.child_id === CHILD_A_ID) data = [{ data: medA }];
+            else if (filters.child_id === CHILD_B_ID) data = [{ data: medB }];
+            else data = [{ data: medA }, { data: medB }]; // unscoped fallback
+          }
+          // med_library, milestones, symptom_logs, ptec_logs → empty
+
+          return Promise.resolve({ data, error: null }).then(resolve, reject);
+        };
+
+        return chain;
+      };
+
+      const db = { from: (table: string) => makeChain(table) };
+      return { supabase: db, requireSupabase: () => db };
+    });
+
+    vi.doMock('../middlewares/supabaseAuth.js', () =>
+      makeAuthMock(() => undefined),
+    );
+
+    const mod = await import('../app.js');
+    app = mod.default;
+  });
+
+  it("returns only child A's medication when the share is scoped to child A", async () => {
+    const res = await request(app).get(`/api/shares/${SHARE_TOKEN}`);
+
+    expect(res.status).toBe(200);
+
+    const medications: unknown[] = res.body.medications;
+    expect(medications).toBeDefined();
+
+    // Child A's med must be present
+    expect(medications).toContainEqual(expect.objectContaining({ id: 'med-a' }));
+
+    // Child B's med must NOT be present
+    expect(medications).not.toContainEqual(expect.objectContaining({ id: 'med-b' }));
+
+    // Confirm the share resolved to the correct child
+    expect(res.body.child).toMatchObject({ id: CHILD_A_ID, name: 'Alice' });
+  });
+});
+
+// ---------------------------------------------------------------------------
 // Suite 2: IP-only key — all requests share one bucket regardless of userId
 // ---------------------------------------------------------------------------
 

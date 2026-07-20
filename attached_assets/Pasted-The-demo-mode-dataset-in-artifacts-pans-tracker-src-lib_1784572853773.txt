@@ -1,0 +1,17 @@
+The demo mode dataset in artifacts/pans-tracker/src/lib/demoData.ts has a comment at the top flagging it needs updating. Right now several features only show data in some of the four demo scenarios (exploring, in_crisis, tracking, multi_child), so switching scenarios makes those features look blank or broken:
+
+useMilestones.ts only returns data for the multi_child scenario (via DEMO_MULTI_CHILD_MILESTONES). The exploring, in_crisis, and tracking scenarios all get an empty array.
+useTriggerLog.ts has the identical pattern: only multi_child has data (DEMO_MULTI_CHILD_TRIGGERS), the other three scenarios get [].
+useLabResults.ts only returns data for the tracking scenario (DEMO_LAB_RESULTS). exploring, in_crisis, and multi_child all get [].
+useScreenerResults.ts has one hardcoded screener result tied to child_id: "demo-child-avery", which only exists in the tracking scenario. The other three scenarios show no screener results at all.
+useHouseholdHealth.ts has no demo-mode handling at all: no isDemoMode check, no scenario branching, nothing. It falls through to reading empty local storage in every scenario.
+
+Please:
+
+Add scenario-specific demo data for milestones covering exploring, in_crisis, and tracking, each realistic for that child's journey stage (for example, an exploring stage child might have a "first symptom logged" milestone but not yet a "one month symptom-free" milestone).
+Add scenario-specific demo data for trigger log entries covering exploring, in_crisis, and tracking.
+Add lab results demo data for exploring, in_crisis, and multi_child, matching the diagnosis_status of each scenario's child (for example, a purely exploring/suspected child may realistically have no labs yet, so it's fine if that one stays empty, but confirm that's an intentional choice rather than an oversight).
+Add screener result demo data for exploring, in_crisis, and multi_child, each keyed to the correct child_id for that scenario.
+Add a demo-mode branch to useHouseholdHealth.ts following the same pattern used in the other hooks (check DEMO_KEY and DEMO_SCENARIO_KEY from DemoContext, return scenario-specific illness data), and add at least one realistic household illness entry per scenario.
+
+Keep the tone and realism consistent with the existing demo data in the file (specific dates using the existing daysAgo/addDays/mondayOf helpers, not placeholder text). Update the top-of-file comment once done to note the last updated date.

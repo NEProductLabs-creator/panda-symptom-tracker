@@ -132,18 +132,14 @@ router.get("/:token", async (req, res) => {
 
     type ChildRow = { id: string; name: string; baseline: unknown };
 
-    // ── Phase 1: children + shared (non-child-scoped) data ────────────────────
-    const [childrenRes, medsRes, medLibRes, milestonesRes] = await Promise.all([
-      db
-        .from("children")
-        .select("id, name, baseline")
-        .eq("user_id", uid)
-        .eq("is_archived", false)
-        .order("sort_order", { ascending: true }),
-      db.from("medications").select("data").eq("user_id", uid),
-      db.from("med_library").select("data").eq("user_id", uid),
-      db.from("milestones").select("data").eq("user_id", uid),
-    ]);
+    // ── Phase 1: resolve the child ────────────────────────────────────────────
+    // Must complete before Phase 2 so childFilter is available for all queries.
+    const childrenRes = await db
+      .from("children")
+      .select("id, name, baseline")
+      .eq("user_id", uid)
+      .eq("is_archived", false)
+      .order("sort_order", { ascending: true });
 
     const children = (childrenRes.data ?? []) as ChildRow[];
     // Resolve child: prefer the share's pinned child_id, fall back to first child.
@@ -153,10 +149,21 @@ router.get("/:token", async (req, res) => {
         : (children[0] ?? null);
 
     // ── Phase 2: child-scoped data ─────────────────────────────────────────────
-    // symptom_logs and ptec_logs carry a child_id column — filter to the
-    // resolved child when one exists so the viewer sees only that child's data.
+    // medications, med_library, milestones, symptom_logs, and ptec_logs all have
+    // a child_id column (added in migration 021). When childFilter is set, apply
+    // it so a share scoped to child A never leaks child B's records. Fall back to
+    // user_id-only for shares created before per-child scoping existed.
     const childFilter = resolvedChild?.id;
-    const [logsRes, ptecRes] = await Promise.all([
+    const [medsRes, medLibRes, milestonesRes, logsRes, ptecRes] = await Promise.all([
+      childFilter
+        ? db.from("medications").select("data").eq("user_id", uid).eq("child_id", childFilter)
+        : db.from("medications").select("data").eq("user_id", uid),
+      childFilter
+        ? db.from("med_library").select("data").eq("user_id", uid).eq("child_id", childFilter)
+        : db.from("med_library").select("data").eq("user_id", uid),
+      childFilter
+        ? db.from("milestones").select("data").eq("user_id", uid).eq("child_id", childFilter)
+        : db.from("milestones").select("data").eq("user_id", uid),
       childFilter
         ? db.from("symptom_logs").select("data").eq("user_id", uid).eq("child_id", childFilter)
         : db.from("symptom_logs").select("data").eq("user_id", uid),

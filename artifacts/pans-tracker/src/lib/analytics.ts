@@ -39,9 +39,9 @@ function getDemoId(): string {
   return id;
 }
 
-export function identifyUser(clerkId: string): void {
+export function identifyUser(userId: string): void {
   if (!analyticsReady) return;
-  posthog.identify(clerkId);
+  posthog.identify(userId);
 }
 
 export function identifyAsDemo(): void {

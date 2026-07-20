@@ -1,0 +1,14 @@
+Prompt 6: Add tests for the offline sync logic
+
+The frontend workspace (artifacts/pans-tracker) currently has zero automated tests. The highest-risk untested code is the offline-first sync logic, since a past bug in this exact area (documented in .agents/memory/symptom-logs-child-scoping.md) caused switching the active child and saving a log to silently wipe out the other child's data from localStorage if the merge-before-save step was skipped.
+
+Step 1: Set up test tooling for the artifacts/pans-tracker workspace using Vitest (to match the tooling already used in artifacts/api-server). Add a test script to artifacts/pans-tracker/package.json and a vitest.config.ts if one doesn't exist.
+
+Step 2: Write unit tests for the pure merge functions in artifacts/pans-tracker/src/lib/syncUtils.ts:
+
+mergeById: test that when both local and server have the same id, the one with the newer updatedAt wins and the server wins on a tie; test that a local-only item appears in both merged and localOnly; test that a server-only item appears in merged but not localOnly; test the case where updatedAt is missing on one side (should be treated as epoch 0, per the comment in the file).
+mergeSingleton: read the function first to understand its contract, then write equivalent coverage for its win/lose and push-to-server logic.
+
+Step 3: Write a regression test that specifically encodes the child-scoping rule described in .agents/memory/symptom-logs-child-scoping.md: when a log is added while a specific child is active, the data written to localStorage must include both the new log for the active child AND any existing logs belonging to other children, never just the filtered/active-child subset. You can test this by extracting or directly testing the filterByChild and save logic in useSymptomLogs.ts, using a mocked storage module. If useMilestones.ts and useTriggerLog.ts follow the same merge-before-save pattern, note in a comment that they should get the same regression test as a follow-up, but only implement it for useSymptomLogs.ts in this pass.
+
+Keep the scope to these two files for now (syncUtils.ts and useSymptomLogs.ts), this is meant to establish the testing pattern, not achieve full coverage in one pass.

@@ -123,8 +123,6 @@ export default defineConfig({
           if (id.includes("jspdf")) return "pdf";
           // Charts — Recharts pulls in a full D3 subset
           if (id.includes("recharts") || id.includes("d3-") || id.includes("d3/")) return "charts";
-          // Clerk auth SDK
-          if (id.includes("@clerk")) return "clerk";
           // Framer Motion animation library
           if (id.includes("framer-motion")) return "motion";
           // PostHog analytics

@@ -15,14 +15,9 @@ import {
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 import { track } from '@/lib/analytics';
 import { useActiveChild } from '@/hooks/useActiveChild';
+import { filterByChild } from '@/lib/childScoping';
 
 const dispatchDemo = () => window.dispatchEvent(new CustomEvent('pans:demo:save'));
-
-function filterByChild(logs: SymptomLog[], childId: string | null): SymptomLog[] {
-  if (!childId) return logs;
-  // Show logs that match the active child, or legacy logs with no child_id (pre-migration)
-  return logs.filter(l => !l.child_id || l.child_id === childId);
-}
 
 export function useSymptomLogs() {
   const isDemoMode = localStorage.getItem(DEMO_KEY) === '1';

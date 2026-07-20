@@ -1,6 +1,10 @@
-// DEMO_DATA: update this dataset to reflect latest app features before sharing portfolio
+// DEMO_DATA: last updated 2026-07-20
+// All four scenarios (exploring, in_crisis, tracking, multi_child) now have
+// complete data for milestones, triggers, lab results, screener results, and
+// household health. See DEMO_MILESTONES, DEMO_TRIGGERS, DEMO_ALL_LAB_RESULTS,
+// DEMO_HOUSEHOLD_HEALTH, and the expanded DEMO_SCREENER_RESULTS array below.
 
-import type { SymptomLog, ChildBaseline, Medication, MedLibraryItem, Milestone, TriggerEntry, PTECLog, WellbeingLog, JourneyState, Child, LabResult } from "@/lib/types";
+import type { SymptomLog, ChildBaseline, Medication, MedLibraryItem, Milestone, TriggerEntry, PTECLog, WellbeingLog, JourneyState, Child, LabResult, HouseholdIllness } from "@/lib/types";
 import { computePTECTotal } from "@/lib/ptec";
 import type { ReportHistoryItem } from "@/lib/reportHistory";
 
@@ -1001,4 +1005,420 @@ export const DEMO_SCREENER_RESULTS: Array<{
     created_at: "2025-10-10T08:00:00.000Z",
     updated_at: "2025-10-10T08:00:00.000Z",
   },
+  // ── Exploring: Sam (suspected, just started tracking) ────────────────────
+  {
+    id: "demo-screener-2",
+    user_id: "demo",
+    child_id: "demo-child-sam",
+    answers: {
+      ageAtOnset: "8",
+      suddenOnset: "yes",
+      symptomStartDate: daysAgo(10),
+      ocdSymptoms: "no",
+      foodRestriction: "no",
+      accompanyingSymptoms: [
+        "Anxiety (new or sharply worsened)",
+        "Separation anxiety (new or dramatically worse)",
+        "Sensory sensitivities (sound, light, clothing textures)",
+      ],
+      illnesses: ["Strep throat (my child had it)"],
+      otherIllnessDescription: "Sore throat and low-grade fever about ten days ago — no strep test done.",
+      householdSick: "no",
+      alternativeDiagnosis: "no",
+      alternativeDiagnosisDescription: "",
+    },
+    result_bucket: "possible_match",
+    created_at: daysAgo(3) + "T09:00:00.000Z",
+    updated_at: daysAgo(3) + "T09:00:00.000Z",
+  },
+  // ── In-crisis: Riley (undiagnosed, acute first flare) ────────────────────
+  {
+    id: "demo-screener-3",
+    user_id: "demo",
+    child_id: "demo-child-riley",
+    answers: {
+      ageAtOnset: "7",
+      suddenOnset: "yes",
+      symptomStartDate: daysAgo(7),
+      ocdSymptoms: "yes",
+      ocdDescription: "Contamination OCD — washing hands repeatedly, terrified to touch surfaces",
+      foodRestriction: "yes",
+      foodDescription: "Barely eating during the flare — refuses most foods",
+      accompanyingSymptoms: [
+        "Anxiety (new or sharply worsened)",
+        "Irritability, aggression, or oppositional behavior",
+        "Sleep disturbance",
+        "Separation anxiety (new or dramatically worse)",
+        "Urinary symptoms (frequency, urgency, or regression)",
+      ],
+      illnesses: ["Strep throat (in a sibling or household member)"],
+      otherIllnessDescription: "Maya (sibling) had confirmed strep the week before Riley's symptoms started.",
+      householdSick: "yes",
+      alternativeDiagnosis: "no",
+      alternativeDiagnosisDescription: "",
+    },
+    result_bucket: "strong_match",
+    created_at: daysAgo(6) + "T21:00:00.000Z",
+    updated_at: daysAgo(6) + "T21:00:00.000Z",
+  },
+  // ── Multi-child: Mia (diagnosed) ─────────────────────────────────────────
+  {
+    id: "demo-screener-4",
+    user_id: "demo",
+    child_id: "demo-child-mia",
+    answers: {
+      ageAtOnset: "7",
+      suddenOnset: "yes",
+      symptomStartDate: daysAgo(548),
+      ocdSymptoms: "yes",
+      ocdDescription: "Intrusive thoughts, compulsive reassurance-seeking, feared contamination",
+      foodRestriction: "yes",
+      foodDescription: "Dropped to 3–4 safe foods during first flare",
+      accompanyingSymptoms: [
+        "Anxiety (new or sharply worsened)",
+        "Irritability, aggression, or oppositional behavior",
+        "Sleep disturbance",
+        "Tics (motor or vocal, new or worsened)",
+        "Handwriting deterioration or loss of fine motor skills",
+      ],
+      illnesses: ["Strep throat (my child had it)", "Strep throat (in a sibling or household member)"],
+      otherIllnessDescription: "",
+      householdSick: "yes",
+      alternativeDiagnosis: "no",
+      alternativeDiagnosisDescription: "",
+    },
+    result_bucket: "strong_match",
+    created_at: daysAgo(545) + "T10:00:00.000Z",
+    updated_at: daysAgo(545) + "T10:00:00.000Z",
+  },
+  // ── Multi-child: Theo (suspected, exploring) ──────────────────────────────
+  {
+    id: "demo-screener-5",
+    user_id: "demo",
+    child_id: "demo-child-theo",
+    answers: {
+      ageAtOnset: "6",
+      suddenOnset: "yes",
+      symptomStartDate: daysAgo(20),
+      ocdSymptoms: "no",
+      foodRestriction: "no",
+      accompanyingSymptoms: [
+        "Tics (motor or vocal, new or worsened)",
+        "Separation anxiety (new or dramatically worse)",
+        "Anxiety (new or sharply worsened)",
+      ],
+      illnesses: ["Strep throat (my child had it)"],
+      otherIllnessDescription: "Confirmed strep throat 6 weeks ago, treated with amoxicillin. New tics appeared 2–3 weeks later.",
+      householdSick: "no",
+      alternativeDiagnosis: "no",
+      alternativeDiagnosisDescription: "",
+    },
+    result_bucket: "possible_match",
+    created_at: daysAgo(18) + "T14:00:00.000Z",
+    updated_at: daysAgo(18) + "T14:00:00.000Z",
+  },
 ];
+
+// ── Milestones per scenario ────────────────────────────────────────────────────
+
+export const DEMO_MILESTONES: Record<"exploring" | "in_crisis" | "tracking" | "multi_child", Milestone[]> = {
+  // Sam (suspected, 3 days of tracking — just starting out)
+  exploring: [
+    {
+      id: "demo-ms-ex-1",
+      date: daysAgo(3),
+      title: "First symptoms logged",
+      type: "other",
+      notes: "Started tracking Sam's sudden behavior changes — new separation anxiety and sensory sensitivity. Noticed roughly 10 days ago.",
+      updatedAt: daysAgo(3),
+    },
+    {
+      id: "demo-ms-ex-2",
+      date: daysAgo(-5),
+      title: "Pediatrician — first visit about symptoms",
+      type: "appointment",
+      notes: "Upcoming appointment to discuss the sudden behavioral changes. Planning to ask about PANS/PANDAS and request strep titers.",
+      updatedAt: daysAgo(1),
+    },
+  ],
+  // Riley (undiagnosed, 7 days into acute first flare)
+  in_crisis: [
+    {
+      id: "demo-ms-ic-1",
+      date: daysAgo(10),
+      title: "Sore throat and fever — possible trigger",
+      type: "other",
+      notes: "Riley had a sore throat and low-grade fever for two days. Sibling Maya had confirmed strep the week before. No strep test done for Riley yet.",
+      updatedAt: daysAgo(10),
+    },
+    {
+      id: "demo-ms-ic-2",
+      date: daysAgo(7),
+      title: "First severe neuropsychiatric symptoms",
+      type: "other",
+      notes: "Sudden-onset contamination OCD, uncontrollable anxiety, and rage episodes unlike anything we have seen. This is not our child.",
+      updatedAt: daysAgo(7),
+    },
+    {
+      id: "demo-ms-ic-3",
+      date: daysAgo(-1),
+      title: "Pediatrician — urgent evaluation",
+      type: "appointment",
+      notes: "Scheduled for tomorrow. Bringing symptom log and printed notes. Will ask about PANS/PANDAS, strep titers, and referral to specialist.",
+      updatedAt: daysAgo(1),
+    },
+  ],
+  // Avery (diagnosed 180 days ago, currently recovering from flare)
+  tracking: [
+    {
+      id: "demo-ms-tr-1",
+      date: daysAgo(180),
+      title: "PANDAS Diagnosis — Dr. Chen",
+      type: "appointment",
+      notes: "PANDAS confirmed. Elevated ASO titers, sudden-onset OCD and anxiety after strep infection. Started prophylactic Augmentin and referred to pediatric immunologist.",
+      updatedAt: daysAgo(180),
+    },
+    {
+      id: "demo-ms-tr-2",
+      date: daysAgo(180),
+      title: "Started prophylactic Augmentin",
+      type: "medication_change",
+      notes: "500mg twice daily. Dr. Chen recommending long-term prophylaxis given severity of first episode.",
+      updatedAt: daysAgo(180),
+    },
+    {
+      id: "demo-ms-tr-3",
+      date: daysAgo(60),
+      title: "First symptom-free week",
+      type: "other",
+      notes: "Seven consecutive days with all scores at 1 or below. Avery went to a friend's sleepover for the first time since diagnosis. Cautiously celebrating.",
+      updatedAt: daysAgo(60),
+    },
+    {
+      id: "demo-ms-tr-4",
+      date: daysAgo(27),
+      title: "Strep exposure at school — flare onset",
+      type: "other",
+      notes: "Teacher confirmed strep circulating in Avery's classroom. Escalating symptoms started within 48 hours. Called Dr. Chen.",
+      updatedAt: daysAgo(27),
+    },
+    {
+      id: "demo-ms-tr-5",
+      date: daysAgo(-5),
+      title: "Dr. Chen follow-up",
+      type: "appointment",
+      notes: "Scheduled for next week to review the current flare, discuss whether the prophylactic dose is still adequate, and talk through next steps.",
+      updatedAt: daysAgo(3),
+    },
+  ],
+  multi_child: DEMO_MULTI_CHILD_MILESTONES,
+};
+
+// ── Triggers per scenario ──────────────────────────────────────────────────────
+
+export const DEMO_TRIGGERS: Record<"exploring" | "in_crisis" | "tracking" | "multi_child", TriggerEntry[]> = {
+  // Sam (suspected — recent illness + stress)
+  exploring: [
+    {
+      id: "demo-tr-ex-1",
+      category: "child_illness",
+      date: daysAgo(10),
+      notes: "Sam had a sore throat and low-grade fever for two days. No strep test done. New anxiety and sensory symptoms started 3–4 days after.",
+      severity: "medium",
+      updatedAt: daysAgo(10),
+    },
+    {
+      id: "demo-tr-ex-2",
+      category: "high_stress",
+      date: daysAgo(20),
+      notes: "Back to school after break — always a hard transition for Sam. More clingy and rigid than usual at drop-off.",
+      severity: "low",
+      updatedAt: daysAgo(20),
+    },
+  ],
+  // Riley (in crisis — sibling strep → first flare)
+  in_crisis: [
+    {
+      id: "demo-tr-ic-1",
+      category: "strep_exposure",
+      date: daysAgo(14),
+      notes: "Sibling Maya had confirmed strep throat (rapid test positive). Maya was treated with amoxicillin. Riley's severe neuropsychiatric symptoms began about a week later.",
+      severity: "high",
+      updatedAt: daysAgo(14),
+    },
+    {
+      id: "demo-tr-ic-2",
+      category: "child_illness",
+      date: daysAgo(10),
+      notes: "Riley had a sore throat and fever for two days — possible secondary strep infection. No rapid test done at the time.",
+      severity: "high",
+      updatedAt: daysAgo(10),
+    },
+  ],
+  // Avery (tracking — strep exposure triggered 6-week flare)
+  tracking: [
+    {
+      id: "demo-tr-tr-1",
+      category: "strep_exposure",
+      date: daysAgo(27),
+      notes: "Strep confirmed in Avery's classroom. Flare symptoms began escalating within 48 hours. Dr. Chen advised temporarily increasing Augmentin dose.",
+      severity: "high",
+      updatedAt: daysAgo(27),
+    },
+    {
+      id: "demo-tr-tr-2",
+      category: "poor_sleep",
+      date: daysAgo(17),
+      notes: "Five consecutive nights of broken sleep during peak flare — waking at 2–3am with anxiety and OCD rituals that could last over an hour.",
+      severity: "medium",
+      updatedAt: daysAgo(17),
+    },
+    {
+      id: "demo-tr-tr-3",
+      category: "high_stress",
+      date: daysAgo(35),
+      notes: "State testing week at school. Avery was already mildly elevated and the extra pressure worsened checking behaviors and morning rigidity.",
+      severity: "low",
+      updatedAt: daysAgo(35),
+    },
+  ],
+  multi_child: DEMO_MULTI_CHILD_TRIGGERS,
+};
+
+// ── Lab results per scenario ───────────────────────────────────────────────────
+// exploring: intentionally empty — Sam is a suspected child who started tracking
+// 3 days ago. No labs have been ordered yet. This is a realistic reflection of
+// the early exploring stage, not an oversight.
+
+export const DEMO_ALL_LAB_RESULTS: Record<"exploring" | "in_crisis" | "tracking" | "multi_child", LabResult[]> = {
+  exploring: [],
+  // Riley (in_crisis): one urgent ASO titer ordered by the pediatrician after
+  // the sibling's confirmed strep; result came back elevated.
+  in_crisis: [
+    {
+      id: "demo-lab-ic-1",
+      child_id: "demo-child-riley",
+      date: daysAgo(3),
+      test_name: "ASO",
+      result_value: 680,
+      result_unit: "IU/mL",
+      reference_range: "< 200",
+      lab_name: "Urgent Care Lab",
+      notes: "Ordered after sudden neuropsychiatric symptom onset following sibling strep exposure. Result elevated — discussing with pediatrician at tomorrow's appointment.",
+      updatedAt: daysAgo(3) + "T12:00:00.000Z",
+    },
+  ],
+  tracking: DEMO_LAB_RESULTS,
+  // Mia (diagnosed 18 months ago) + Theo (recent strep, suspected)
+  multi_child: [
+    {
+      id: "demo-lab-mc-1",
+      child_id: "demo-child-mia",
+      date: daysAgo(548),
+      test_name: "ASO",
+      result_value: 920,
+      result_unit: "IU/mL",
+      reference_range: "< 200",
+      lab_name: "Quest Diagnostics",
+      notes: "Initial titer at PANDAS diagnosis — significantly elevated. Started prophylactic Augmentin same day.",
+      updatedAt: daysAgo(548) + "T12:00:00.000Z",
+    },
+    {
+      id: "demo-lab-mc-2",
+      child_id: "demo-child-mia",
+      date: daysAgo(360),
+      test_name: "ASO",
+      result_value: 310,
+      result_unit: "IU/mL",
+      reference_range: "< 200",
+      lab_name: "Quest Diagnostics",
+      notes: "6-month follow-up on prophylactic antibiotics — trending down but still above normal.",
+      updatedAt: daysAgo(360) + "T12:00:00.000Z",
+    },
+    {
+      id: "demo-lab-mc-3",
+      child_id: "demo-child-mia",
+      date: daysAgo(12),
+      test_name: "ASO",
+      result_value: 480,
+      result_unit: "IU/mL",
+      reference_range: "< 200",
+      lab_name: "Quest Diagnostics",
+      notes: "Ordered during current flare after strep classroom exposure. Elevated again — consistent with prior flare pattern.",
+      updatedAt: daysAgo(12) + "T12:00:00.000Z",
+    },
+    {
+      id: "demo-lab-mc-4",
+      child_id: "demo-child-theo",
+      date: daysAgo(45),
+      test_name: "ASO",
+      result_value: 580,
+      result_unit: "IU/mL",
+      reference_range: "< 200",
+      lab_name: "Quest Diagnostics",
+      notes: "Ordered by Dr. Patel after confirmed strep. Elevated. New motor tics appeared 2–3 weeks after infection. Discussing PANS at next visit.",
+      updatedAt: daysAgo(45) + "T12:00:00.000Z",
+    },
+  ],
+};
+
+// ── Household health per scenario ─────────────────────────────────────────────
+
+export const DEMO_HOUSEHOLD_HEALTH: Record<"exploring" | "in_crisis" | "tracking" | "multi_child", HouseholdIllness[]> = {
+  // Sam: sibling had a sore throat the week before Sam's symptoms appeared
+  exploring: [
+    {
+      id: "demo-hh-ex-1",
+      memberName: "Jake (sibling)",
+      illnessType: "Sore throat",
+      startDate: daysAgo(14),
+      endDate: daysAgo(10),
+      notes: "Low-grade fever and sore throat. No strep test done. Sam's behavioral symptoms started about a week later.",
+      updatedAt: daysAgo(14) + "T12:00:00.000Z",
+    },
+  ],
+  // Riley: sibling had confirmed strep — suspected trigger for first flare
+  in_crisis: [
+    {
+      id: "demo-hh-ic-1",
+      memberName: "Maya (sibling)",
+      illnessType: "Strep throat (confirmed)",
+      startDate: daysAgo(14),
+      endDate: daysAgo(9),
+      notes: "Rapid strep positive at pediatrician's office. Treated with amoxicillin for 10 days. Riley's severe symptoms began approximately one week later.",
+      updatedAt: daysAgo(14) + "T12:00:00.000Z",
+    },
+  ],
+  // Avery: sibling had a sore throat days before the strep classroom exposure
+  tracking: [
+    {
+      id: "demo-hh-tr-1",
+      memberName: "Jordan (sibling)",
+      illnessType: "Cold / sore throat",
+      startDate: daysAgo(32),
+      endDate: daysAgo(27),
+      notes: "Sore throat and runny nose. No strep test — assumed viral. Avery's symptoms escalated around the same time strep was confirmed at school.",
+      updatedAt: daysAgo(32) + "T12:00:00.000Z",
+    },
+  ],
+  // Mia + Theo: Theo's confirmed strep + Mia's school strep exposure
+  multi_child: [
+    {
+      id: "demo-hh-mc-1",
+      memberName: "Theo",
+      illnessType: "Strep throat (confirmed)",
+      startDate: daysAgo(51),
+      endDate: daysAgo(41),
+      notes: "Rapid strep positive at Dr. Patel's office. Treated with 10-day amoxicillin. New motor tics appeared 2–3 weeks after infection.",
+      updatedAt: daysAgo(51) + "T12:00:00.000Z",
+    },
+    {
+      id: "demo-hh-mc-2",
+      memberName: "Mia (school exposure)",
+      illnessType: "Strep exposure",
+      startDate: daysAgo(14),
+      notes: "Strep confirmed circulating in Mia's classroom. Mia's flare symptoms started within 48 hours of exposure.",
+      updatedAt: daysAgo(14) + "T12:00:00.000Z",
+    },
+  ],
+};

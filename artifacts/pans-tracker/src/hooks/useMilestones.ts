@@ -8,7 +8,7 @@ import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
 import { useActiveChild } from '@/hooks/useActiveChild';
-import { DEMO_MULTI_CHILD_MILESTONES } from '@/lib/demoData';
+import { DEMO_MILESTONES } from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
 function filterByChild(items: Milestone[], childId: string | null): Milestone[] {
@@ -25,9 +25,8 @@ export function useMilestones() {
 
   const [milestones, setMilestones] = useState<Milestone[]>(() => {
     if (isDemoMode) {
-      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
-      if (scenario === 'multi_child') return filterByChild(DEMO_MULTI_CHILD_MILESTONES, activeChildId);
-      return [];
+      const scenario = (localStorage.getItem(DEMO_SCENARIO_KEY) ?? 'tracking') as keyof typeof DEMO_MILESTONES;
+      return filterByChild(DEMO_MILESTONES[scenario] ?? [], activeChildId);
     }
     return filterByChild(storage.getMilestones(), activeChildId);
   });
@@ -66,10 +65,8 @@ export function useMilestones() {
   // Re-filter when the active child changes.
   useEffect(() => {
     if (isDemoMode) {
-      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
-      if (scenario === 'multi_child') {
-        setMilestones(filterByChild(DEMO_MULTI_CHILD_MILESTONES, activeChildId));
-      }
+      const scenario = (localStorage.getItem(DEMO_SCENARIO_KEY) ?? 'tracking') as keyof typeof DEMO_MILESTONES;
+      setMilestones(filterByChild(DEMO_MILESTONES[scenario] ?? [], activeChildId));
       return;
     }
     setMilestones(filterByChild(storage.getMilestones(), activeChildId));

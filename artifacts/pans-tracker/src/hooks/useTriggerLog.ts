@@ -8,7 +8,7 @@ import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
 import { useActiveChild } from '@/hooks/useActiveChild';
-import { DEMO_MULTI_CHILD_TRIGGERS } from '@/lib/demoData';
+import { DEMO_TRIGGERS } from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
 function filterByChild(items: TriggerEntry[], childId: string | null): TriggerEntry[] {
@@ -29,9 +29,8 @@ export function useTriggerLog() {
 
   const [entries, setEntries] = useState<TriggerEntry[]>(() => {
     if (isDemoMode) {
-      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
-      if (scenario === 'multi_child') return sorted(filterByChild(DEMO_MULTI_CHILD_TRIGGERS, activeChildId));
-      return [];
+      const scenario = (localStorage.getItem(DEMO_SCENARIO_KEY) ?? 'tracking') as keyof typeof DEMO_TRIGGERS;
+      return sorted(filterByChild(DEMO_TRIGGERS[scenario] ?? [], activeChildId));
     }
     return sorted(filterByChild(storage.getTriggerLog(), activeChildId));
   });
@@ -70,10 +69,8 @@ export function useTriggerLog() {
   // Re-filter when the active child changes.
   useEffect(() => {
     if (isDemoMode) {
-      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
-      if (scenario === 'multi_child') {
-        setEntries(sorted(filterByChild(DEMO_MULTI_CHILD_TRIGGERS, activeChildId)));
-      }
+      const scenario = (localStorage.getItem(DEMO_SCENARIO_KEY) ?? 'tracking') as keyof typeof DEMO_TRIGGERS;
+      setEntries(sorted(filterByChild(DEMO_TRIGGERS[scenario] ?? [], activeChildId)));
       return;
     }
     setEntries(sorted(filterByChild(storage.getTriggerLog(), activeChildId)));

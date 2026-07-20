@@ -8,7 +8,7 @@ import { queueMutation } from '@/lib/apiQueue';
 import { useToast } from '@/hooks/use-toast';
 import { track } from '@/lib/analytics';
 import { useActiveChild } from '@/hooks/useActiveChild';
-import { DEMO_LAB_RESULTS } from '@/lib/demoData';
+import { DEMO_ALL_LAB_RESULTS } from '@/lib/demoData';
 import { DEMO_KEY, DEMO_SCENARIO_KEY } from '@/contexts/DemoContext';
 
 export function useLabResults() {
@@ -21,8 +21,10 @@ export function useLabResults() {
 
   const [entries, setEntries] = useState<LabResult[]>(() => {
     if (isDemoMode) {
-      const scenario = localStorage.getItem(DEMO_SCENARIO_KEY);
-      return scenario === 'tracking' ? DEMO_LAB_RESULTS : [];
+      const scenario = (localStorage.getItem(DEMO_SCENARIO_KEY) ?? 'tracking') as keyof typeof DEMO_ALL_LAB_RESULTS;
+      const data = DEMO_ALL_LAB_RESULTS[scenario] ?? [];
+      const filtered = activeChildId ? data.filter((e) => e.child_id === activeChildId) : data;
+      return [...filtered].sort((a, b) => b.date.localeCompare(a.date));
     }
     const all = storage.getLabResults();
     const filtered = activeChildId ? all.filter((e) => e.child_id === activeChildId) : all;
@@ -61,7 +63,13 @@ export function useLabResults() {
   }, [refetch]);
 
   useEffect(() => {
-    if (isDemoMode) return;
+    if (isDemoMode) {
+      const scenario = (localStorage.getItem(DEMO_SCENARIO_KEY) ?? 'tracking') as keyof typeof DEMO_ALL_LAB_RESULTS;
+      const data = DEMO_ALL_LAB_RESULTS[scenario] ?? [];
+      const filtered = activeChildId ? data.filter((e) => e.child_id === activeChildId) : data;
+      setEntries([...filtered].sort((a, b) => b.date.localeCompare(a.date)));
+      return;
+    }
     const all = storage.getLabResults();
     const filtered = activeChildId ? all.filter((e) => e.child_id === activeChildId) : all;
     setEntries([...filtered].sort((a, b) => b.date.localeCompare(a.date)));

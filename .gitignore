@@ -2,6 +2,7 @@
 
 # compiled output
 dist
+build
 tmp
 out-tsc
 *.tsbuildinfo
@@ -43,6 +44,13 @@ Thumbs.db
 
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
+
+# Environment variables — never commit these
+.env
+.env.local
+.env.*.local
+.env.production
+.env.development
 
 # Replit
 .cache/

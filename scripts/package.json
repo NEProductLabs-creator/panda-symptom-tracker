@@ -5,8 +5,6 @@
   "type": "module",
   "scripts": {
     "hello": "tsx ./src/hello.ts",
-    "sendDailyReminders": "tsx ./src/sendDailyReminders.ts",
-    "sendInactivityReminders": "tsx ./src/sendInactivityReminders.ts",
     "migrate": "tsx ./src/migrate.ts",
     "generate-apple-secret": "tsx ./src/generate-apple-secret.ts",
     "typecheck": "tsc -p tsconfig.json --noEmit"

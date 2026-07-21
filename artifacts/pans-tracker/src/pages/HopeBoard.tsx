@@ -256,7 +256,7 @@ export default function HopeBoard() {
             families who are still in the hardest part.
           </p>
           <a
-            href="mailto:pandstracker@example.com?subject=My%20Recovery%20Story&body=I%20would%20like%20to%20share%20my%20family%27s%20story%20anonymously%20to%20help%20other%20PANS%2FPANDAS%20families."
+            href="mailto:info@pandascompanion.com?subject=My%20Recovery%20Story&body=I%20would%20like%20to%20share%20my%20family%27s%20story%20anonymously%20to%20help%20other%20PANS%2FPANDAS%20families."
             className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-amber-800 bg-amber-200 hover:bg-amber-300 transition-colors"
           >
             <Heart className="w-3.5 h-3.5" />

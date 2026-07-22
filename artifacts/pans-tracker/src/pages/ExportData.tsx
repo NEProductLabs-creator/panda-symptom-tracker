@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { BRAND } from "@/lib/brand";
 import { track } from "@/lib/analytics";
 import { format, parseISO, subDays, differenceInDays } from "date-fns";
 import jsPDF from "jspdf";
@@ -267,7 +268,7 @@ function buildClipboardText(opts: {
   const lines: string[] = [];
   const hr = "─".repeat(50);
 
-  lines.push("PANS & PANDAS SYMPTOM REPORT");
+  lines.push(`${BRAND.name} Symptom Report`);
   if (childName)
     lines.push(`Patient: ${childName}${childAge ? `, Age ${childAge}` : ""}`);
   lines.push(`Period: ${fmtDate(effectiveStart)} – ${fmtDate(effectiveEnd)}`);
@@ -731,7 +732,7 @@ export default function ExportData() {
     doc.setFont("helvetica", "bold");
     doc.setFontSize(17);
     doc.setTextColor(255, 255, 255);
-    doc.text("PANS & PANDAS Symptom Report", margin, 13);
+    doc.text(`${BRAND.name} Symptom Report`, margin, 13);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9.5);
     doc.setTextColor(200, 230, 200);
@@ -1064,7 +1065,7 @@ export default function ExportData() {
       doc.setFont("helvetica", "normal");
       doc.setTextColor(160);
       doc.text(
-        `PANS & PANDAS Tracker · Page ${i} of ${pageCount}`,
+        `${BRAND.name} · Page ${i} of ${pageCount}`,
         pageWidth / 2,
         pageHeight - 8,
         { align: "center" },

@@ -1,4 +1,5 @@
 import { format, subDays } from "date-fns";
+import { BRAND } from "@/lib/brand";
 import { isNative, printOrShare } from "@/lib/platform";
 import { useSymptomLogs } from "@/hooks/useSymptomLogs";
 import { useMedications } from "@/hooks/useMedications";
@@ -66,7 +67,7 @@ export default function PrintSummary() {
     // ── Header ────────────────────────────────────────────────────────────────
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(18);
-    doc.text('PANS & PANDAS Symptom Report', lm, y);
+    doc.text(`${BRAND.name} Symptom Report`, lm, y);
     y += 22;
     if (childName) {
       doc.setFont('helvetica', 'normal');
@@ -218,7 +219,7 @@ export default function PrintSummary() {
       doc.setFontSize(8);
       doc.setTextColor(130, 130, 130);
       doc.text(
-        `Printed from PANS & PANDAS Tracker · ${format(new Date(), 'MMMM d, yyyy')} · Page ${i} of ${pageCount}`,
+        `Printed from ${BRAND.name} · ${format(new Date(), 'MMMM d, yyyy')} · Page ${i} of ${pageCount}`,
         pageW / 2,
         doc.internal.pageSize.getHeight() - 30,
         { align: 'center' },
@@ -293,7 +294,7 @@ export default function PrintSummary() {
             Doctor Visit Summary
           </p>
           <h1 className="text-3xl font-semibold text-foreground" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.02em", fontWeight: 400 }}>
-            PANS &amp; PANDAS Symptom Report
+            {BRAND.name} Symptom Report
           </h1>
           {childName && (
             <p className="text-lg text-foreground mt-1" style={{ fontFamily: "Fraunces, serif", fontWeight: 400 }}>
@@ -302,7 +303,7 @@ export default function PrintSummary() {
           )}
           <noscript>
             <p style={{ fontFamily: "Newsreader, serif", fontSize: "0.875rem", color: "#666" }}>
-              {childName ? `Report generated for ${childName}` : "Report generated from PANS & PANDAS Tracker"}
+              {childName ? `Report generated for ${childName}` : `Report generated from ${BRAND.name}`}
             </p>
           </noscript>
           <p className="text-sm text-muted-foreground mt-2" style={{ fontFamily: "Newsreader, serif" }}>
@@ -489,7 +490,7 @@ export default function PrintSummary() {
 
         {/* Footer */}
         <div className="mt-12 pt-4 border-t border-border text-xs text-muted-foreground text-center" style={{ fontFamily: "Newsreader, serif", fontStyle: "italic" }}>
-          <p>Printed from PANS &amp; PANDAS Tracker &bull; {format(new Date(), "MMMM d, yyyy")}</p>
+          <p>Printed from {BRAND.name} &bull; {format(new Date(), "MMMM d, yyyy")}</p>
           <p className="mt-0.5">All data is stored locally on this device and is not shared.</p>
         </div>
       </div>

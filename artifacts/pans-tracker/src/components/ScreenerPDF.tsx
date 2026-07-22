@@ -6,6 +6,7 @@
 // containing these values.
 
 import jsPDF from "jspdf";
+import { BRAND } from "@/lib/brand";
 import type { ScreenerAnswers, ResultBucket } from "@/lib/types";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -271,7 +272,7 @@ export function generateScreenerPDF(props: ScreenerPDFProps): void {
   // Top-right app name
   setFont(doc, "normal", 7);
   setColor(doc, [180, 165, 150]);
-  doc.text("PANS & PANDAS Companion", pageW - M, 9, { align: "right" });
+  doc.text(BRAND.name, pageW - M, 9, { align: "right" });
 
   // Main title
   setFont(doc, "bold", 15);
@@ -281,7 +282,7 @@ export function generateScreenerPDF(props: ScreenerPDFProps): void {
   // Sub-lines
   setFont(doc, "normal", 8);
   setColor(doc, [200, 188, 178]);
-  doc.text(`Generated ${today} via PANS/PANDAS Companion`, M, 22);
+  doc.text(`Generated ${today} via ${BRAND.name}`, M, 22);
   doc.text("Based on PANDAS Physicians Network (PPN) diagnostic criteria", M, 27);
 
   // Result badge (bottom-right of header)

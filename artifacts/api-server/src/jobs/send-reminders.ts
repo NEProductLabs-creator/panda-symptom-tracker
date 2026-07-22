@@ -25,7 +25,7 @@ import { sendPush, isFcmConfigured } from "../lib/fcm.js";
 
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-const vapidSubject = process.env.VAPID_SUBJECT ?? "mailto:admin@panstrack.app";
+const vapidSubject = process.env.VAPID_SUBJECT ?? "mailto:info@pandascompanion.com";
 
 if (!vapidPublicKey || !vapidPrivateKey) {
   logger.error("VAPID_PUBLIC_KEY or VAPID_PRIVATE_KEY not set — aborting");

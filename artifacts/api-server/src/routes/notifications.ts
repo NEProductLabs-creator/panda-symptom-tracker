@@ -8,7 +8,7 @@ const router = Router();
 
 const vapidPublicKey = process.env.VAPID_PUBLIC_KEY;
 const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY;
-const vapidSubject = process.env.VAPID_SUBJECT ?? "mailto:admin@panstrack.app";
+const vapidSubject = process.env.VAPID_SUBJECT ?? "mailto:info@pandascompanion.com";
 
 if (vapidPublicKey && vapidPrivateKey) {
   webpush.setVapidDetails(vapidSubject, vapidPublicKey, vapidPrivateKey);
@@ -114,7 +114,7 @@ router.post("/test", requireAuth, async (req, res) => {
         keys: { p256dh: sub.p256dh as string, auth: sub.auth as string },
       },
       JSON.stringify({
-        title: "PANS Tracker",
+        title: "Companion",
         body: "Test notification — push is working! 🎉",
         url: "/",
       }),

@@ -75,7 +75,7 @@ self.addEventListener("push", (event) => {
       url?: string;
     } | null) ?? {};
 
-  const title = data.title ?? "PANS Tracker";
+  const title = data.title ?? "Companion";
   const body = data.body ?? "Time to log today's symptoms.";
   const scope = self.registration.scope;
   const targetUrl = data.url ? new URL(data.url, scope).href : scope;

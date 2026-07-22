@@ -57,7 +57,7 @@ export default function TermsGate({ onAgree }: Props) {
             }}
           >
             Please review and agree to the updated terms to continue using the
-            PANS &amp; PANDAS Symptom Tracker.
+            PANS/PANDAS Companion.
           </p>
         </div>
 

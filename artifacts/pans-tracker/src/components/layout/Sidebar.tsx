@@ -357,10 +357,10 @@ export default function Sidebar() {
           className="block cursor-pointer hover:opacity-80 transition-opacity"
         >
           <p className="font-semibold text-[15px] leading-tight text-foreground" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.02em" }}>
-            PANS &amp; PANDAS
+            PANS/PANDAS
           </p>
           <p className="text-[12px] leading-snug mt-0.5 text-muted-foreground" style={{ fontFamily: "Newsreader, serif", fontStyle: "italic" }}>
-            Symptom Tracker
+            Companion
           </p>
         </Link>
         <ChildSwitcher variant="sidebar" />
@@ -477,7 +477,7 @@ export default function Sidebar() {
             className="flex items-center min-w-0 cursor-pointer hover:opacity-80 transition-opacity flex-1"
           >
             <span className="font-semibold text-[14px] text-foreground leading-tight truncate" style={{ fontFamily: "Fraunces, serif", letterSpacing: "-0.01em" }}>
-              PANS &amp; PANDAS
+              PANS/PANDAS
             </span>
           </Link>
           <ChildSwitcher variant="mobile" />

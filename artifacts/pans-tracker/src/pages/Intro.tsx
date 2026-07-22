@@ -63,7 +63,7 @@ export default function Intro() {
               className="text-3xl font-bold text-foreground leading-tight"
               style={{ fontFamily: "Fraunces, serif" }}
             >
-              PANS &amp; PANDAS Tracker
+              PANS/PANDAS Companion
             </h1>
             <p className="text-muted-foreground text-sm mt-1">Your daily symptom journal</p>
           </div>

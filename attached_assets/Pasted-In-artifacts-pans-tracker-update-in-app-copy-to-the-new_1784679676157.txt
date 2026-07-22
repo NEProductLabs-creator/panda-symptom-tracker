@@ -1,0 +1,28 @@
+In artifacts/pans-tracker, update in-app copy to the new name "PANS/PANDAS Companion" and
+retire the old forest/cream landing palette.
+
+Copy changes (replace "PANS & PANDAS Symptom Tracker" / "PANS & PANDAS Tracker" with
+"PANS/PANDAS Companion", and standalone "Symptom Tracker" labels with "Companion"):
+- src/pages/Landing.tsx: the logo lockup (lp-logo-main "PANS & PANDAS" + lp-logo-sub
+  "Symptom Tracker") becomes main "PANS/PANDAS" + sub "Companion". Update the three body
+  mentions. In the hero, add the tagline "Track, learn, and care for PANS and PANDAS
+  together." and the subline "Your child's full picture in one place."
+- src/components/layout/Sidebar.tsx: the lockup at both the desktop and mobile spots
+  ("PANS & PANDAS" / "Symptom Tracker") becomes "PANS/PANDAS" / "Companion".
+- src/pages/Intro.tsx: "PANS & PANDAS Tracker" becomes "PANS/PANDAS Companion".
+- src/pages/TermsGate.tsx: "PANS & PANDAS Symptom Tracker" becomes "PANS/PANDAS Companion".
+- src/pages/SharedView.tsx: "Loading shared tracker..." becomes "Loading shared record...".
+- src/components/settings/SettingsShares.tsx: "view the tracker" becomes "view the record".
+
+Landing palette retirement:
+- The landing page currently uses a forest/cream palette scoped under .lp-root, backed by
+  the tokens --cream, --cream-warm, --forest, --forest-deep in src/styles/design-system.css.
+  Move the landing hero and CTAs onto the brand palette: a soft #FBEAF0 to #fbf7ef gradient
+  background, #D4537E primary buttons, warm ink text. Then remove the --cream, --cream-warm,
+  --forest, and --forest-deep tokens and update any .lp-root rules that referenced them so
+  nothing breaks. The end state is a two-palette system: the warm clay/ivory interior plus
+  the pink/coral brand layer, with no forest/cream and no sage/teal anywhere.
+
+Keep the clay-based severity scale (--sev-1 through --sev-5 and the --clay* tokens) exactly
+as it is. Do not rename any localStorage key or the pans-tracker package/directory. Run the
+frontend typecheck after.

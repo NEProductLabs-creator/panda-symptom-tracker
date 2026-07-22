@@ -66,7 +66,7 @@ export default function SharedView() {
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-3 text-muted-foreground">
           <Activity className="w-8 h-8 animate-pulse" />
-          <p className="text-sm">Loading shared tracker…</p>
+          <p className="text-sm">Loading shared record…</p>
         </div>
       </div>
     );

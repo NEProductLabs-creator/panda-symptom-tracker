@@ -208,7 +208,7 @@ export default function SettingsShares() {
               Create share link
             </DialogTitle>
             <DialogDescription>
-              Send this link to a clinician or care team member. They can view the tracker without
+              Send this link to a clinician or care team member. They can view the record without
               creating an account.
             </DialogDescription>
           </DialogHeader>

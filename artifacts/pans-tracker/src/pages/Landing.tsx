@@ -15,8 +15,8 @@ export default function Landing() {
       <header className="lp-container">
         <nav>
           <div className="lp-logo">
-            <span className="lp-logo-main">PANS &amp; PANDAS</span>
-            <span className="lp-logo-sub">Symptom Tracker</span>
+            <span className="lp-logo-main">PANS/PANDAS</span>
+            <span className="lp-logo-sub">Companion</span>
           </div>
 
           <ul className="lp-nav-links">
@@ -65,6 +65,8 @@ export default function Landing() {
 
         <div className="lp-hero-eyebrow">For families navigating PANS &amp; PANDAS</div>
         <h1>You haven't lost your child. <em>You're not alone.</em></h1>
+        <p className="lp-hero-tagline">Track, learn, and care for PANS and PANDAS together.</p>
+        <p className="lp-hero-subline">Your child's full picture in one place.</p>
         <p className="lp-hero-sub">
           If you're here, something is happening to your child that feels impossible to explain.
           We've been where you are. This is the tool we wish we'd had on the worst days of our lives.
@@ -142,7 +144,7 @@ export default function Landing() {
             <div className="lp-signature">
               <div className="lp-signature-rule" />
               With you in this,<br />
-              <em>The family behind PANS &amp; PANDAS Symptom Tracker</em>
+              <em>The family behind PANS/PANDAS Companion</em>
             </div>
           </div>
         </div>
@@ -214,7 +216,7 @@ export default function Landing() {
               our lives, scribbling notes from memory and group texts.
             </p>
             <p>
-              The PANS &amp; PANDAS Symptom Tracker exists so you don't have to do that. Log a moment in
+              The PANS/PANDAS Companion exists so you don't have to do that. Log a moment in
               seconds. Build a record without thinking about it. Walk into appointments prepared.
             </p>
 
@@ -344,7 +346,7 @@ export default function Landing() {
         <div className="lp-cta-inner">
           <h2>Whatever today looks like, <em>you don't have to remember it alone.</em></h2>
           <p>
-            The PANS &amp; PANDAS Symptom Tracker is free to use. Start a timeline in a few minutes.
+            The PANS/PANDAS Companion is free to use. Start a timeline in a few minutes.
             Whether you're in the middle of a flare or trying to understand what just happened,
             we built this for you.
           </p>

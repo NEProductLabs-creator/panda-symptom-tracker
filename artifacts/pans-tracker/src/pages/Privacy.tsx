@@ -6,8 +6,8 @@ export default function Privacy() {
     <div className="lp-root">
       <nav className="lp-nav lp-container">
         <Link href="/" className="lp-logo">
-          <span>PANS &amp; PANDAS</span>
-          <em>Symptom Tracker</em>
+          <span>PANS/PANDAS</span>
+          <em>Companion</em>
         </Link>
       </nav>
 
@@ -15,6 +15,7 @@ export default function Privacy() {
         <div className="lp-privacy-content">
           <h1>Privacy Policy</h1>
           <p className="lp-privacy-updated">Last updated: May 20, 2026</p>
+          <p className="lp-privacy-updated">Formerly the PANS &amp; PANDAS Symptom Tracker, renamed to PANS/PANDAS Companion in 2026.</p>
 
           <p>
             Hi. We're parents who built this app because we needed it ourselves. You're
@@ -24,7 +25,7 @@ export default function Privacy() {
           <p>
             We've tried to write this in plain language. If anything is unclear, please reach
             out to us at{" "}
-            <a href="mailto:PansTracker@gmail.com">PansTracker@gmail.com</a>.
+            <a href="mailto:info@pandascompanion.com">info@pandascompanion.com</a>.
           </p>
 
           <h2>The short version</h2>
@@ -38,7 +39,7 @@ export default function Privacy() {
 
           <h2>About this service</h2>
           <p>
-            The PANS &amp; PANDAS Symptom Tracker is a personal tracking tool, not a healthcare
+            The PANS/PANDAS Companion is a personal tracking tool, not a healthcare
             service. We are not your healthcare provider, and using this app does not create a
             doctor-patient relationship. We are not a HIPAA covered entity. If you share your
             records with your child's doctor, the doctor's use of those records is governed by
@@ -169,7 +170,7 @@ export default function Privacy() {
           </ul>
           <p>
             To exercise any of these rights, contact us by email at{" "}
-            <a href="mailto:PansTracker@gmail.com">PansTracker@gmail.com</a>.
+            <a href="mailto:info@pandascompanion.com">info@pandascompanion.com</a>.
           </p>
           <p>
             Residents of certain regions, including California, the European Union, and the
@@ -237,7 +238,7 @@ export default function Privacy() {
           <h2>Contact us</h2>
           <p>Questions, concerns, or requests about your privacy can be sent to:</p>
           <p>
-            <a href="mailto:PansTracker@gmail.com">PansTracker@gmail.com</a>
+            <a href="mailto:info@pandascompanion.com">info@pandascompanion.com</a>
           </p>
         </div>
       </div>
@@ -246,7 +247,7 @@ export default function Privacy() {
         <p>Built by a family, for families.</p>
         <div>
           <Link href="/privacy">Privacy</Link>
-          <a href="mailto:PansTracker@gmail.com">Contact</a>
+          <a href="mailto:info@pandascompanion.com">Contact</a>
         </div>
       </footer>
     </div>

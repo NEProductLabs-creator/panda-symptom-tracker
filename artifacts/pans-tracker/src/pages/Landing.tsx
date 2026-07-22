@@ -365,7 +365,7 @@ export default function Landing() {
         <p>Built by a family, for families.</p>
         <div>
           <Link href="/privacy">Privacy</Link>
-          <a href="mailto:PansTracker@gmail.com">Contact</a>
+          <a href="mailto:info@pandascompanion.com">Contact</a>
         </div>
       </footer>
 

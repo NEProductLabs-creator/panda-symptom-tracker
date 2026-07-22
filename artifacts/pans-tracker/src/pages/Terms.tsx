@@ -7,8 +7,8 @@ export default function Terms() {
     <div className="lp-root">
       <nav className="lp-nav lp-container">
         <Link href="/" className="lp-logo">
-          <span>PANS &amp; PANDAS</span>
-          <em>Symptom Tracker</em>
+          <span>PANS/PANDAS</span>
+          <em>Companion</em>
         </Link>
       </nav>
 
@@ -16,20 +16,21 @@ export default function Terms() {
         <div className="lp-privacy-content">
           <h1>Terms and Conditions</h1>
           <p className="lp-privacy-updated">Last updated: May 20, 2026</p>
+          <p className="lp-privacy-updated">Formerly the PANS &amp; PANDAS Symptom Tracker, renamed to PANS/PANDAS Companion in 2026.</p>
 
           <p>
-            Please read these Terms and Conditions carefully before using the PANS &amp; PANDAS
-            Symptom Tracker. By creating an account or accessing the service, you agree to be
+            Please read these Terms and Conditions carefully before using the PANS/PANDAS
+            Companion. By creating an account or accessing the service, you agree to be
             bound by these terms. If you do not agree, do not use the service.
           </p>
           <p>
             Questions? Contact us at{" "}
-            <a href="mailto:PansTracker@gmail.com">PansTracker@gmail.com</a>.
+            <a href="mailto:info@pandascompanion.com">info@pandascompanion.com</a>.
           </p>
 
           <h2>1. About the service</h2>
           <p>
-            The PANS &amp; PANDAS Symptom Tracker ("the app", "the service") is a personal
+            The PANS/PANDAS Companion ("the app", "the service") is a personal
             health-logging tool designed to help parents and caregivers track and communicate
             symptom patterns in children with PANS or PANDAS. We are not a medical service, a
             healthcare provider, or a HIPAA covered entity.
@@ -57,7 +58,7 @@ export default function Terms() {
           <p>
             You are responsible for maintaining the confidentiality of your account credentials
             and for all activity that occurs under your account. Notify us immediately at{" "}
-            <a href="mailto:PansTracker@gmail.com">PansTracker@gmail.com</a> if you believe your
+            <a href="mailto:info@pandascompanion.com">info@pandascompanion.com</a> if you believe your
             account has been compromised.
           </p>
           <p>
@@ -153,7 +154,7 @@ export default function Terms() {
           <h2>12. Contact</h2>
           <p>
             For questions about these terms, contact us at:{" "}
-            <a href="mailto:PansTracker@gmail.com">PansTracker@gmail.com</a>
+            <a href="mailto:info@pandascompanion.com">info@pandascompanion.com</a>
           </p>
         </div>
       </div>
@@ -163,7 +164,7 @@ export default function Terms() {
         <div>
           <Link href="/terms">Terms</Link>
           <Link href="/privacy">Privacy</Link>
-          <a href="mailto:PansTracker@gmail.com">Contact</a>
+          <a href="mailto:info@pandascompanion.com">Contact</a>
         </div>
       </footer>
     </div>

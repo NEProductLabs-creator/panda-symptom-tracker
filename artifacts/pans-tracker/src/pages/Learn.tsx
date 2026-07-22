@@ -56,11 +56,12 @@ const SECTIONS = [
       "How to find a clinician who takes PANS and PANDAS seriously.",
   },
   {
-    href: "/learn/self-check",
+    href: "https://pandassupport.com/screener",
     icon: ClipboardCheck,
-    title: "Is this what we are seeing?",
+    title: "Is it PANDAS? Take the screener",
     description:
-      "A structured questionnaire that organizes your observations into a format your doctor can use — and generates a printable summary.",
+      "A free 2-minute screener based on PPN diagnostic criteria. Opens on PANDAS Support — no account needed.",
+    external: true,
   },
 ];
 
@@ -92,8 +93,8 @@ export default function Learn() {
 
         {/* Section cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {SECTIONS.map(({ href, icon: Icon, title, description }) => (
-            <Link key={href} href={href}>
+          {SECTIONS.map(({ href, icon: Icon, title, description, external }) => {
+            const card = (
               <div className="group flex items-start gap-4 p-5 bg-card rounded-2xl border-2 border-border hover:border-primary/40 hover:shadow-sm transition-all cursor-pointer h-full">
                 <div
                   className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors group-hover:bg-primary/10"
@@ -117,8 +118,16 @@ export default function Learn() {
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5 group-hover:text-foreground transition-colors" />
               </div>
-            </Link>
-          ))}
+            );
+            if (external) {
+              return (
+                <a key={href} href={href} target="_blank" rel="noopener noreferrer">
+                  {card}
+                </a>
+              );
+            }
+            return <Link key={href} href={href}>{card}</Link>;
+          })}
         </div>
 
         <p className="text-xs text-muted-foreground text-center mt-10 opacity-70">

@@ -93,7 +93,9 @@ export default function Landing() {
             criteria. Get a printable summary you can bring to your child's doctor.
           </p>
           <a
-            href="/screener"
+            href="https://pandassupport.com/screener"
+            target="_blank"
+            rel="noopener noreferrer"
             className="lp-btn-primary"
             onClick={() => track("screener_landing_cta_clicked")}
           >

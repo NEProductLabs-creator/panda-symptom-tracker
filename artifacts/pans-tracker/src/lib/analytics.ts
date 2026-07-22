@@ -84,6 +84,7 @@ export type AnalyticsEvent =
   | 'onboarding_screener_skipped_by_stage'
   | 'onboarding_add_child_skipped'
   | 'screener_landing_cta_clicked'
+  | 'screener_public_redirect'
   | 'screener_started'
   | 'screener_step_completed'
   | 'screener_completed'

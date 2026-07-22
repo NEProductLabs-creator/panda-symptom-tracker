@@ -1,0 +1,32 @@
+In artifacts/pans-tracker, consolidate the screeners. Decision: the PANDAS Support site owns
+the public "is it PANDAS?" screener; this app keeps only the authenticated in-app screener.
+
+Keep and leave working (this is core product, it writes screener results to the child record
+and feeds reports): src/pages/AppScreener.tsx, src/pages/AppScreenerResult.tsx,
+src/components/ScreenerWizard.tsx, src/components/ScreenerPDF.tsx, and the
+src/hooks/useScreenerResults.ts data path. The authenticated route is /screener when signed in.
+
+Retire the public pre-signup screener:
+- In src/App.tsx, the branch that renders the public screener for unauthenticated users
+  (around lines 1343-1347, "if (!isSignedIn && !isDemoMode && location.startsWith('/screener'))"
+  rendering ScreenerPage / ScreenerResults) should instead redirect the browser to
+  https://pandassupport.com/screener. Fire a tracking event (mirror the existing screener
+  analytics naming) before the redirect so the hand-off is still measurable.
+- Once nothing routes to them, delete src/pages/ScreenerPage.tsx and src/pages/ScreenerResults.tsx
+  and remove their imports from App.tsx.
+
+Retire the Learn Self-Check:
+- Remove the /learn/self-check route (the <Route path="/learn/self-check" ...> in App.tsx) and
+  its item in the Learn section navigation. Delete src/pages/learn/SelfCheck.tsx and its import.
+- If the Learn section looks empty without it, replace the nav item with an outbound link to
+  https://pandassupport.com/screener labeled "Is it PANDAS? Take the screener" rather than a
+  second in-app questionnaire.
+
+Sweep for now-dead inbound links: search the app for links to "/screener" (public) and
+"/learn/self-check" from Landing, the Learn nav, onboarding, and any empty states, and point
+them at either the Support screener (for discovery) or the authenticated in-app screener (for
+signed-in users), whichever fits the context.
+
+Leave the authenticated-screener demo data intact. Do not rename any localStorage key or the
+pans-tracker package/directory. Run the frontend typecheck and confirm no route references a
+deleted file.

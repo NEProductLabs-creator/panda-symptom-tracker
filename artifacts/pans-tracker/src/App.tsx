@@ -34,7 +34,6 @@ import LearnCriteria from "@/pages/learn/Criteria";
 import LearnRedFlags from "@/pages/learn/RedFlags";
 import LearnGlossary from "@/pages/learn/Glossary";
 import LearnFindProvider from "@/pages/learn/FindProvider";
-import LearnSelfCheck from "@/pages/learn/SelfCheck";
 import RightNow from "@/pages/RightNow";
 import RightNowReframe from "@/pages/right-now/Reframe";
 import RightNowToday from "@/pages/right-now/Today";
@@ -70,8 +69,6 @@ import { CURRENT_TERMS_VERSION } from "@/lib/termsVersion";
 import { DemoProvider, DemoBanner, useDemoContext } from "@/contexts/DemoContext";
 import DemoPicker from "@/pages/DemoPicker";
 import Landing from "@/pages/Landing";
-import ScreenerPage from "@/pages/ScreenerPage";
-import ScreenerResults from "@/pages/ScreenerResults";
 import AppScreener from "@/pages/AppScreener";
 import AppScreenerResult from "@/pages/AppScreenerResult";
 import InstallPrompt from "@/components/InstallPrompt";
@@ -1340,11 +1337,12 @@ function Router() {
     return <Landing />;
   }
 
-  // Unauthenticated users at /screener/* → public screener pages (no Layout/sidebar)
+  // Unauthenticated users at /screener/* → hand off to PANDAS Support
   if (!isSignedIn && !isDemoMode && location.startsWith("/screener")) {
     if (!isLoaded) return <LoadingScreen />;
-    if (location === "/screener/results") return <ScreenerResults />;
-    return <ScreenerPage />;
+    track("screener_public_redirect", { destination: "pandassupport.com" });
+    window.location.replace("https://pandassupport.com/screener");
+    return <LoadingScreen />;
   }
 
   if (!isLoaded && !isDemoMode) return <LoadingScreen />;
@@ -1393,7 +1391,6 @@ function Router() {
           <Route path="/learn/red-flags" component={LearnRedFlags} />
           <Route path="/learn/glossary" component={LearnGlossary} />
           <Route path="/learn/find-provider" component={LearnFindProvider} />
-          <Route path="/learn/self-check" component={LearnSelfCheck} />
           <Route path="/right-now" component={RightNow} />
           <Route path="/right-now/reframe" component={RightNowReframe} />
           <Route path="/right-now/today" component={RightNowToday} />

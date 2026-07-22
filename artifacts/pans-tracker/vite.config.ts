@@ -25,12 +25,12 @@ export default defineConfig({
       injectRegister: "auto",
       includeAssets: ["favicon.svg", "logo.svg", "icons/*.png"],
       manifest: {
-        name: "PANS & PANDAS Tracker",
-        short_name: "PANS Tracker",
+        name: "PANS/PANDAS Companion",
+        short_name: "Companion",
         description:
-          "PANS and PANDAS symptom tracking built for families, designed for doctors.",
-        theme_color: "#44797E",
-        background_color: "#F7F9FB",
+          "Track, learn, and care for PANS and PANDAS together. Symptom tracking built for families, designed for doctors.",
+        theme_color: "#D4537E",
+        background_color: "#fbf7ef",
         display: "standalone",
         orientation: "portrait",
         scope: pwaScope,
